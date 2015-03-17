@@ -1,0 +1,4 @@
+java -XX:-UseGCOverheadLimit -Xmx2G 
+
+
+Test it: https://plumbr.eu/memory-leak

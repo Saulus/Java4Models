@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<konfiguration>
+	<input>
+		<datei>
+			<datentyp>Stamm</datentyp> 
+			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Grouping\stamm_v.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>Ja</istsortiert>
+		</datei>
+		<datei>
+			<datentyp>Arzneimittel</datentyp>
+			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Details\am_evo_v.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->
+			<istsortiert>Ja</istsortiert>
+		</datei>
+		<datei>
+			<datentyp>Stationaer</datentyp>
+			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Details\kh_diagnose_v.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->
+			<istsortiert>Ja</istsortiert>
+		</datei>
+		<datei>
+			<datentyp>Ambulant</datentyp>
+			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Details\arzt_diagnose_v.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->
+			<istsortiert>Ja</istsortiert>
+		</datei>
+		<datei>
+			<datentyp>Kosten</datentyp>
+			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Grouping\param_py_v.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->
+			<istsortiert>Ja</istsortiert>
+		</datei>
+		<datei>
+			<datentyp>Region</datentyp>
+			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Grouping\rg_vw_v.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->
+			<istsortiert>Ja</istsortiert>
+		</datei>
+	</input>
+	<outputpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall</outputpfad>
+	<modellpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\Java4Models\Models</modellpfad>
+	<!-- optionale Parameter -->
+	<createProfilDense>False</createProfilDense>
+	<createProfilSparse>True</createProfilSparse>
+	<idField>PID</idField>
+	<outputfile>scores.csv</outputfile>
+	<interceptname>INTERCEPT</interceptname>
+</konfiguration>

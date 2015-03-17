@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modellconfiguration>
+	<datentyp>
+		<name>Stamm</name>
+		<variable>
+			<variablename>Geschlecht</variablename> <!-- placeholder $ is optional; $ is replaced by fieldvalue (stringposition considered) -->
+			<fieldname>Geschlecht</fieldname>
+			<stringposition_from></stringposition_from>  <!-- optional; Characters in field to be used (inclusive; starting from 1)-->
+			<stringposition_to></stringposition_to> <!-- optional -->
+			<valuefilter_from></valuefilter_from> <!-- optional; filters field-values for this variable, e.g. age groups -->
+			<valuefilter_to></valuefilter_to> 	<!-- optional -->
+			<aggregationtype>mean</aggregationtype> <!-- optional; occurance (=Standard), mean, sum, count -->
+			<otherfieldfilter> <!-- optional; filters other fields in same inputrow, variable is used only if these are true -->
+				<otherfield>
+					<fieldname>Geschlecht</fieldname>
+					<stringposition_from></stringposition_from>  <!-- optional; Characters in field to be used (inclusive; starting from 1)-->
+					<stringposition_to></stringposition_to> <!-- optional -->
+					<valuefilter_from></valuefilter_from> <!-- Required; filters field-values for this variable -->
+					<valuefilter_to></valuefilter_to> 	<!-- Required -->
+				<otherfield>
+			</otherfieldfilter>
+		</variable>
+	</datentyp>
+	
+Inputfile;Field;Stringposition;Values;Aggregation;Variable
+Stamm;Geschlecht;;;mean;Geschlecht
+Stamm;Alter;;;mean;Alter
+Stamm;Verstorben;;1-1;;Verstorben
+Ambulant;ICD_CODE;1-3;;Count;AICD_$
+Stationaer;ICD_CODE;1-3;;Count;SICD_$
+Arzneimittel;ATC_CODE;1-4;;Count;ATC_$
+Arzneimittel;Betrag_Brutto;;;SUM;AM_BETRAG
