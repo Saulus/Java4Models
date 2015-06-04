@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import org.xmappr.*;
 
+import configuration.Consts;
 import configuration.Konfiguration;
 
 /**
@@ -30,6 +31,10 @@ public class Java4Models {
 	            System.err.println("Für schnelle Sortierung der Input-Files mit mehr Memory:  java -Xmx2048m -Xms256m -jar java4models.jar <konfiguration.xml>");
 	            System.exit(1);
 	        }
+		if (args[0].equals("--version")) {
+			System.out.println("Java4Models. Elsevier Health Analytics. Version: " + Consts.version);
+			System.exit(1);
+		}
 		Reader reader = null;
 		Konfiguration config = null;
 		try {
@@ -48,7 +53,7 @@ public class Java4Models {
 			) {
 			String timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 			System.out.println(timeStamp + " Die Scores wurden erfolgreich berechnet. Outputdatei: "+ config.getOutputfile());
-		}
+		} else System.err.println("Das Programm wurde durch einen Fehler beendet.");
 	}
 
 }

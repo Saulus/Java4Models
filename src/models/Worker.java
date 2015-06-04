@@ -107,7 +107,7 @@ public class Worker {
 	public boolean init () {
 		String timeStamp;
 		//1. Create & Open Inputfiles
-		boolean worked = true;
+		boolean worked = false; 
 		for (Datei nextfile : config.getInputfiles()) {
 			//Sort if isSorted=false
 			if (!nextfile.isSorted()) {
@@ -121,10 +121,10 @@ public class Worker {
 					nextfile.setPath(newpath);
 					nextfile.setFiletype(Consts.csvFlag);
 					nextfile.setIsSorted(true);
+					worked = true; //if one files is ok, then start
 				} catch (Exception e) {
 					System.out.println("Fehler beim Sortieren von " + nextfile.getPath());
 					e.printStackTrace();
-					worked = false;
 					System.exit(1);
 				}
 			}
@@ -133,10 +133,10 @@ public class Worker {
 				System.out.println(timeStamp + " Einlesen der Inputdatei "+ nextfile.getPath() + " gestartet.");
 				InputFile newfile = new InputFile(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype());
 				inputfiles.add(newfile);
+				worked = true; //if one files is ok, then start
 			} catch (Exception e) {
 				System.out.println("Fehler gefunden beim Einlesen von " + nextfile.getPath());
 				e.printStackTrace();
-				worked = false;
 			}
 		}
 		//2. Create and Import Models
@@ -159,15 +159,16 @@ public class Worker {
 			    			processedModels.add(modelname);
 			    			timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 			    			System.out.println(timeStamp + " Modell "+ modelname + " konfiguriert.");
+			    			worked = true; //if one files is ok, then start
 			    		} catch (Exception e) {
 							System.out.println("Fehler gefunden bei Konfiguration des Modells " + modelname);
 							e.printStackTrace();
-							worked = false;
 						}
 			    	}
 			    }
 			}
 			//create and open output Score file
+			if (worked)
 			try {
 				outputfile = new CSVWriter(new FileWriter(config.getOutputfile()), ';', CSVWriter.NO_QUOTE_CHARACTER);
 				List<String> newline = new ArrayList<String>();
@@ -177,13 +178,14 @@ public class Worker {
 					newline.add(model.getName());
 				}
 				outputfile.writeNext(newline.toArray(new String[newline.size()]));
+				worked = true;
 			} catch (Exception e) {
 				System.out.println("Die Outputdatei " + config.getOutputfile() + " konnte nicht erstellt werden.");
 				e.printStackTrace();
 				worked = false;
 			}
 			//create and open output ProfilDense file (if needed)
-			if (config.createProfilDense()) {
+			if (worked && config.createProfilDense()) {
 				for (Model model : models) {
 					try {
 						profildensefile.put(model, new CSVWriter(new FileWriter(config.getProfilfileDenseTmp(model.getName())), ';', CSVWriter.NO_QUOTE_CHARACTER));
@@ -196,7 +198,7 @@ public class Worker {
 				}
 			}
 			//create and open output ProfilSparse files (if needed)
-			if (config.createProfilSparse()) {
+			if (worked && config.createProfilSparse()) {
 				for (Model model : models) {
 					try {
 						profilsparsefile.put(model, new CSVWriter(new FileWriter(config.getProfilfileSparse(model.getName())), ';', CSVWriter.NO_QUOTE_CHARACTER));
@@ -361,9 +363,16 @@ public class Worker {
 					header.addAll(knownVariables.get(model));
 					newfile.writeNext(header.toArray(new String[header.size()]));
 					CSVReader tmpfile = new CSVReader(new FileReader(config.getProfilfileDenseTmp(model.getName())), ';');
-					String [] nextLine;
+					//now write line for line
+					String[] nextLine;
+					String[] tmpline;
 				    while ((nextLine = tmpfile.readNext()) != null) {
-				    	newfile.writeNext(nextLine);
+				    	//add missing delimiters (i.e. empty columns) -> required for some csv parsers
+				    	if (nextLine.length < header.size()) {
+				    		tmpline = new String[header.size()];
+				    		System.arraycopy(nextLine, 0, tmpline, 0, nextLine.length);
+				    		newfile.writeNext(tmpline);
+				    	} else newfile.writeNext(nextLine);
 				    }
 				    //close and delete tmpfile
 				    newfile.close();

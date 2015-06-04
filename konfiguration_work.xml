@@ -41,7 +41,7 @@
 	<outputpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall</outputpfad>
 	<modellpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\Java4Models\Models</modellpfad>
 	<!-- optionale Parameter -->
-	<createProfilDense>False</createProfilDense>
+	<createProfilDense>True</createProfilDense>
 	<createProfilSparse>True</createProfilSparse>
 	<idField>PID</idField>
 	<outputfile>scores.csv</outputfile>
