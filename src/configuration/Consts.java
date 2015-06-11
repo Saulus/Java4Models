@@ -5,7 +5,7 @@ Collected constants of general utility.
 **/
 public final class Consts {
 	
-	public static final String version = "1.0.1";
+	public static final String version = "1.1";
 	
 	/** The Constant satzartFlag. */
 	public static final String satzartFlag = "SATZART";
@@ -15,17 +15,15 @@ public final class Consts {
 	
 	/** The Constant logRegFlag. */
 	public static final String logRegFlag = "LOGREG";
-	
-	/** The Constant isSortedFlag. */
-	public static final String isSortedFlag = "JA";
+
 	
 	/** The Constant modInputfileCol.
 	 * 	Column of Model.config file / definition: Inputfile from konfiguration.xml*/
-	public static final String modInputfileCol = "INPUTFILE";
+	public static final String modInputfileCol = "DATENTYP";
 	
 	/** The Constant modFieldCol.
 	 * 	Column of Model.config file / definition */
-	public static final String modFieldCol = "FIELD";
+	public static final String modFieldCol = "SPALTE";
 	
 	/** The Constant modPositionCol. 
 	 * 	Column of Model.config file / definition*/
@@ -33,7 +31,7 @@ public final class Consts {
 	
 	/** The Constant modValueCol.
 	 * 	Column of Model.config file / definition */
-	public static final String modValueCol = "VALUES";
+	public static final String modValueCol = "WERTEFILTER";
 	
 	/** The Constant modAggCol.
 	 * 	Column of Model.config file / definition */
@@ -41,11 +39,14 @@ public final class Consts {
 	
 	/** The Constant modOtrherfieldCol.
 	 * 	Column of Model.config file / definition */
-	public static final String modOtrherfieldCol = "OTHERFIELDFILTER";
+	public static final String modOtrherfieldCol = "ANDERESPALTEFILTER";
 	
 	/** The Constant modVarCol.
 	 * 	Column of Model.config file / definition */
 	public static final String modVarCol = "VARIABLE";
+	
+	public static final String modIncludeCol = "EINSCHLUSS";
+	public static final String modExcludeCol = "AUSSCHLUSS";
 	
 	/** The Constant aggSum.
 	 * Field "Aggregation" (type) in Model.config file */
@@ -82,6 +83,14 @@ public final class Consts {
 	/** The Constant interceptname. 
 	 * Intercept Row in model.coeff(icients) file */
 	public static final String interceptname = "INTERCEPT";
+	
+	/** The Constant navalue. 
+	 * for dense profile creation */
+	public static final String navalue = "0";
+	
+	/** The Constant comment_indicator. 
+	 * for Model config */
+	public static final String comment_indicator = "#";
 	
 	 /**
  	 * Instantiates a new consts.

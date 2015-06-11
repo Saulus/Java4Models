@@ -1,0 +1,50 @@
+Request:
+http://data-sandbox.elsevier.com/
+
+Documentation:
+http://ldr-doc.elsevier.com
+
+X-ELS-Authentication see mail
+
+
+Get disease-concepts (JSON) per ICD10-Code:
+http://data-sandbox.elsevier.com/content/vocabulary/labels?conceptName=I71.4&conceptNameType=CODE&codeType=ICD-10-CM&vocabularyDescribesResource=http://data.elsevier.com/vocabulary/EMMeT-3.7/&resultsToReturn=10&return=STANDARD
+
+-> Needs EMMeT Version Number (bad! latest: 3.6)
+
+codeType s:
+ICD-10-CM
+SNOMEDCT
+Dorland
+UMLS
+GS-brand (drugs)
+CVX (drugs / procedures) 
+
+
+- German codes 
+
+ ICD10-GM [DIMDI] -> ICD10-CM [NCHS], both based on ICD10-WHO
+ ATC --> RXNORM (GS-brand, SNOMEDCT, CVX, Dorland)
+ OPS --> ICD-10-PCS (SNOMEDCT, Dorland)
+
+
+
+
+Issues:
+- Ambiguous design
+-- disease hierarchy unclear, e.g. "Diabetes mellitus" (mapped to E10 + E11) vs. "Diabetes mellitus type 2" (mapped to E11)
+-- -> Is this meant to be a hierarchy?
+-- -> Are relationships passed on to sub-concept? (some relationships are defined for both; some are defined only for diabetes, although they medically apply also to type 2)
+-- Coding guide?
+-- -> definitions of concepts, e.g. disease vs. symptom?
+-- -> how to choose? 
+-- -> Example: "renal disease" (= disease, mapped to N08) vs. "end stage renal disease" (=symptom, not mapped)
+-- Validation and QS process to enforce guide resp. refactoring to solve ambiguities?  
+
+- Ambiguous for our purpose due to real world
+-- concept assignment: an ICD code might map to multiple concepts (diseases, symptoms, clinical findings...)
+-- -> which one to choose? Syntactical problem!
+-- -> might be distinguished by "mappingQuality" (exactMatch vs. narrowMatch)
+-- relationship assignment: a concept (drug, symptom) might have relationships with multiple other concepts (diseases)
+-- -> which one to choose? Semantical problem (thinking like the physician)!
+

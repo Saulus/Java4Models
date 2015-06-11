@@ -2,6 +2,7 @@ package models;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -84,20 +85,25 @@ class PatientModel {
 	private HashMap<String,PatientVariable> variables = new HashMap<String,PatientVariable>(); //variablename -> PatientVariable
 	private Model model;
 	private boolean profValuesAreCalculated=false;
+	private boolean amIincluded=true;
+	private boolean amIexcluded=false;
 
 	
 	public PatientModel(Model model) {
 		this.model = model;
+		if (model.hasInclusion()) amIincluded=false;
 	}
 	
-	public void addVariable (String variable, String value, String aggregation, double coeff ) {
+	public void addVariable (Variable newvar, double coeff ) {
 		profValuesAreCalculated=false;
-		if (variables.get(variable) == null) {
-			PatientVariable pvar = new PatientVariable(aggregation,value,coeff);
-			variables.put(variable,pvar);
+		if (variables.get(newvar.getVariable()) == null) {
+			PatientVariable pvar = new PatientVariable(newvar.getAggregation(),newvar.getValue(),coeff);
+			variables.put(newvar.getVariable(),pvar);
 		} else {
-			variables.get(variable).add(value);
+			variables.get(newvar.getVariable()).add(newvar.getValue());
 		}
+		if (newvar.isInclude()) amIincluded=true;
+		if (newvar.isExclude()) amIexcluded=true;
 	}
 	
 	private void calcProfValues () {
@@ -148,12 +154,16 @@ class PatientModel {
 		for (int i = 0; i < knownVars.size(); i++) {
 			//has Patient this Variable? If not, return ""
 			if (variables.get(knownVars.get(i)) == null) {
-				profvalues.add("");
+				profvalues.add(Consts.navalue);
 			} else { 
 				profvalues.add(String.valueOf(variables.get(knownVars.get(i)).getProfvalue())); //gets the Profil-value from PatientVariable, ordered by KnownVars order
 			}
 		}
 		return profvalues;
+	}
+	
+	public boolean amIincluded() {
+		return amIincluded && !amIexcluded;
 	}
 }
 	
@@ -211,13 +221,11 @@ public class Patient {
 			String value = inputfile.getValue(nextfield);
 			//new Var only if value is not empty
 			if (!value.equals("")) {
-				//get aggTyp for the field
-				String aggType = model.getAgg4ModelField(inputfile,nextfield);
 				//Identify real variables based on inputfile, field, value)
 				//could be more than one
-				HashMap<String,String> realVariables = model.getVariables(inputfile, nextfield, value); 
-				for (Entry<String, String> nextvar : realVariables.entrySet()) {
-					this.models.get(model).addVariable(nextvar.getKey(),nextvar.getValue(),aggType,model.getCoeff(nextvar.getKey()));
+				List<Variable> realVariables = model.getVariables(inputfile, nextfield, value); 
+				for (Variable nextvar : realVariables) {
+					this.models.get(model).addVariable(nextvar,model.getCoeff(nextvar.getVariable()));
 				}
 			}
 		}
@@ -271,6 +279,10 @@ public class Patient {
 	 */
 	public  ArrayList<String> getProfvalues (Model model, ArrayList<String> knownVars) {
 		return models.get(model).getProfvalues(knownVars);
+	}
+	
+	public boolean areYouIncluded (Model model) {
+		return models.get(model).amIincluded();
 	}
 	
 }

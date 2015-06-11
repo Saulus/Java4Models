@@ -77,7 +77,7 @@ public class Sorter extends InputFile {
 		while (this.nextRow()) {
 			for (int i=0; i<50000;i++) {
 				if (this.hasRow()) {
-					for (int j=0; j<colcount-1; j++) {
+					for (int j=0; j<colcount; j++) {
 				        	prep.setString(j+1, this.getValue(headerline[j])); //i+1 as statements start with 1
 				    }
 				    prep.addBatch();

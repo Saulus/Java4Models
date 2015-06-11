@@ -52,7 +52,7 @@ public class Java4Models {
 			&& (wrk.finish())
 			) {
 			String timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
-			System.out.println(timeStamp + " Die Scores wurden erfolgreich berechnet. Outputdatei: "+ config.getOutputfile());
+			System.out.println(timeStamp + " Die Patienten wurden erfolgreich bearbeitet.");
 		} else System.err.println("Das Programm wurde durch einen Fehler beendet.");
 	}
 

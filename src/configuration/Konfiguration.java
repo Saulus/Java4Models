@@ -52,6 +52,10 @@ public class Konfiguration {
 	@Element(defaultValue="false")
 	public boolean createProfilSparse;
 	
+	/** The createScores. */
+	@Element(defaultValue="true")
+	public boolean createScores;
+	
 	/** The id field. */
 	@Element(defaultValue="PID")
 	public String idField;
@@ -165,22 +169,18 @@ public class Konfiguration {
 		return outputpfad + "\\" + model + profilfileSparseRow;
 	}
 	
-	/**
-	 * Creates the profil dense.
-	 *
-	 * @return true, if successful
-	 */
+	
 	public boolean createProfilDense() {
 		return createProfilDense;
 	}
 	
-	/**
-	 * Creates the profil sparse.
-	 *
-	 * @return true, if successful
-	 */
+	
 	public boolean createProfilSparse() {
 		return createProfilSparse;
+	}
+	
+	public boolean createScores() {
+		return createScores;
 	}
 	
 	//temp path for db if sorting

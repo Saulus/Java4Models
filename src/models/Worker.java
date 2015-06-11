@@ -168,7 +168,7 @@ public class Worker {
 			    }
 			}
 			//create and open output Score file
-			if (worked)
+			if (worked && config.createScores())
 			try {
 				outputfile = new CSVWriter(new FileWriter(config.getOutputfile()), ';', CSVWriter.NO_QUOTE_CHARACTER);
 				List<String> newline = new ArrayList<String>();
@@ -252,78 +252,90 @@ public class Worker {
 					infile.nextRow();
 				}
 			}
-			//save patient to file
-			// 1. Scores
+			//save patient to file, if  includes and not excludes
 			List<String> newline = new ArrayList<String>();
-			newline.add(patient.getPid());
-			for (Model model : models) {
-				if (model.hasCoeffs()) newline.add(String.valueOf(patient.getCoeffSum(model)));
-			}
-			try {
-				outputfile.writeNext(newline.toArray(new String[newline.size()]));
-			} catch (Exception e) {
-				System.out.println("In die Outputdatei " + config.getOutputfile() + " konnte nicht geschrieben werden.");
-				e.printStackTrace();
-				worked = false;
+			// 1. Scores
+			if (config.createScores()) {
+				newline.add(patient.getPid());
+				for (Model model : models) {
+					if (model.hasCoeffs() && patient.areYouIncluded(model)) 
+							newline.add(String.valueOf(patient.getCoeffSum(model)));
+					else newline.add(Consts.navalue); //write navalue if model has no coefficients or patient is not included
+				}
+				try {
+					outputfile.writeNext(newline.toArray(new String[newline.size()]));
+				} catch (Exception e) {
+					System.out.println("In die Outputdatei " + config.getOutputfile() + " konnte nicht geschrieben werden.");
+					e.printStackTrace();
+					worked = false;
+				}
 			}
 			//2. Dense Profile
 			if (config.createProfilDense()) {
 				for (Model model : models) {
-					//update knownVariables
-					ArrayList<String> knownVars = patient.addToKnownVariables(model,knownVariables.get(model));
-					knownVariables.put(model,knownVars);
-					//get ProfileValues
-					ArrayList<String> profValues = patient.getProfvalues(model,knownVars);
-					//output PID+Profilvalues only
-					newline = new ArrayList<String>();
-					newline.add(patient.getPid());
-					newline.addAll(profValues);
-					try {
-						profildensefile.get(model).writeNext(newline.toArray(new String[newline.size()]));
-					} catch (Exception e) {
-						System.out.println("In die Outputdatei " + config.getProfilfileDense(model.getName()) + " konnte nicht geschrieben werden.");
-						e.printStackTrace();
-						worked = false;
+					if (patient.areYouIncluded(model)) {
+						//update knownVariables
+						ArrayList<String> knownVars = patient.addToKnownVariables(model,knownVariables.get(model));
+						knownVariables.put(model,knownVars);
+						//get ProfileValues
+						ArrayList<String> profValues = patient.getProfvalues(model,knownVars);
+						//output PID+Profilvalues only
+						newline = new ArrayList<String>();
+						newline.add(patient.getPid());
+						newline.addAll(profValues);
+						try {
+							profildensefile.get(model).writeNext(newline.toArray(new String[newline.size()]));
+						} catch (Exception e) {
+							System.out.println("In die Outputdatei " + config.getProfilfileDense(model.getName()) + " konnte nicht geschrieben werden.");
+							e.printStackTrace();
+							worked = false;
+						}
 					}
 				}
 			}
 			//3. Sparse Profile
 			if (config.createProfilSparse()) {
+				boolean isincluded = false;
 				for (Model model : models) {
-					//update knownVariables
-					ArrayList<String> knownVars = patient.addToKnownVariables(model,knownVariables.get(model));
-					knownVariables.put(model,knownVars);
-					//get ProfileValues
-					ArrayList<String> profValues = patient.getProfvalues(model,knownVars);
-					//output: row PID No, column (=Variable no.), value
-					String[] sparseline = new String[3];
-					for (int i =0; i<profValues.size(); i++) {
-						if (profValues.get(i) != "") {
-							sparseline[0]=Long.toString(rowNo); //Row
-							sparseline[1]=Integer.toString(i+1); //Col; matrix starts from 1
-							sparseline[2]=profValues.get(i); //Val
-							if (!sparseline.equals(new String[3])) {
-								try {
-									profilsparsefile.get(model).writeNext(sparseline);
-								} catch (Exception e) {
-									System.out.println("In die Outputdatei " + config.getProfilfileSparse(model.getName()) + " konnte nicht geschrieben werden.");
-									e.printStackTrace();
-									worked = false;
-								}	
-								sparseline = new String[3];
+					if (patient.areYouIncluded(model)) {
+						//update knownVariables
+						ArrayList<String> knownVars = patient.addToKnownVariables(model,knownVariables.get(model));
+						knownVariables.put(model,knownVars);
+						//get ProfileValues
+						ArrayList<String> profValues = patient.getProfvalues(model,knownVars);
+						//output: row PID No, column (=Variable no.), value
+						String[] sparseline = new String[3];
+						for (int i =0; i<profValues.size(); i++) {
+							if (!profValues.get(i).equals(Consts.navalue)) {
+								sparseline[0]=Long.toString(rowNo); //Row
+								sparseline[1]=Integer.toString(i+1); //Col; matrix starts from 1
+								sparseline[2]=profValues.get(i); //Val
+								if (!sparseline.equals(new String[3])) {
+									try {
+										profilsparsefile.get(model).writeNext(sparseline);
+									} catch (Exception e) {
+										System.out.println("In die Outputdatei " + config.getProfilfileSparse(model.getName()) + " konnte nicht geschrieben werden.");
+										e.printStackTrace();
+										worked = false;
+									}	
+									sparseline = new String[3];
+								}
 							}
 						}
+						isincluded = true;
 					}
 				}
 				//write PID in row-translation.file
-				String[] pidrow = {Long.toString(rowNo), patient.getPid()};
-				for (Model model : models) {
-					try {
-						profilsparsefileRows.get(model).writeNext(pidrow);
-					} catch (Exception e) {
-						System.out.println("In die Outputdatei " + config.getProfilfileSparseROWs(model.getName()) + " konnte nicht geschrieben werden.");
-						e.printStackTrace();
-						worked = false;
+				if (isincluded) {
+					String[] pidrow = {Long.toString(rowNo), patient.getPid()};
+					for (Model model : models) {
+						try {
+							profilsparsefileRows.get(model).writeNext(pidrow);
+						} catch (Exception e) {
+							System.out.println("In die Outputdatei " + config.getProfilfileSparseROWs(model.getName()) + " konnte nicht geschrieben werden.");
+							e.printStackTrace();
+							worked = false;
+						}
 					}
 				}
 			} //end sparse matrix
@@ -348,7 +360,10 @@ public class Worker {
 		boolean worked = true;
 		//close all files
 		try {
-			outputfile.close();
+			if (config.createScores()) {
+				outputfile.close();
+				System.out.println("Outputdatei " + config.getOutputfile() + " wurde erfolgreich geschrieben.");
+			}
 			for (InputFile infile : inputfiles) {
 				infile.close();
 			}
@@ -371,6 +386,7 @@ public class Worker {
 				    	if (nextLine.length < header.size()) {
 				    		tmpline = new String[header.size()];
 				    		System.arraycopy(nextLine, 0, tmpline, 0, nextLine.length);
+				    		for (int i=nextLine.length;i<header.size();i++) tmpline[i]=Consts.navalue; //set navalue
 				    		newfile.writeNext(tmpline);
 				    	} else newfile.writeNext(nextLine);
 				    }
@@ -379,6 +395,7 @@ public class Worker {
 				    tmpfile.close();
 				    File file = new File(config.getProfilfileDenseTmp(model.getName()));
 				    file.delete();
+				    System.out.println("Outputdatei " + config.getProfilfileDense(model.getName()) + " wurde erfolgreich geschrieben.");
 				}
 				if (config.createProfilSparse()) { 
 					//write COL-translation file for sparse profile (vars)
@@ -396,6 +413,7 @@ public class Worker {
 					profilsparsefile.get(model).close();
 					profilsparsefileRows.get(model).close();
 					profilsparsefileCols.get(model).close();
+					System.out.println("Outputdatei " + config.getProfilfileSparse(model.getName()) + " wurde erfolgreich geschrieben.");
 				}
 			}
 		} catch (Exception e) {

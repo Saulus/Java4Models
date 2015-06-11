@@ -64,14 +64,18 @@ class ModelFieldFilter {
 	private String fields_value_max;
 	private ArrayList<Otherfieldfilter> otherfieldfilters = new ArrayList<Otherfieldfilter>();
 	private String variable;
+	private boolean include; //if true: only include patients that have this
+	private boolean exclude; //if true: exclude all patients that have this
 	
-	public ModelFieldFilter (Integer pos_min, Integer pos_max, String value_min, String value_max, ArrayList<Otherfieldfilter> filters, String variable) {
+	public ModelFieldFilter (Integer pos_min, Integer pos_max, String value_min, String value_max, ArrayList<Otherfieldfilter> filters, String variable, boolean include, boolean exclude) {
 		this.fields_pos_min=pos_min;
 		this.fields_pos_max=pos_max;
 		this.fields_value_min=value_min;
 		this.fields_value_max=value_max;
 		this.variable=variable;
 		this.otherfieldfilters.addAll(filters);
+		this.include=include;
+		this.exclude=exclude;
 	}
 	
 	public Integer getFields_pos_min() {
@@ -92,6 +96,13 @@ class ModelFieldFilter {
 	public ArrayList<Otherfieldfilter> getOtherfieldfilters() {
 		return otherfieldfilters;
 	}
+	public boolean getInclude() {
+		return include;
+	}
+	public boolean getExclude() {
+		return exclude;
+	}
+	
 }
 
 
@@ -117,11 +128,12 @@ class ModelField {
 	/**
 	 * adds a filter for a field
 	 */
-	public void addFilter (Integer pos_min, Integer pos_max, String value_min, String value_max, String aggregation, ArrayList<Otherfieldfilter> filters, String variable) {
-		ModelFieldFilter newfilter = new ModelFieldFilter (pos_min,pos_max,value_min,value_max,filters,variable);
+	public void addFilter (Integer pos_min, Integer pos_max, String value_min, String value_max, String aggregation, ArrayList<Otherfieldfilter> filters, String variable, boolean include, boolean exclude) {
+		ModelFieldFilter newfilter = new ModelFieldFilter (pos_min,pos_max,value_min,value_max,filters,variable,include,exclude);
 		this.filters.add(newfilter);
 		this.aggregation = aggregation; //just one aggType possible (take last that comes in)
 	}
+	
 	
 	/**
 	 * Gets the Variables for a model on a field in an inputfile.
@@ -130,8 +142,8 @@ class ModelField {
 	 * @param inputrow the full inputrow from the inputfile; to test filters in other fields
 	 * @return a hashmap of Variable, Value fields (e.g. ICD_F32 -> 5)
 	 */
-	public HashMap<String,String> getVariables(String value, InputFile inputrow) {
-		HashMap<String,String> targetvar = new HashMap<String,String>();
+	public List<Variable> getVariables(String value, InputFile inputrow) {
+		HashMap<String,Variable> targetvars = new HashMap<String,Variable>(); //hashmap to keep one variable(typ) per row only
 		for(ModelFieldFilter filter : filters) {
 			//First thing: Test if Otherfieldfilters are true
 			boolean isAllowed = false;
@@ -157,10 +169,8 @@ class ModelField {
 				myValue = myValue.substring(mymin,mymax+1);
 			}
 			//In Range? or Range not filled? -> take coeff 
-			if ((filter.getFields_value_min().equals("") &&
-					filter.getFields_value_max().equals("")) || 
-					((myValue.compareTo(filter.getFields_value_min())>=0) &&
-					(myValue.compareTo(filter.getFields_value_max())<=0))) {
+			if ( (filter.getFields_value_min().equals("") || myValue.compareTo(filter.getFields_value_min())>=0)
+				&& (filter.getFields_value_max().equals("") || myValue.compareTo(filter.getFields_value_max())<=0)) {
 				String myvariable = filter.getVariable();
 				//deal with $ place holder
 				int placeholder_pos = myvariable.indexOf(Consts.placeholder);
@@ -170,17 +180,10 @@ class ModelField {
 					sb.insert(placeholder_pos, myValue);
 					myvariable = sb.toString();
 				}
-				targetvar.put(myvariable,myValue);// i.e. if 1 var is filled multi times from 1 row -> keep last value only
+				targetvars.put(myvariable,new Variable(myvariable,myValue,this.aggregation,filter.getInclude(),filter.getExclude()));// i.e. if 1 var is filled multi times from 1 row -> keep last value only
 			}
 		}
-		return targetvar;
-	}
-	
-	/**
-	 * returns Aggregation Type for ModelField
-	 */
-	public String getAgg4ModelField () {
-		return this.aggregation;
+		return new ArrayList<Variable>(targetvars.values());
 	}
 }
 
@@ -207,7 +210,7 @@ class ModelFile {
 	 * @param otherfieldfilter the otherfieldfilter String from Model.config
 	 * @param variable the variablefrom Model.config
 	 */
-	public void addField (String field, String position, String values, String aggregation, String otherfieldfilter, String variable) {
+	public void addField (String field, String position, String values, String aggregation, String otherfieldfilter, String variable, String include, String exclude, Model mymodel) {
 		if ((field != "") && (variable != "")) {
 			//field already there?
 			ModelField myfield = this.filefields.get(field);
@@ -229,6 +232,9 @@ class ModelFile {
 			if (values.contains("-")) {
 				min_value = values.split("-")[0];
 				max_value = values.split("-")[1];
+			} else {
+				min_value=values;
+				max_value=values;
 			}
 			//Parse Otherfieldfilter
 			ArrayList<Otherfieldfilter> filters = null;
@@ -242,7 +248,10 @@ class ModelFile {
 					} catch (Exception e) {}
 				}
 			}
-			myfield.addFilter(min_pos, max_pos, min_value, max_value, aggregation, filters, variable);
+			//Parse include and exclude
+			boolean b_include="TRUE".equals(include); if (b_include) mymodel.setInclusion(true);
+			boolean b_exclude="TRUE".equals(exclude); if (b_exclude) mymodel.setExclusion(true);
+			myfield.addFilter(min_pos, max_pos, min_value, max_value, aggregation, filters, variable,b_include,b_exclude);
 			this.filefields.put(field,myfield);
 		}
 	}
@@ -262,15 +271,8 @@ class ModelFile {
 	 * @param inputrow the full inputrow from the inputfile; to test filters in other fields
 	 * @return a hashmap of Variable, Value fields (e.g. ICD_F32 -> 5)
 	 */
-	public HashMap<String,String> getVariables(String field, String value, InputFile inputrow) {
+	public List<Variable> getVariables(String field, String value, InputFile inputrow) {
 		return filefields.get(field).getVariables(value,inputrow);
-	}
-	
-	/**
-	 * returns Aggregation Type for ModelField
-	 */
-	public String getAgg4ModelField (String field) {
-		return filefields.get(field).getAgg4ModelField();
 	}
 }
 
@@ -298,6 +300,12 @@ public class Model {
 	/** The i have coeffs. */
 	private boolean iHaveCoeffs = true;
 	
+	/** The i have inclusion criteria. */
+	private boolean iHaveInclusion = false;
+	
+	/** The i have exclusion criteria. */
+	private boolean iHaveExclusion = false;
+	
 	/**
 	 * Instantiates a new model.
 	 *
@@ -322,26 +330,32 @@ public class Model {
 		String[] headerline = myEntries.get(0);
 		myEntries.remove(0);
 		for (String[] nextline : myEntries) {
-			//add current line values to Hashmap (header -> value)
-			//this prohibits errors from wrong column order in config file
-			for (int j=0; j<nextline.length; j++) {
-				fields_data.put(headerline[j].toUpperCase(), nextline[j].toUpperCase());
-			}
-			//find inputfile(s) for this line / fields_data
-			for (InputFile myinputfile : inputfiles) {
-				if ((myinputfile.isDatentyp(fields_data.get(Consts.modInputfileCol))) 
-						&& (myinputfile.hasField(fields_data.get(Consts.modFieldCol)))) {
-					//save aggregation type per variable found 
-					String aggType = fields_data.get(Consts.modAggCol);
-					//ToDO: Config-Check (z.B. Wrong Aggregation Type?)
-					if (aggType.equals("")) { aggType = Consts.aggStd; }
-					this.modelfiles.get(myinputfile).addField(
-							fields_data.get(Consts.modFieldCol),
-							fields_data.get(Consts.modPositionCol),
-							fields_data.get(Consts.modValueCol),
-							aggType,
-							fields_data.get(Consts.modOtrherfieldCol),
-							fields_data.get(Consts.modVarCol));
+			//ignore comments
+			if (!nextline[0].substring(0, 0).equals(Consts.comment_indicator)) {
+				//add current line values to Hashmap (header -> value)
+				//this prohibits errors from wrong column order in config file
+				for (int j=0; j<nextline.length; j++) {
+					fields_data.put(headerline[j].toUpperCase(), nextline[j].toUpperCase());
+				}
+				//find inputfile(s) for this line / fields_data
+				for (InputFile myinputfile : inputfiles) {
+					if ((myinputfile.isDatentyp(fields_data.get(Consts.modInputfileCol))) 
+							&& (myinputfile.hasField(fields_data.get(Consts.modFieldCol)))) {
+						//save aggregation type per variable found 
+						String aggType = fields_data.get(Consts.modAggCol);
+						//ToDO: Config-Check (z.B. Wrong Aggregation Type?)
+						if (aggType.equals("")) { aggType = Consts.aggStd; }
+						this.modelfiles.get(myinputfile).addField(
+								fields_data.get(Consts.modFieldCol),
+								fields_data.get(Consts.modPositionCol),
+								fields_data.get(Consts.modValueCol),
+								aggType,
+								fields_data.get(Consts.modOtrherfieldCol),
+								fields_data.get(Consts.modVarCol),
+								fields_data.get(Consts.modIncludeCol),
+								fields_data.get(Consts.modExcludeCol),
+								this);
+					}
 				}
 			}
 		}
@@ -370,6 +384,7 @@ public class Model {
 		return this.modelfiles.get(inputfile).getFields();
 	}
 	
+	
 	/**
 	 * Gets the name.
 	 *
@@ -396,9 +411,10 @@ public class Model {
 	 * @param value the value
 	 * @return the variables
 	 */
-	public HashMap<String,String> getVariables(InputFile inputfile, String field, String value) {
+	public List<Variable> getVariables(InputFile inputfile, String field, String value) {
 		return modelfiles.get(inputfile).getVariables(field, value, inputfile);
 	}
+	
 	
 	/**
 	 * Gets the coeff.
@@ -417,23 +433,28 @@ public class Model {
 	}
 	
 	/**
-	 * Gets the Aggregation Type model field.
-	 *
-	 * @param inputfile the inputfile
-	 * @param field the field
-	 * @return the agg4 model field
-	 */
-	public String getAgg4ModelField (InputFile inputfile, String field) {
-		return modelfiles.get(inputfile).getAgg4ModelField(field);
-	}
-	
-	/**
 	 * Checks for coeffs.
 	 *
 	 * @return true, if successful
 	 */
 	public boolean hasCoeffs () {
 		return iHaveCoeffs;
+	}
+	
+	public boolean hasInclusion () {
+		return iHaveInclusion;
+	}
+	
+	public void setInclusion (boolean b) {
+		iHaveInclusion = b;
+	}
+	
+	public boolean hasExclusion () {
+		return iHaveExclusion;
+	}
+	
+	public void setExclusion (boolean b) {
+		iHaveExclusion = b;
 	}
 	
 }

@@ -22,8 +22,8 @@ public class Datei {
 	public String dateityp;
 	
 	/** The istsortiert. */
-	@Element(defaultValue="Ja")
-	public String istsortiert;
+	@Element(defaultValue="false")
+	public boolean istsortiert;
 	
 	/**
 	 * Checks if is sorted.
@@ -31,7 +31,7 @@ public class Datei {
 	 * @return true, if is sorted
 	 */
 	public boolean isSorted() {
-		return istsortiert.toUpperCase().equals(Consts.isSortedFlag);
+		return istsortiert;
 	}
 	
 	/**
@@ -40,11 +40,7 @@ public class Datei {
 	 * @param b the new checks if is sorted
 	 */
 	public void setIsSorted(boolean b) {
-		if (b) {
-			istsortiert=Consts.isSortedFlag;
-		} else {
-			istsortiert="Nein";
-		}
+		istsortiert=b;
 	}
 	
 	/**
