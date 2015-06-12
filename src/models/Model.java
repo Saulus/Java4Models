@@ -415,7 +415,6 @@ public class Model {
 	 * @return the variables
 	 */
 	public List<Variable> getVariables(InputFile inputfile, String field, String value) {
-		String testvalue = "N02B";
 		return modelfiles.get(inputfile).getVariables(field, value, inputfile);
 	}
 	
