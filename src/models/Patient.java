@@ -72,6 +72,11 @@ class PatientVariable {
 		return profvalue * coeff;
 	}
 	
+	public String getAggregation () {
+		return aggregationType;
+	}
+	
+	
 }
 
 /**
@@ -93,13 +98,17 @@ class PatientModel {
 		if (model.hasInclusion()) amIincluded=false;
 	}
 	
-	public void addVariable (Variable newvar, double coeff ) {
+	
+	//returns false, if variable could not be added
+	public void addVariable (Variable newvar, double coeff ) throws Exception {
 		profValuesAreCalculated=false;
 		if (variables.get(newvar.getVariable()) == null) {
 			PatientVariable pvar = new PatientVariable(newvar.getAggregation(),newvar.getValue(),coeff);
 			variables.put(newvar.getVariable(),pvar);
 		} else {
-			variables.get(newvar.getVariable()).add(newvar.getValue());
+			//only one aggretation type per Variable -> otherwise error (when calculation values)!
+			if (!variables.get(newvar.getVariable()).getAggregation().equals(newvar.getAggregation())) throw new Exception("Fehler! Der Variable " + newvar.getVariable() + " sind verschiedene Aggregationstypen zugewiesen: " + variables.get(newvar.getVariable()).getAggregation() + " vs. " + newvar.getAggregation());
+			else variables.get(newvar.getVariable()).add(newvar.getValue());
 		}
 		if (newvar.isInclude()) amIincluded=true;
 		if (newvar.isExclude()) amIexcluded=true;
@@ -207,7 +216,7 @@ public class Patient {
 	 * @param model the model
 	 * @param inputfile the inputfile
 	 */
-	public void processRow (Model model, InputFile inputfile) {
+	public void processRow (Model model, InputFile inputfile) throws Exception {
 		//Patient does not have that model yet -> create
 		if (models.get(model) == null) {
 			PatientModel mypatientmodel = new PatientModel(model);

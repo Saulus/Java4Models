@@ -64,10 +64,11 @@ class ModelFieldFilter {
 	private String fields_value_max;
 	private ArrayList<Otherfieldfilter> otherfieldfilters = new ArrayList<Otherfieldfilter>();
 	private String variable;
+	private String aggregation;
 	private boolean include; //if true: only include patients that have this
 	private boolean exclude; //if true: exclude all patients that have this
 	
-	public ModelFieldFilter (Integer pos_min, Integer pos_max, String value_min, String value_max, ArrayList<Otherfieldfilter> filters, String variable, boolean include, boolean exclude) {
+	public ModelFieldFilter (Integer pos_min, Integer pos_max, String value_min, String value_max, ArrayList<Otherfieldfilter> filters, String variable, String aggregation, boolean include, boolean exclude) {
 		this.fields_pos_min=pos_min;
 		this.fields_pos_max=pos_max;
 		this.fields_value_min=value_min;
@@ -76,6 +77,7 @@ class ModelFieldFilter {
 		this.otherfieldfilters.addAll(filters);
 		this.include=include;
 		this.exclude=exclude;
+		this.aggregation=aggregation;
 	}
 	
 	public Integer getFields_pos_min() {
@@ -95,6 +97,9 @@ class ModelFieldFilter {
 	}
 	public ArrayList<Otherfieldfilter> getOtherfieldfilters() {
 		return otherfieldfilters;
+	}
+	public String getAggregation() {
+		return aggregation;
 	}
 	public boolean getInclude() {
 		return include;
@@ -120,7 +125,6 @@ class ModelFieldFilter {
  */
 class ModelField { 
 	private List<ModelFieldFilter> filters = new ArrayList<ModelFieldFilter>();
-	private String aggregation;
 	
 	public ModelField () {
 	}
@@ -129,9 +133,8 @@ class ModelField {
 	 * adds a filter for a field
 	 */
 	public void addFilter (Integer pos_min, Integer pos_max, String value_min, String value_max, String aggregation, ArrayList<Otherfieldfilter> filters, String variable, boolean include, boolean exclude) {
-		ModelFieldFilter newfilter = new ModelFieldFilter (pos_min,pos_max,value_min,value_max,filters,variable,include,exclude);
+		ModelFieldFilter newfilter = new ModelFieldFilter (pos_min,pos_max,value_min,value_max,filters,variable,aggregation,include,exclude);
 		this.filters.add(newfilter);
-		this.aggregation = aggregation; //just one aggType possible (take last that comes in)
 	}
 	
 	
@@ -180,7 +183,7 @@ class ModelField {
 					sb.insert(placeholder_pos, myValue);
 					myvariable = sb.toString();
 				}
-				targetvars.put(myvariable,new Variable(myvariable,myValue,this.aggregation,filter.getInclude(),filter.getExclude()));// i.e. if 1 var is filled multi times from 1 row -> keep last value only
+				targetvars.put(myvariable,new Variable(myvariable,myValue,filter.getAggregation(),filter.getInclude(),filter.getExclude()));// i.e. if 1 var is filled multi times from 1 row -> keep last value only
 			}
 		}
 		return new ArrayList<Variable>(targetvars.values());
@@ -412,6 +415,7 @@ public class Model {
 	 * @return the variables
 	 */
 	public List<Variable> getVariables(InputFile inputfile, String field, String value) {
+		String testvalue = "N02B";
 		return modelfiles.get(inputfile).getVariables(field, value, inputfile);
 	}
 	
