@@ -168,8 +168,8 @@ class ModelField {
 				int mymin = filter.getFields_pos_min();
 				int mymax = filter.getFields_pos_max();
 				if ((mymin > (myValue.length()-1)) || (mymin < 0))  { mymin=0; }
-				if ((mymax > (myValue.length()-1)) || (mymax <= 0)) { mymax = myValue.length()-1; }
-				myValue = myValue.substring(mymin,mymax+1);
+				if ((mymax > (myValue.length())) || (mymax <= 0)) { mymax = myValue.length(); }
+				myValue = myValue.substring(mymin,mymax);
 			}
 			//In Range? or Range not filled? -> take coeff 
 			if ( (filter.getFields_value_min().equals("") || myValue.compareTo(filter.getFields_value_min())>=0)
@@ -226,7 +226,7 @@ class ModelFile {
 			if (position.contains("-")) {
 				try { min_pos = Integer.parseInt(position.split("-")[0])-1; } //In Java Strings start from 0
 					catch (Exception e) {} //ignore Parsing.Exception, as "0" as init-value is fine 
-				try { max_pos = Integer.parseInt(position.split("-")[1])-1; } //In Java Strings start from 0
+				try { max_pos = Integer.parseInt(position.split("-")[1]); } //In Java Strings start from 0, but substring end counts +1
 					catch (Exception e) {} //ignore Parsing.Exception, as "0" as init-value is fine 
 			}
 			//Parse Values
@@ -334,7 +334,7 @@ public class Model {
 		myEntries.remove(0);
 		for (String[] nextline : myEntries) {
 			//ignore comments
-			if (!nextline[0].substring(0, 0).equals(Consts.comment_indicator)) {
+			if (!nextline[0].substring(0, 1).equals(Consts.comment_indicator)) {
 				//add current line values to Hashmap (header -> value)
 				//this prohibits errors from wrong column order in config file
 				for (int j=0; j<nextline.length; j++) {
