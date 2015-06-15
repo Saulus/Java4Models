@@ -149,13 +149,11 @@ class ModelField {
 		HashMap<String,Variable> targetvars = new HashMap<String,Variable>(); //hashmap to keep one variable(typ) per row only
 		for(ModelFieldFilter filter : filters) {
 			//First thing: Test if Otherfieldfilters are true
-			boolean isAllowed = false;
-			if (filter.getOtherfieldfilters().isEmpty()) {
-				isAllowed = true;
-			} else {
+			boolean isAllowed = true;
+			if (!filter.getOtherfieldfilters().isEmpty()) {
 				for(Otherfieldfilter otherfieldfilter : filter.getOtherfieldfilters()) {
-					if (otherfieldfilter.valueIsAllowed(inputrow.getValue(otherfieldfilter.getField()))) {
-						isAllowed=true;
+					if (!otherfieldfilter.valueIsAllowed(inputrow.getValue(otherfieldfilter.getField()))) {
+						isAllowed=false;
 						break;
 					}
 				}
