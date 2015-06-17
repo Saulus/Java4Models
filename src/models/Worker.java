@@ -161,7 +161,7 @@ public class Worker {
 			    			System.out.println(timeStamp + " Modell "+ modelname + " konfiguriert.");
 			    			worked = true; //if one files is ok, then start
 			    		} catch (Exception e) {
-							System.out.println("Fehler gefunden bei Konfiguration des Modells " + modelname);
+							System.err.println("Fehler gefunden bei Konfiguration des Modells " + modelname + ". Das Modell wird nicht verwendet.");
 							e.printStackTrace();
 						}
 			    	}
@@ -180,7 +180,7 @@ public class Worker {
 				outputfile.writeNext(newline.toArray(new String[newline.size()]));
 				worked = true;
 			} catch (Exception e) {
-				System.out.println("Die Outputdatei " + config.getOutputfile() + " konnte nicht erstellt werden.");
+				System.err.println("Die Outputdatei " + config.getOutputfile() + " konnte nicht erstellt werden.");
 				e.printStackTrace();
 				worked = false;
 			}
@@ -191,7 +191,7 @@ public class Worker {
 						profildensefile.put(model, new CSVWriter(new FileWriter(config.getProfilfileDenseTmp(model.getName())), ';', CSVWriter.NO_QUOTE_CHARACTER));
 						//no header here
 					} catch (Exception e) {
-						System.out.println("Die Outputdatei " + config.getProfilfileDense(model.getName()) + " konnte nicht erstellt werden.");
+						System.err.println("Die Outputdatei " + config.getProfilfileDense(model.getName()) + " konnte nicht erstellt werden.");
 						e.printStackTrace();
 						worked = false;
 					}
@@ -215,7 +215,7 @@ public class Worker {
 						String[] rowline = {"ROW_NO","PID"};
 						profilsparsefileRows.get(model).writeNext(rowline);
 					} catch (Exception e) {
-						System.out.println("Die Outputdatei " + config.getProfilfileSparse(model.getName()) + " konnte nicht erstellt werden.");
+						System.err.println("Die Outputdatei " + config.getProfilfileSparse(model.getName()) + " konnte nicht erstellt werden.");
 						e.printStackTrace();
 						worked = false;
 					}
@@ -295,7 +295,7 @@ public class Worker {
 							try {
 								profildensefile.get(model).writeNext(newline.toArray(new String[newline.size()]));
 							} catch (Exception e) {
-								System.out.println("In die Outputdatei " + config.getProfilfileDense(model.getName()) + " konnte nicht geschrieben werden.");
+								System.err.println("In die Outputdatei " + config.getProfilfileDense(model.getName()) + " konnte nicht geschrieben werden.");
 								e.printStackTrace();
 								worked = false;
 							}

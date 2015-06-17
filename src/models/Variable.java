@@ -1,5 +1,16 @@
 package models;
 
+/**
+ * The Class Variable.
+ * Used when building Variables from an inputfile(row) for a model, based on ModelFieldFilter   
+ * Example:
+ * 	Field: ICD_CODE
+ * 	Stringposition: 1-3 (i.e. first 3 characters in icd)
+ * 	Values: F32 (i.e. count only Depression icds)
+ * 
+ * There might be multiple filters on one field, see List in ModelField
+ *  
+ */
 public class Variable {
 	private String variable;
 	private String value;

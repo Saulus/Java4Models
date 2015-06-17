@@ -17,6 +17,8 @@ class PatientVariable {
 	private double sum;
 	private String aggregationType;
 	private double profvalue = 1;
+	private double profvaluemin = 0;
+	private double profvaluemax = 0; 
 	private double coeff = 0;
 	
 	
@@ -31,9 +33,19 @@ class PatientVariable {
 				//test if value contains "," -> change to "."
 				String newvalue = value.replace(",", ".");
 				this.profvalue=Double.parseDouble(newvalue);
-		}
+		} else if (aggregationType.startsWith(Consts.aggConstant)) { //for CONSTANT(x) type: use only x
+			//take number from aggregation type
+			String newvalue = aggregationType.substring(Consts.aggConstant.length()+1,aggregationType.length()-1).replace(",", ".");
+			this.profvalue = Double.parseDouble(newvalue); 
+		} else if (aggregationType.equals(Consts.aggMaxdistance)) { //for Maxdistance type: keep min and max values
+			String newvalue = value.replace(",", ".");
+			Double newvalued = Double.parseDouble(newvalue);
+			this.profvaluemin=newvalued;
+			this.profvaluemax=newvalued;
+		} 
 		this.coeff=coeffVal;
 		this.aggregationType=aggregationType;
+		
 	}
 	
 	public void add (String value) {
@@ -43,13 +55,18 @@ class PatientVariable {
 				String newvalue = value.replace(",", ".");
 				this.sum+=Double.parseDouble(newvalue);
 		} else if (aggregationType.equals(Consts.aggMin)) { //for Min/Max type: calc profvalue
-					//test if value contains "," -> change to "."
-					String newvalue = value.replace(",", ".");
-					this.profvalue=Math.min(this.profvalue,Double.parseDouble(newvalue));
+			//test if value contains "," -> change to "."
+			String newvalue = value.replace(",", ".");
+			this.profvalue=Math.min(this.profvalue,Double.parseDouble(newvalue));
 		} else if (aggregationType.equals(Consts.aggMax)) { //for Min/Max type: calc profvalue
 			//test if value contains "," -> change to "."
 			String newvalue = value.replace(",", ".");
 			this.profvalue=Math.max(this.profvalue,Double.parseDouble(newvalue));
+		} else if (aggregationType.equals(Consts.aggMaxdistance)) { //for Maxdistance type: keep min and max values
+			String newvalue = value.replace(",", ".");
+			Double newvalued = Double.parseDouble(newvalue);
+			this.profvaluemin=Math.min(profvaluemin,newvalued);
+			this.profvaluemax=Math.max(profvaluemax,newvalued);
 		}
 		this.count +=1;
 	}
@@ -61,6 +78,8 @@ class PatientVariable {
 			this.profvalue = this.count; 
 		} else if (aggregationType.equals(Consts.aggMean)) {
 			this.profvalue = this.sum / this.count; 
+		} else if (aggregationType.equals(Consts.aggMaxdistance)) {
+			this.profvalue = this.profvaluemax-this.profvaluemin;
 		}
 	}
 	

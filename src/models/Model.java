@@ -211,7 +211,7 @@ class ModelFile {
 	 * @param otherfieldfilter the otherfieldfilter String from Model.config
 	 * @param variable the variablefrom Model.config
 	 */
-	public void addField (String field, String position, String values, String aggregation, String otherfieldfilter, String variable, String include, String exclude, Model mymodel) {
+	public void addField (String field, String position, String values, String aggregation, String otherfieldfilter, String variable, String include, String exclude, Model mymodel) throws ModelConfigException {
 		if ((field != "") && (variable != "")) {
 			//field already there?
 			ModelField myfield = this.filefields.get(field);
@@ -222,10 +222,10 @@ class ModelFile {
 			int min_pos = 0;
 			int max_pos = 0; 
 			if (position.contains("-")) {
-				try { min_pos = Integer.parseInt(position.split("-")[0])-1; } //In Java Strings start from 0
-					catch (Exception e) {} //ignore Parsing.Exception, as "0" as init-value is fine 
-				try { max_pos = Integer.parseInt(position.split("-")[1]); } //In Java Strings start from 0, but substring end counts +1
-					catch (Exception e) {} //ignore Parsing.Exception, as "0" as init-value is fine 
+				try { min_pos = Integer.parseInt(position.split("-")[0])-1; 
+					max_pos = Integer.parseInt(position.split("-")[1]); 
+				} //In Java Strings start from 0, but substring end counts +1
+				catch (Exception e) { throw new ModelConfigException("Kann Spalte "+ Consts.modPositionCol + " für Feld "+ field + " nicht parsen",e); }
 			}
 			//Parse Values
 			String min_value = "";
@@ -238,16 +238,25 @@ class ModelFile {
 				max_value=values;
 			}
 			//Parse Otherfieldfilter
-			ArrayList<Otherfieldfilter> filters = null;
-			if (otherfieldfilter != "") {
-				filters = new ArrayList<Otherfieldfilter>();
+			ArrayList<Otherfieldfilter> filters = new ArrayList<Otherfieldfilter>();
+			if (!otherfieldfilter.equals("")) {
 				String[]tokens = otherfieldfilter.split(Consts.placeholderEsc);
 				for (int i=0; i<tokens.length; i = i+3) {
 					try {
 						Otherfieldfilter newfilter = new Otherfieldfilter(tokens[i],tokens[i+1], tokens[i+2]);
 						filters.add(newfilter);
-					} catch (Exception e) {}
+					}
+					catch (Exception e) { 
+						throw new ModelConfigException("Kann Spalte "+ Consts.modOtrherfieldCol + " für Feld "+ field + " nicht parsen",e); }
 				}
+			}
+			//parse aggregation, if needed
+			if (aggregation.startsWith(Consts.aggConstant)) { //for CONSTANT(x) type: use only x
+				//take number from aggregation type
+				try {
+				String newvalue = aggregation.substring(Consts.aggConstant.length()+1,aggregation.length()-1).replace(",", ".");
+				Double.parseDouble(newvalue); 
+				} catch (Exception e) { throw new ModelConfigException("Kann Spalte "+ Consts.modAggCol + " für Feld "+ field + " nicht parsen",e); }
 			}
 			//Parse include and exclude
 			boolean b_include="TRUE".equals(include); if (b_include) mymodel.setInclusion(true);
@@ -316,7 +325,7 @@ public class Model {
 	 * @param coefffile the coefffile
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public Model (String name, List<InputFile> inputfiles, String configfile, String coefffile) throws IOException {
+	public Model (String name, List<InputFile> inputfiles, String configfile, String coefffile) throws Exception {
 		this.name = name;
 		//Create one modelfile object per inputfile
 		for (InputFile myinputfile : inputfiles) {

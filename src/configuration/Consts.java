@@ -5,7 +5,7 @@ Collected constants of general utility.
 **/
 public final class Consts {
 	
-	public static final String version = "1.2.1";
+	public static final String version = "1.3";
 	
 	/** The Constant satzartFlag. */
 	public static final String satzartFlag = "SATZART";
@@ -71,6 +71,14 @@ public final class Consts {
 	/** The Constant aggMax. 
 	 * Field "Aggregation" (type) in Model.config file*/
 	public static final String aggMax = "MAX";
+	
+	/** The Constant aggConstant. Usage: CONSTANT(x)
+	 * Field "Aggregation" (type) in Model.config file*/
+	public static final String aggConstant = "CONSTANT";
+	
+	/** The Constant aggMaxdistance. 
+	 * Field "Aggregation" (type) in Model.config file*/
+	public static final String aggMaxdistance = "MAXDISTANCE";
 	
 	/** The Constant placeholder. 
 	 * Placeholder in Model.config for adding Value to Variable-Name*/
