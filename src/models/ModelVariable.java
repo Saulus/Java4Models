@@ -8,6 +8,7 @@ import org.joda.time.LocalDate;
 import org.joda.time.Days;
 
 import configuration.Consts;
+import configuration.Utils;
 
 /**
  * The Class ModelVariableFilter.
@@ -29,7 +30,7 @@ class ModelVariableFilterPart {
 		isEquals = (operation.contains("="));
 		isBigger = (operation.contains(">"));
 		isSmaller = (operation.contains("<"));
-		this.refColnumber = Integer.parseInt(value.substring(1));
+		this.refColnumber = Integer.parseInt(field.substring(1));
 		this.testvalue = value;
 	}
 	
@@ -116,7 +117,7 @@ class ModelVariableCalcPart {
 	private String refVariable;
 	private double value;
 	private LocalDate mydate;
-	private LocalDate myreferencedate = new LocalDate(Consts.reference_date);
+	private LocalDate myreferencedate = Utils.parseDate(Consts.reference_date);
 	
 	private boolean isValue;
 	private boolean isDate;
@@ -124,8 +125,8 @@ class ModelVariableCalcPart {
 	
 	
 	public ModelVariableCalcPart (String type, String value) throws Exception {
-			this.parseType(type);
-			this.parseValue(value);
+			parseType(type);
+			parseValue(value);
 	}
 	
 	private void parseType (String type) {
@@ -134,7 +135,7 @@ class ModelVariableCalcPart {
 	}
 	
 	private void parseValue (String value) throws Exception {
-		if (value.startsWith(Consts.referenceEsc)) {
+		if (value.startsWith(Consts.reference)) {
 			refColnumber = Integer.parseInt(value.substring(1));
 			needsCol=true;
 		} else if (value.startsWith(Consts.varreferenceEsc)) {
@@ -170,7 +171,7 @@ class ModelVariableCalcPart {
 		double newval;
 		//parse inputvalue & calc
 		if (isDate) {
-			mydate = LocalDate.parse(inputvalue);
+			mydate = Utils.parseDate(inputvalue);
 			newval = Days.daysBetween(myreferencedate, mydate).getDays();
 		} else 
 			try {
@@ -218,7 +219,7 @@ class ModelVariableCalc {
 		if (!calculation.equals("")) {
 			//if not starting with"+" or "-" -> add "+"
 			if (!calculation.startsWith("+") &&  !calculation.startsWith("-")) {
-				calculation = "!+!" + calculation;
+				calculation = "+!" + calculation;
 			}
 			String[] tokens = calculation.split(Consts.seperatorEsc);
 			
@@ -286,15 +287,17 @@ class ModelVariableCols {
 			
 			this.column = tokens[0];
 			//Parse Stringposition
-			if (tokens[1].contains("-")) {
-				String [] positions = tokens[1].split("-");
-				if (positions[0].equals("")) pos_min=0; //allow "-4"
-				else pos_min = Integer.parseInt(positions[0])-1; //In Java Strings start from 0, but substring end counts +1
-				if (positions[1].equals("")) pos_max=15000; //allow "4-"
-				else pos_max = Integer.parseInt(positions[1]); //In Java Strings start from 0, but substring end counts +1
-			} else {
-				pos_min = Integer.parseInt(tokens[1])-1;
-				pos_max = pos_min+1;
+			if (tokens.length>1) {
+				if (tokens[1].contains("-")) {
+					String [] positions = tokens[1].split("-");
+					if (positions[0].equals("")) pos_min=0; //allow "-4"
+					else pos_min = Integer.parseInt(positions[0])-1; //In Java Strings start from 0, but substring end counts +1
+					if (positions[1].equals("")) pos_max=15000; //allow "4-"
+					else pos_max = Integer.parseInt(positions[1]); //In Java Strings start from 0, but substring end counts +1
+				} else {
+					pos_min = Integer.parseInt(tokens[1])-1;
+					pos_max = pos_min+1;
+				}
 			}
 		}
 	}
@@ -411,8 +414,8 @@ public class ModelVariable {
 		//parse name
 		try {
 			tokens = variable.split(Consts.seperatorEsc);
-			namePrefixes = new String[tokens.length-1];
-			nameColumnNumbers = new int[tokens.length-1];
+			namePrefixes = new String[tokens.length];
+			nameColumnNumbers = new int[tokens.length];
 			for (int i=0; i<tokens.length; i++) {
 				if (i==0) namePrefixes[i]= tokens[i];
 					else namePrefixes[i]= tokens[i].substring(1);
@@ -424,7 +427,7 @@ public class ModelVariable {
 		//parse columns
 		try {
 			tokens = columns.split(Consts.seperatorEsc);
-			cols = new ModelVariableCols[tokens.length-1]; 
+			cols = new ModelVariableCols[tokens.length]; 
 			ModelVariableCols c;
 			for (int i=0; i<tokens.length; i++) {
 				c = new ModelVariableCols(tokens[i]);

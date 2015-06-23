@@ -30,7 +30,7 @@ public final class Consts {
 	
 	/** The Constant modAggCol.
 	 * 	Column of Model.config file / definition */
-	public static final String modAggCol = "AGGREGATION";
+	public static final String modAggCol = "VARAGGREGATION";
 	
 	public static final String modCalcCol = "BERECHNUNG";
 	
@@ -77,6 +77,7 @@ public final class Consts {
 	
 
 	public static final String referenceEsc = "\\$";
+	public static final String reference = "$";
 	public static final String varreferenceEsc = "V\\(";
 	
 	public static final String bracketEsc = "[\\(\\)]";
