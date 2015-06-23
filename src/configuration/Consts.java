@@ -1,11 +1,12 @@
 package configuration;
 
+
 /**
 Collected constants of general utility.
 **/
 public final class Consts {
 	
-	public static final String version = "1.3";
+	public static final String version = "2.0";
 	
 	/** The Constant satzartFlag. */
 	public static final String satzartFlag = "SATZART";
@@ -19,34 +20,30 @@ public final class Consts {
 	
 	/** The Constant modInputfileCol.
 	 * 	Column of Model.config file / definition: Inputfile from konfiguration.xml*/
-	public static final String modInputfileCol = "DATENTYP";
+	public static final String modInputfileCol = "DATEI";
 	
-	/** The Constant modFieldCol.
+	public static final String modVariableCol = "VARIABLE";
+	
+	/** The Constant modColumnCol.
 	 * 	Column of Model.config file / definition */
-	public static final String modFieldCol = "SPALTE";
-	
-	/** The Constant modPositionCol. 
-	 * 	Column of Model.config file / definition*/
-	public static final String modPositionCol = "STRINGPOSITION";
-	
-	/** The Constant modValueCol.
-	 * 	Column of Model.config file / definition */
-	public static final String modValueCol = "WERTEFILTER";
+	public static final String modColumnCol = "SPALTEN";
 	
 	/** The Constant modAggCol.
 	 * 	Column of Model.config file / definition */
 	public static final String modAggCol = "AGGREGATION";
 	
-	/** The Constant modOtrherfieldCol.
-	 * 	Column of Model.config file / definition */
-	public static final String modOtrherfieldCol = "ANDERESPALTEFILTER";
+	public static final String modCalcCol = "BERECHNUNG";
 	
-	/** The Constant modVarCol.
+	
+	/** The Constant .
 	 * 	Column of Model.config file / definition */
-	public static final String modVarCol = "VARIABLE";
+	public static final String modFilterCol = "FILTER";
 	
 	public static final String modIncludeCol = "EINSCHLUSS";
 	public static final String modExcludeCol = "AUSSCHLUSS";
+	public static final String modHideCol = "HIDEME";
+	
+	public static final String aggValue = "VALUE";
 	
 	/** The Constant aggSum.
 	 * Field "Aggregation" (type) in Model.config file */
@@ -56,9 +53,9 @@ public final class Consts {
 	 * Field "Aggregation" (type) in Model.config file */
 	public static final String aggCount = "COUNT";
 	
-	/** The Constant aggStd. 
+	/** The Constant aggOccurence. = default
 	 * Field "Aggregation" (type) in Model.config file*/
-	public static final String aggStd = "OCCURRENCE";
+	public static final String aggOccurence = "OCCURRENCE"; 
 	
 	/** The Constant aggMean. 
 	 * Field "Aggregation" (type) in Model.config file*/
@@ -72,21 +69,23 @@ public final class Consts {
 	 * Field "Aggregation" (type) in Model.config file*/
 	public static final String aggMax = "MAX";
 	
-	/** The Constant aggConstant. Usage: CONSTANT(x)
-	 * Field "Aggregation" (type) in Model.config file*/
-	public static final String aggConstant = "CONSTANT";
-	
 	/** The Constant aggMaxdistance. 
 	 * Field "Aggregation" (type) in Model.config file*/
-	public static final String aggMaxdistance = "MAXDISTANCE";
+	public static final String aggMaxDistance = "MAXDISTANCE";
 	
-	/** The Constant placeholder. 
-	 * Placeholder in Model.config for adding Value to Variable-Name*/
-	public static final String placeholder = "$";
+	public static final String aggDate = "DATE";
 	
-	/** The Constant placeholderEsc. 
-	 * Placeholder in Model.config for adding Value to Variable-Name (escaped)*/
-	public static final String placeholderEsc = "\\$";
+
+	public static final String referenceEsc = "\\$";
+	public static final String varreferenceEsc = "V\\(";
+	
+	public static final String bracketEsc = "[\\(\\)]";
+	
+	
+	public static final String seperatorEsc = "\\!";
+	
+	public static final String wahr = "TRUE";
+	
 	
 	/** The Constant interceptname. 
 	 * Intercept Row in model.coeff(icients) file */
@@ -99,6 +98,9 @@ public final class Consts {
 	/** The Constant comment_indicator. 
 	 * for Model config */
 	public static final String comment_indicator = "#";
+	
+	//days are counted starting here
+	public static final String reference_date = "01JAN2008";
 	
 	 /**
  	 * Instantiates a new consts.

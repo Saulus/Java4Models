@@ -7,96 +7,6 @@ import java.util.Set;
 
 import configuration.Consts;
 
-/**
- * The Class PatientVariable.
- * Represents an actual profile/model-variable for a patient, as read in when processing inputfiles
- * Holds count and sum, values are increased each time the variable turns up for the patient 
- */
-class PatientVariable {
-	private int count = 1;
-	private double sum;
-	private String aggregationType;
-	private double profvalue = 1;
-	private double profvaluemin = 0;
-	private double profvaluemax = 0; 
-	private double coeff = 0;
-	
-	
-	public PatientVariable (String aggregationType, String value, double coeffVal) {
-		if ((aggregationType.equals(Consts.aggSum)) ||		//for SUm or Mean-type: calc sum
-			(aggregationType.equals(Consts.aggMean))) {
-			//test if value contains "," -> change to "."
-			String newvalue = value.replace(",", ".");
-			this.sum=Double.parseDouble(newvalue);
-		} else if ((aggregationType.equals(Consts.aggMin)) ||
-			(aggregationType.equals(Consts.aggMax))) { //for Min/Max type: calc profvalue
-				//test if value contains "," -> change to "."
-				String newvalue = value.replace(",", ".");
-				this.profvalue=Double.parseDouble(newvalue);
-		} else if (aggregationType.startsWith(Consts.aggConstant)) { //for CONSTANT(x) type: use only x
-			//take number from aggregation type
-			String newvalue = aggregationType.substring(Consts.aggConstant.length()+1,aggregationType.length()-1).replace(",", ".");
-			this.profvalue = Double.parseDouble(newvalue); 
-		} else if (aggregationType.equals(Consts.aggMaxdistance)) { //for Maxdistance type: keep min and max values
-			String newvalue = value.replace(",", ".");
-			Double newvalued = Double.parseDouble(newvalue);
-			this.profvaluemin=newvalued;
-			this.profvaluemax=newvalued;
-		} 
-		this.coeff=coeffVal;
-		this.aggregationType=aggregationType;
-		
-	}
-	
-	public void add (String value) {
-		if ((aggregationType.equals(Consts.aggSum)) ||		//for SUm or Mean-type: calc sum
-				(aggregationType.equals(Consts.aggMean))) {
-				//test if value contains "," -> change to "."
-				String newvalue = value.replace(",", ".");
-				this.sum+=Double.parseDouble(newvalue);
-		} else if (aggregationType.equals(Consts.aggMin)) { //for Min/Max type: calc profvalue
-			//test if value contains "," -> change to "."
-			String newvalue = value.replace(",", ".");
-			this.profvalue=Math.min(this.profvalue,Double.parseDouble(newvalue));
-		} else if (aggregationType.equals(Consts.aggMax)) { //for Min/Max type: calc profvalue
-			//test if value contains "," -> change to "."
-			String newvalue = value.replace(",", ".");
-			this.profvalue=Math.max(this.profvalue,Double.parseDouble(newvalue));
-		} else if (aggregationType.equals(Consts.aggMaxdistance)) { //for Maxdistance type: keep min and max values
-			String newvalue = value.replace(",", ".");
-			Double newvalued = Double.parseDouble(newvalue);
-			this.profvaluemin=Math.min(profvaluemin,newvalued);
-			this.profvaluemax=Math.max(profvaluemax,newvalued);
-		}
-		this.count +=1;
-	}
-	
-	public void calcProfvalue () {
-		if (aggregationType.equals(Consts.aggSum)) {
-			this.profvalue = this.sum; 
-		} else if (aggregationType.equals(Consts.aggCount)) {
-			this.profvalue = this.count; 
-		} else if (aggregationType.equals(Consts.aggMean)) {
-			this.profvalue = this.sum / this.count; 
-		} else if (aggregationType.equals(Consts.aggMaxdistance)) {
-			this.profvalue = this.profvaluemax-this.profvaluemin;
-		}
-	}
-	
-	public double getProfvalue () {
-		return profvalue;
-	}
-	
-	public double getCalcCoeff () {
-		return profvalue * coeff;
-	}
-	
-	public String getAggregation () {
-		return aggregationType;
-	}
-	
-	
-}
 
 /**
  * The Class PatientModel.
@@ -105,7 +15,7 @@ class PatientVariable {
  * can return the coeff sum (i.e. risk score) for this patient and model
  */
 class PatientModel {
-	private HashMap<String,PatientVariable> variables = new HashMap<String,PatientVariable>(); //variablename -> PatientVariable
+	private HashMap<String,Variable> variables = new HashMap<String,Variable>(); //variablename -> PatientVariable
 	private Model model;
 	private boolean profValuesAreCalculated=false;
 	private boolean amIincluded=true;
@@ -118,25 +28,38 @@ class PatientModel {
 	}
 	
 	
-	//returns false, if variable could not be added
-	public void addVariable (Variable newvar, double coeff ) throws Exception {
+	public void updateVariables(InputFile inputfile) {
 		profValuesAreCalculated=false;
-		if (variables.get(newvar.getVariable()) == null) {
-			PatientVariable pvar = new PatientVariable(newvar.getAggregation(),newvar.getValue(),coeff);
-			variables.put(newvar.getVariable(),pvar);
-		} else {
-			//only one aggretation type per Variable -> otherwise error (when calculation values)!
-			if (!variables.get(newvar.getVariable()).getAggregation().equals(newvar.getAggregation())) throw new Exception("Fehler! Der Variable " + newvar.getVariable() + " sind verschiedene Aggregationstypen zugewiesen: " + variables.get(newvar.getVariable()).getAggregation() + " vs. " + newvar.getAggregation());
-			else variables.get(newvar.getVariable()).add(newvar.getValue());
-		}
-		if (newvar.isInclude()) amIincluded=true;
-		if (newvar.isExclude()) amIexcluded=true;
-	}
+		variables = this.model.updateVariables(inputfile, variables);
+	}	
 	
+
 	private void calcProfValues () {
 		if (!profValuesAreCalculated) {
-			for (PatientVariable variable : variables.values()) {
-				variable.calcProfvalue();
+			//1. Determine calculation sequence
+			Set<String> allVars = variables.keySet();
+			@SuppressWarnings("unchecked")
+			List<String>[] rounds = (ArrayList<String>[])new ArrayList[5];
+			List<String> allIncludedVars = new ArrayList<String>();
+			for (int i=0; i<rounds.length; i++) {
+				rounds[i] = new ArrayList<String>();
+				if (allVars.size()>0) {
+					for (String var : allVars) {
+						if (i==0 && !variables.get(var).dependsOnOtherVars()) rounds[i].add(var);
+						else if (i>0 && rounds[i-1].containsAll(variables.get(var).getOtherVarsDependent())) rounds[i].add(var);
+					}
+					allVars.removeAll(rounds[i]);
+					allIncludedVars.addAll(rounds[i]);
+				}
+			}
+			rounds[rounds.length-1].addAll(allVars); // add all remaining; hopefully should be able to calc
+			//2. Now round for round: calc values
+			for (int i=0; i<rounds.length; i++) {
+				for (String var : rounds[i]) {
+					variables.get(var).calcProfvalue(variables);
+					if (variables.get(var).isInclude()) amIincluded=true;
+					if (variables.get(var).isExclude()) amIexcluded=true;
+				}
 			}
 			profValuesAreCalculated = true;
 		}
@@ -146,8 +69,9 @@ class PatientModel {
 	public double getCoeffSum () {
 		calcProfValues();
 		double mysum = model.getCoeff(Consts.interceptname);
-		for (PatientVariable variable : variables.values()) {
-			mysum += variable.getCalcCoeff();
+		for (String var : variables.keySet()) {
+			if (!variables.get(var).hideme() && variables.get(var).isAllowed())
+				mysum += variables.get(var).getCalcCoeff(model.getCoeff(var));
 		} 
 		if (this.model.getType().equals(Consts.logRegFlag)) {
 			mysum = Math.exp(mysum) / (1+Math.exp(mysum));
@@ -163,7 +87,7 @@ class PatientModel {
 	public ArrayList<String> addToKnownVariables (ArrayList<String> knownVars) {
 		ArrayList<String> newKnownVars = knownVars;
 		for (String var : variables.keySet()) {
-			if (!knownVars.contains(var)) { //Variable ist bisher nicht bekannt -> add
+			if (!knownVars.contains(var) && !variables.get(var).hideme() && variables.get(var).isAllowed()) { //Variable ist bisher nicht bekannt Und ist gültig -> add
 				newKnownVars.add(var);	
 			}
 		}
@@ -190,6 +114,7 @@ class PatientModel {
 	}
 	
 	public boolean amIincluded() {
+		calcProfValues();
 		return amIincluded && !amIexcluded;
 	}
 }
@@ -241,21 +166,7 @@ public class Patient {
 			PatientModel mypatientmodel = new PatientModel(model);
 			this.models.put(model,mypatientmodel);
 		}
-		//Get fields that need to be looked at for that model/inputfile
-		Set<String> modelFields = model.getFields(inputfile);
-		for (String nextfield : modelFields) {
-			//get value for the field
-			String value = inputfile.getValue(nextfield);
-			//new Var only if value is not empty
-			if (!value.equals("")) {
-				//Identify real variables based on inputfile, field, value)
-				//could be more than one
-				List<Variable> realVariables = model.getVariables(inputfile, nextfield, value); 
-				for (Variable nextvar : realVariables) {
-					this.models.get(model).addVariable(nextvar,model.getCoeff(nextvar.getVariable()));
-				}
-			}
-		}
+		this.models.get(model).updateVariables(inputfile);
 	}
 	
 	/**
@@ -285,17 +196,7 @@ public class Patient {
 	public String get() {
 		return this.pid;
 	}
-	
-	/**
-	 * adds Variables from that model to the list of knownVars
-	 *
-	 * @param model the model
-	 * @param knownVars the known vars
-	 * @return the array list
-	 */
-	public ArrayList<String> addToKnownVariables (Model model, ArrayList<String> knownVars) {
-		return models.get(model).addToKnownVariables(knownVars);
-	}
+
 	
 	/**
 	 * Gets the profvalues.
@@ -310,6 +211,10 @@ public class Patient {
 	
 	public boolean areYouIncluded (Model model) {
 		return models.get(model).amIincluded();
+	}
+	
+	public ArrayList<String> addToKnownVariables (Model m, ArrayList<String> knownVars) {
+		return models.get(m).addToKnownVariables(knownVars);
 	}
 	
 }

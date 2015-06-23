@@ -1,5 +1,27 @@
 package models;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+
+//combines columnvalues and ModelVariable 
+class Allrows {
+	private List<String[]> rows = new ArrayList<String[]>();
+	
+	public Allrows(String[] colvalues) {
+		this.add(colvalues);
+	}
+	
+	public void add (String[] colvalues) {
+		this.rows.add(colvalues);
+	}
+	
+	public List<String[]> getAllRows () {
+		return rows;
+	}
+}
+
 /**
  * The Class Variable.
  * Used when building Variables from an inputfile(row) for a model, based on ModelFieldFilter   
@@ -12,59 +34,105 @@ package models;
  *  
  */
 public class Variable {
-	private String variable;
-	private String value;
-	private String aggregation;
-	private boolean include; //if true: only include patients that have this
-	private boolean exclude; //if true: exclude all patients that have this
+	private HashMap<ModelVariable,Allrows> rows = new  HashMap<ModelVariable,Allrows>();
+	private boolean include = false; //if true: only include patients that have this
+	private boolean exclude = false; //if true: exclude all patients that have this
+	private boolean hideme = false; //if true: do not print var
+	private boolean dependsOnOtherVars = false;
+	
+	private boolean isAllowed = true; //false, if all modelvariables were filtered out
+	
+	private double profvalue = 1;
+	
+	private boolean profvalueIsCalulated = false;
+	
+	private boolean aggIsStd = true; //i.e. 1 (=occurence)
 
-	public Variable(String variable, String value, String aggregation, boolean include, boolean exclude) {
-		this.setVariable(variable);
-		this.setValue(value);
-		this.setAggregation(aggregation);
-		this.setInclude(include);
-		this.setExclude(exclude);
-	}
 
-	public String getVariable() {
-		return variable;
-	}
-
-	public void setVariable(String variable) {
-		this.variable = variable;
-	}
-
-	public String getValue() {
-		return value;
-	}
-
-	public void setValue(String value) {
-		this.value = value;
-	}
-
-	public String getAggregation() {
-		return aggregation;
-	}
-
-	public void setAggregation(String aggregation) {
-		this.aggregation = aggregation;
-	}
-
-	public boolean isInclude() {
-		return include;
-	}
-
-	public void setInclude(boolean include) {
-		this.include = include;
-	}
-
-	public boolean isExclude() {
-		return exclude;
-	}
-
-	public void setExclude(boolean exclude) {
-		this.exclude = exclude;
+	public Variable() {
 	}
 	
+	public void addRow (ModelVariable v,String[] values) {
+		profvalueIsCalulated = false;
+		if (!rows.containsKey(v)) {
+			Allrows myrow = new Allrows(values);
+			rows.put(v, myrow);
+		}
+		rows.get(v).add(values);
+		if (v.isInclude()) include=true; //i.e.: if true for one ModelVar -> true for all
+		if (v.isExclude()) exclude=true; //i.e.: if true for one ModelVar -> true for all
+		if (v.hideme()) hideme=true; //i.e.: if true for one ModelVar -> true for all
+		if (v.dependsOnOtherVar()) dependsOnOtherVars=true;  //if true for one -> must be calculated later
+		if (!v.isStdAgg()) aggIsStd = false;
+	}
+	
+	public boolean isInclude () {
+		return include;
+	}
+	
+	public boolean isExclude () {
+		return exclude;
+	}
+	
+	public boolean hideme () {
+		return hideme;
+	}
+	
+	
+	public boolean dependsOnOtherVars () {
+		return dependsOnOtherVars;
+	}
+	
+	public List<String> getOtherVarsDependent () {
+		List<String> myVars = new ArrayList<String>();
+		for (ModelVariable v : rows.keySet()) {
+			if (v.dependsOnOtherVar()) myVars.addAll(v.getOtherVarsDependent());
+		}
+		return myVars;
+	}
+	
+	public double getProfvalue () {
+		if (!profvalueIsCalulated) this.calcProfvalue(); 
+		return profvalue;
+	}
+	
+	public double getCalcCoeff (double coeff) {
+		if (!profvalueIsCalulated) this.calcProfvalue(); 
+		return profvalue * coeff;
+	}
+	
+	//calc w/o other know variables
+	public void calcProfvalue() {
+		this.calcProfvalue(null);
+	}
+	
+	public void calcProfvalue (HashMap<String,Variable> vars) {
+		if (profvalueIsCalulated) return; 
+		profvalueIsCalulated=true;
+		if (aggIsStd) this.profvalue=1;
+		else {
+			List<Double> allvalues = new ArrayList<Double>();
+			//work through variables, consolidate rows, aggregate
+			ModelVariable aggV =null;
+			double d;
+			for (ModelVariable v : rows.keySet()) {
+				//1: calculate values from single rows
+				for (String[] singlerow : rows.get(v).getAllRows()) {
+					d = v.getValue(singlerow, vars);
+					if (v.varIsAllowed(d)) allvalues.add(d);
+				}
+				aggV=v; //use last for aggregation
+			}
+			//2:aggregate
+			if (allvalues.size()>0) {
+				this.profvalue=aggV.aggregateValues(allvalues);
+				isAllowed=true;
+			} else isAllowed=false;
+		}
+	}
+	
+	public boolean isAllowed() {
+		return isAllowed;
+	}
 
 }
