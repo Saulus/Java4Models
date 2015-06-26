@@ -24,24 +24,29 @@ public final class Consts {
 	
 	public static final String modVariableCol = "VARIABLE";
 	
-	/** The Constant modColumnCol.
-	 * 	Column of Model.config file / definition */
-	public static final String modColumnCol = "SPALTEN";
-	
+
 	/** The Constant modAggCol.
 	 * 	Column of Model.config file / definition */
 	public static final String modAggCol = "VARAGGREGATION";
 	
-	public static final String modCalcCol = "BERECHNUNG";
+	public static final String modCalcCol = "VARBERECHNUNG";
 	
 	
 	/** The Constant .
 	 * 	Column of Model.config file / definition */
-	public static final String modFilterCol = "FILTER";
+	public static final String modFilterCol = "VARFILTER";
 	
 	public static final String modIncludeCol = "EINSCHLUSS";
 	public static final String modExcludeCol = "AUSSCHLUSS";
 	public static final String modHideCol = "HIDEME";
+	
+	/** The Constant modColumnCol.
+	 * 	Column of Model.config file / definition */
+	public static final String modColumnCol = "SPALTE";
+	public static final String modColfilterCol = "FILTER";
+	public static final int maxcol = 5;
+	
+	
 	
 	public static final String aggValue = "VALUE";
 	
@@ -82,9 +87,6 @@ public final class Consts {
 	
 	public static final String bracketEsc = "[\\(\\)]";
 	
-	
-	public static final String seperatorEsc = "\\!";
-	
 	public static final String wahr = "TRUE";
 	
 	
@@ -101,7 +103,7 @@ public final class Consts {
 	public static final String comment_indicator = "#";
 	
 	//days are counted starting here
-	public static final String reference_date = "01JAN2008";
+	public static final String reference_date = "01JAN2006";
 	
 	 /**
  	 * Instantiates a new consts.

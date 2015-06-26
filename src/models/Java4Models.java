@@ -8,6 +8,7 @@ import org.xmappr.*;
 
 import configuration.Consts;
 import configuration.Konfiguration;
+import configuration.Utils;
 
 /**
  * The Class Java4Models.

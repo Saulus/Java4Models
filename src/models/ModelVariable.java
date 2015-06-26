@@ -10,116 +10,18 @@ import org.joda.time.Days;
 import configuration.Consts;
 import configuration.Utils;
 
-/**
- * The Class ModelVariableFilter.
- * Helper class, holds filter on other field from Model.config
- * Notation example: Bezugsjahr$>=$2012$Bezugsjahr$<=$2014
- * 
- * Operatins allowed (as String): =, >, >=, <, <=
- * 
- * Their might be multiple constraints/filters for a field, see List in class Modelfieldfilter 
- */
-class ModelVariableFilterPart {
-	private int refColnumber; //0=current variable; columns starting from 1
-	private boolean isEquals =false; 
-	private boolean isBigger=false;
-	private boolean isSmaller=false;
-	private String testvalue;
-	
-	public ModelVariableFilterPart (String field, String operation, String value) throws Exception {
-		isEquals = (operation.contains("="));
-		isBigger = (operation.contains(">"));
-		isSmaller = (operation.contains("<"));
-		this.refColnumber = Integer.parseInt(field.substring(1));
-		this.testvalue = value;
-	}
-	
-	public int getRefColnumber () {
-		return refColnumber;	
-	}
-	
-	public boolean valueIsAllowed (double value) {
-		//simply parse to string -> easier
-		return valueIsAllowed(Double.toString(value));
-	}
-	
-	public boolean valueIsAllowed (String value) {
-		if (isEquals&isBigger) return value.compareTo(this.testvalue)!=-1;
-		else if (isEquals&isSmaller) return value.compareTo(this.testvalue)!=1;
-		else if (isEquals) return value.equals(this.testvalue);
-		else if (isBigger) return value.compareTo(this.testvalue)==1;
-		else if (isSmaller) return value.compareTo(this.testvalue)==-1;
-	    else return true;
-	}
-}
 
-/**
- * The Class ModelFieldFilter.
- * Helper class, holds filter on field from Model.config, columns: Field, Stringposition, Values, Aggregation
- * Example:
- * 	Field: ICD_CODE
- * 	Stringposition: 1-3 (i.e. first 3 characters in icd)
- * 	Values: F32 (i.e. count only Depression icds)
- * 
- * There might be multiple filters on one field, see List in ModelField
- *  
- */
-class ModelVariableFilter {
-	private List <ModelVariableFilterPart> othercolumns = new ArrayList<ModelVariableFilterPart>();
-	private List <ModelVariableFilterPart> ownvar = new ArrayList<ModelVariableFilterPart>();
-	
-	
-	public ModelVariableFilter (String filters) throws Exception {
-		if (!filters.equals("")) {
-			String[] tokens = filters.split(Consts.seperatorEsc);
-			
-			for (int i=0; i<tokens.length; i = i+3) {
-				//1.ModelVariableAggPart
-				ModelVariableFilterPart p = new ModelVariableFilterPart(tokens[0],tokens[1],tokens[2]);
-				if (p.getRefColnumber()==0) ownvar.add(p);
-				else othercolumns.add(p);
-			}
-		}
-	}
-	
-	public boolean rowIsAllowed (String[] columns) {
-		boolean isAllowed = true;
-		if (!othercolumns.isEmpty()) {
-			for(ModelVariableFilterPart testfilter : othercolumns) {
-				if (!testfilter.valueIsAllowed(columns[testfilter.getRefColnumber()])) {
-					isAllowed=false;
-					break;
-				}
-			}
-		} 
-		return isAllowed;
-	}
-	
-	public boolean varIsAllowed (double value) {
-		boolean isAllowed = true;
-		if (!ownvar.isEmpty()) {
-			for(ModelVariableFilterPart testfilter : ownvar) {
-				if (!testfilter.valueIsAllowed(value)) {
-					isAllowed=false;
-					break;
-				}
-			}
-		} 
-		return isAllowed;
-	}
-	
-}
 
 class ModelVariableCalcPart {
 	private boolean needsCol = false;
 	private boolean needsVariable= false;
-	private int refColnumber; //starting with 1 (0 is reserved for variable-> needed only for filter)
+	private int refColnumber; //starting with 0 
 	private String refVariable;
 	private double value;
 	private LocalDate mydate;
 	private LocalDate myreferencedate = Utils.parseDate(Consts.reference_date);
 	
-	private boolean isValue;
+	private boolean isConstant = false; //
 	private boolean isDate;
 	
 	
@@ -130,21 +32,26 @@ class ModelVariableCalcPart {
 	}
 	
 	private void parseType (String type) {
-		isValue = (type.equals(Consts.aggValue));
+		//isConstant = (type.equals(Consts.aggValue));
 		isDate= (type.equals(Consts.aggDate));
 	}
 	
 	private void parseValue (String value) throws Exception {
 		if (value.startsWith(Consts.reference)) {
-			refColnumber = Integer.parseInt(value.substring(1));
-			needsCol=true;
-		} else if (value.startsWith(Consts.varreferenceEsc)) {
-			refVariable = value.split(Consts.bracketEsc)[1];
-			needsVariable=true;
+			try { 
+				//Is Integer -> refers to column
+				refColnumber = Integer.parseInt(value.substring(1))-1; 
+				needsCol=true;
+			} catch (Exception e) {
+				//is no integer -> take as variable
+				refVariable = value.substring(1);
+				needsVariable=true;
+			}
 		} else {
 			//test if value contains "," -> change to "."
 			String newvalue = value.replace(",", ".");
 			this.value=Double.parseDouble(newvalue); 
+			isConstant = true;
 		}
 	}
 	
@@ -176,15 +83,15 @@ class ModelVariableCalcPart {
 		} else 
 			try {
 				//test if value contains "," -> change to "."
-				inputvalue.replace(",", ".");
-				newval = Double.parseDouble(inputvalue);
+				String myval = inputvalue.replace(",", ".");
+				newval = Double.parseDouble(myval);
 			} catch (Exception e) { newval = 1; } 
-		return getValue(newval);
+		return newval;
 	}
 	
-	//used for variable input
+	//used for input from other variable
 	public double getValue(double inputvalue) {
-		if (isValue) return value;
+		if (isConstant) return value;
 		else return inputvalue;
 	}
 	
@@ -192,8 +99,8 @@ class ModelVariableCalcPart {
 		return value;
 	}
 	
-	public boolean isValue() {
-		return isValue;
+	public boolean isConstant() {
+		return isConstant;
 	}
 	
 	public boolean isDate() {
@@ -217,22 +124,26 @@ class ModelVariableCalc {
 		//Parse Otherfieldfilter
 		
 		if (!calculation.equals("")) {
-			//if not starting with"+" or "-" -> add "+"
-			if (!calculation.startsWith("+") &&  !calculation.startsWith("-")) {
-				calculation = "+!" + calculation;
-			}
-			String[] tokens = calculation.split(Consts.seperatorEsc);
+			//Split "+", then split "-" 
+			String[] plustokens = calculation.split("\\+");
+			String[] minustokens;
+			String[] parts;
 			
-			for (int i=0; i<tokens.length; i = i+2) {
-				//1.ModelVariableAggPart
-				String[] parts = tokens[i+1].split(Consts.bracketEsc);
-				ModelVariableCalcPart p = new ModelVariableCalcPart(parts[0],parts[1]);
-				if (p.needsVariable()) {
-					dependsOnOtherVar=true;
-					otherVars.add(p.getRefVariable());
+			for (int i=0; i<plustokens.length; i++) {
+				//split again by "-"
+				minustokens = plustokens[i].split("\\-");
+				//now: 1st is +, following are -
+				for (int j=0; j<minustokens.length; j++) {
+					//look for ()
+					parts = minustokens[j].split(Consts.bracketEsc);
+					ModelVariableCalcPart p = new ModelVariableCalcPart(parts[0],parts[1]);
+					if (p.needsVariable()) {
+						dependsOnOtherVar=true;
+						otherVars.add(p.getRefVariable());
+					}
+					if (j==0) plusParts.add(p);
+					else minusParts.add(p);
 				}
-				if (tokens[i].equals("-")) minusParts.add(p);
-					else plusParts.add(p);
 			}
 		} else isStd=true;
 	}
@@ -279,9 +190,16 @@ class ModelVariableCalc {
 class ModelVariableCols {
 	private String column; 
 	private int pos_min = 0;
-	private int pos_max = 0;
+	private int pos_max = 10000; //dummy value
+	private String filterstart = "";
+	private String filterend = "";
 	
-	public ModelVariableCols (String col) throws Exception {
+	public ModelVariableCols (String col, String filter) throws Exception {
+		parseCol(col);
+		parseFilter(filter);
+	}
+	
+	private void parseCol (String col) throws Exception {
 		if (!col.equals("")) {
 			String[] tokens = col.split(Consts.bracketEsc);
 			
@@ -302,6 +220,15 @@ class ModelVariableCols {
 		}
 	}
 	
+	private void parseFilter (String filter) throws Exception {
+		if (!filter.equals("")) {
+			String[] tokens = filter.split("-");
+			
+			filterstart=tokens[0];
+			if (tokens.length>1) filterend=tokens[1];
+		}
+	}
+	
 	public String getColumn() {
 		return column;
 	}
@@ -312,6 +239,11 @@ class ModelVariableCols {
 	
 	public int getMaxPos () {
 		return pos_max;
+	}
+	
+	public boolean isAllowed(String value) {
+		return ((filterstart.equals("") ||  value.compareTo(this.filterstart)>=0) // value >= firstvalue 
+				&& (filterend.equals("") ||  value.compareTo(this.filterend)<=0)); //value <= filterend
 	}
 	
 }
@@ -351,12 +283,20 @@ class ModelVariableAgg {
 		if (isOccurence || isStd) return 1;
 		if (isSum) {
 			for (double d: values) myval+=d;
-			return myval;
+			//needs rounding.... double not precise; gives not exactly correct numbers
+			myval = myval*100;
+			myval = Math.round(myval);
+			myval = myval /100;
+			return myval; 
 		}
 		if (isCount) return values.size();
 		if (isMean) {
 			for (double d: values) myval+=d;
-			return myval/values.size();
+			//needs rounding.... double not precise; gives not exactly correct numbers
+			myval = myval*100/values.size();
+			myval = Math.round(myval);
+			myval = myval /100;
+			return myval; 
 		}
 		if (isMin) {
 			myval=1000000;
@@ -404,73 +344,94 @@ public class ModelVariable {
 	private ModelVariableCols[] cols;
 	private ModelVariableCalc calc;
 	private ModelVariableAgg agg;
-	private ModelVariableFilter filter;
+	private double filterstart = -1;
+	private double filterend = -1;
 	private boolean include; //if true: only include patients that have this
 	private boolean exclude; //if true: exclude all patients that have this
 	private boolean hideme; //if true: do not print var
 	
-	public ModelVariable (String variable, String columns, String filter, String calculation, String aggregation, String include, String exclude, String hideme, Model mymodel) throws ModelConfigException{
+	public ModelVariable (String variable, String calculation, String aggregation,  String varfilter, String include, String exclude, String hideme, String[] columns, String[] filter, Model mymodel) throws ModelConfigException{
 		String[] tokens;
-		//parse name
+		//parse variable name
 		try {
-			tokens = variable.split(Consts.seperatorEsc);
+			tokens = variable.split(Consts.referenceEsc);
 			namePrefixes = new String[tokens.length];
-			nameColumnNumbers = new int[tokens.length];
+			nameColumnNumbers = new int[tokens.length-1];
 			for (int i=0; i<tokens.length; i++) {
 				if (i==0) namePrefixes[i]= tokens[i];
 					else namePrefixes[i]= tokens[i].substring(1);
-				if (i<tokens.length-1) nameColumnNumbers[i]=Integer.parseInt(tokens[i+1].substring(0,1));
+				if (i<tokens.length-1) nameColumnNumbers[i]=Integer.parseInt(tokens[i+1].substring(0,1))-1;
 			}
 		} catch (Exception e) {
-			throw new ModelConfigException("Fehler bei Variable "+ variable + ", Spalten "+ columns + " (Variable)",e); 
+			throw new ModelConfigException("Fehler bei Variable "+ variable + ": "+ Consts.modVariableCol + " nicht lesbar",e); 
 		}
-		//parse columns
+		//parse var filter
 		try {
-			tokens = columns.split(Consts.seperatorEsc);
-			cols = new ModelVariableCols[tokens.length]; 
-			ModelVariableCols c;
-			for (int i=0; i<tokens.length; i++) {
-				c = new ModelVariableCols(tokens[i]);
-				cols[i]=c;
-			}
+			parseFilter(varfilter);
 		} catch (Exception e) {
-			throw new ModelConfigException("Fehler bei Variable "+ variable + ", Spalten "+ columns + " (Spalten)",e); 
-		}
-		//parse filter
-		try {
-			this.filter = new ModelVariableFilter(filter);
-		} catch (Exception e) {
-			throw new ModelConfigException("Fehler bei Variable "+ variable + ", Spalten "+ columns + " (Filter)",e); 
+			throw new ModelConfigException("Fehler bei Variable "+ variable + ": "+ Consts.modFilterCol + " nicht lesbar",e); 
 		}
 		//parse calculation
 		try {
 			this.calc = new ModelVariableCalc(calculation);
 		} catch (Exception e) {
-			throw new ModelConfigException("Fehler bei Variable "+ variable + ", Spalten "+ columns + " (Berechnung)",e); 
+			throw new ModelConfigException("Fehler bei Variable "+ variable + ": "+ Consts.modCalcCol + " nicht lesbar",e); 
 		}
 		//parse aggregation
 		try {
 			this.agg = new ModelVariableAgg(aggregation);
 		} catch (Exception e) {
-			throw new ModelConfigException("Fehler bei Variable "+ variable + ", Spalten "+ columns + " (Aggregation)",e); 
+			throw new ModelConfigException("Fehler bei Variable "+ variable + ": "+ Consts.modAggCol + " nicht lesbar",e); 
 		}
 		//parse rest
 		this.include=Consts.wahr.equals(include); if (this.include) mymodel.setInclusion(true);
 		this.exclude=Consts.wahr.equals(exclude); if (this.exclude) mymodel.setExclusion(true);
 		this.hideme=Consts.wahr.equals(hideme);
+		//parse columns
+		int number = 0;
+		try {
+			cols = new ModelVariableCols[columns.length]; 
+			for (int i=0; i<columns.length; i++) {
+				number=i+1;
+				cols[i] = new ModelVariableCols(columns[i],filter[i]);	
+			}
+		} catch (Exception e) {
+			throw new ModelConfigException("Fehler bei Variable "+ variable + ": " + Consts.modColumnCol + number + " bzw. " + Consts.modColfilterCol + number + " nicht lesbar",e); 
+		}
+	}
+	
+	private void parseFilter (String filter) throws Exception {
+		if (!filter.equals("")) {
+			String[] tokens = filter.split("-");
+
+			if (!tokens[0].equals("")) filterstart=Double.parseDouble(tokens[0]);
+				else filterstart=-1;
+			if (tokens.length>1) {
+				if (!tokens[1].equals("")) filterend=Double.parseDouble(tokens[1]);
+				 else filterend=-1;
+			} else filterend=filterstart;
+		}
 	}
 	
 	/*
 	 * get column values, substrings
+	 * returns null, if row is not allowed
 	 */
 	public String[] getColumnValues (InputFile inputrow) {
-		String[] myCols = new String[cols.length-1];
+		String[] myCols = new String[cols.length];
 		int mymax;
 		String myval;
 		for (int i=0; i<myCols.length;i++) {
-			myval = inputrow.getValue(cols[i].getColumn());
-			mymax=Math.min(cols[i].getMaxPos(), myval.length());
-			myCols[i]=myval.substring(cols[i].getMinPos(), mymax);
+			//column definition might be empty
+			if (cols[i].getColumn()!= null ) {
+				//get value from inputrow - only if
+				myval = inputrow.getValue(cols[i].getColumn());
+				//substring (max length)
+				mymax=Math.min(cols[i].getMaxPos(), myval.length());
+				myval =myval.substring(cols[i].getMinPos(), mymax);
+				if (!cols[i].isAllowed(myval)) return null; 
+				myCols[i]=myval;
+			}
 		}
 		return myCols;
 	}
@@ -483,18 +444,12 @@ public class ModelVariable {
 		myname=myname + namePrefixes[namePrefixes.length-1];
 		return myname;
 	}
-	
-	public boolean rowIsAllowed (String[] columns) {
-		boolean isallowed = true;
-		//test if name columns are not empty
-		for (int i=0; i<nameColumnNumbers.length; i++) {
-			isallowed = !columns[nameColumnNumbers[i]].equals("");
-		}
-		return isallowed && filter.rowIsAllowed(columns);
-	}
+
 	
 	public boolean varIsAllowed (double value) {
-		return filter.varIsAllowed(value);
+		//simply parse to string 
+		return ((filterstart==-1  ||  value >= filterstart ) // value >= filterstart 
+				&& (filterend==-1  ||  value <= filterend)); //value <= filterend
 	}
 	
 	public boolean isInclude () {

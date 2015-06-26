@@ -40,7 +40,7 @@ public class Variable {
 	private boolean hideme = false; //if true: do not print var
 	private boolean dependsOnOtherVars = false;
 	
-	private boolean isAllowed = true; //false, if all modelvariables were filtered out
+	private boolean isAllowed = true; //false, if all modelvariables or variable itself were filtered out
 	
 	private double profvalue = 1;
 	
@@ -57,8 +57,7 @@ public class Variable {
 		if (!rows.containsKey(v)) {
 			Allrows myrow = new Allrows(values);
 			rows.put(v, myrow);
-		}
-		rows.get(v).add(values);
+		} else rows.get(v).add(values);
 		if (v.isInclude()) include=true; //i.e.: if true for one ModelVar -> true for all
 		if (v.isExclude()) exclude=true; //i.e.: if true for one ModelVar -> true for all
 		if (v.hideme()) hideme=true; //i.e.: if true for one ModelVar -> true for all
@@ -112,21 +111,21 @@ public class Variable {
 		if (aggIsStd) this.profvalue=1;
 		else {
 			List<Double> allvalues = new ArrayList<Double>();
-			//work through variables, consolidate rows, aggregate
+			//work through variables, filter and consolidate rows, aggregate
 			ModelVariable aggV =null;
 			double d;
 			for (ModelVariable v : rows.keySet()) {
 				//1: calculate values from single rows
 				for (String[] singlerow : rows.get(v).getAllRows()) {
 					d = v.getValue(singlerow, vars);
-					if (v.varIsAllowed(d)) allvalues.add(d);
+					allvalues.add(d);
 				}
-				aggV=v; //use last for aggregation
+				aggV=v; //use last for aggregation & check
 			}
-			//2:aggregate
+			//2:aggregate and filter
 			if (allvalues.size()>0) {
 				this.profvalue=aggV.aggregateValues(allvalues);
-				isAllowed=true;
+				if (aggV.varIsAllowed(this.profvalue)) isAllowed=true; else isAllowed=false;
 			} else isAllowed=false;
 		}
 	}

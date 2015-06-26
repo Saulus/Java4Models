@@ -30,9 +30,9 @@ class ModelFile {
 	 * @param otherfieldfilter the otherfieldfilter String from Model.config
 	 * @param variable the variablefrom Model.config
 	 */
-	public void addVariable (String variable, String columns, String filter, String calculation, String aggregation, String include, String exclude, String hideme, Model mymodel) throws ModelConfigException {
-		if (!variable.equals("") && !columns.equals("")) {
-			ModelVariable v = new ModelVariable(variable, columns, filter, calculation,aggregation, include, exclude, hideme, mymodel);
+	public void addVariable (String variable, String calculation, String aggregation,  String varfilter, String include, String exclude, String hideme, String[] columns, String[] filter, Model mymodel) throws ModelConfigException {
+		if (!variable.equals("") && !columns[0].equals("")) {
+			ModelVariable v = new ModelVariable(variable, calculation, aggregation,  varfilter, include, exclude, hideme, columns, filter, mymodel);
 			filevars.add(v);
 		}
 	}
@@ -48,10 +48,10 @@ class ModelFile {
 	public HashMap<String,Variable> updateVariables(InputFile inputrow, HashMap<String,Variable> existingVars) {
 		Variable myVar;
 		for(ModelVariable variable : filevars) {
-			//1. create column values array;
+			//1. create column values array -> returns null if not allowed by rowfilter
 			String[] colvalues = variable.getColumnValues(inputrow);
 			//1b: Test for filters
-			if (variable.rowIsAllowed(colvalues)) {
+			if (colvalues!=null) {
 				//create variable name
 				String myname = variable.getName(colvalues);
 				//test filters
@@ -118,6 +118,11 @@ public class Model {
 		List<String[]> myEntries = reader.readAll();
 		//first line = header-line
 		String[] headerline = myEntries.get(0);
+		//count number of column/filters
+		int columnnumber=0;
+		for (int j=0; j<headerline.length; j++) { if (headerline[j].toUpperCase().startsWith(Consts.modColumnCol)) columnnumber++; }
+		String[] columns = new String[columnnumber];
+		String[] filters = new String[columnnumber];
 		myEntries.remove(0);
 		for (String[] nextline : myEntries) {
 			//ignore comments
@@ -129,17 +134,24 @@ public class Model {
 				}
 				//find inputfile(s) for this line / fields_data
 				for (InputFile myinputfile : inputfiles) {
-					if ((myinputfile.isDatentyp(fields_data.get(Consts.modInputfileCol))) 
-							&& (myinputfile.hasField(fields_data.get(Consts.modVariableCol)))) {
-								this.modelfiles.get(myinputfile).addVariable(
+					if (myinputfile.isDatentyp(fields_data.get(Consts.modInputfileCol))) {
+						//combine columns and filters to array
+						for (int j=0; j<columnnumber; j++) {
+							columns[j]=fields_data.get(Consts.modColumnCol + (j+1));
+							filters[j]=fields_data.get(Consts.modColfilterCol + (j+1));
+							if (!columns[j].isEmpty() && !myinputfile.hasField(columns[j].split(Consts.bracketEsc)[0])) throw new ModelConfigException("Fehler bei Variable "+ fields_data.get(Consts.modVariableCol) + ": "+ columns[j] + " existiert nicht in File "+ myinputfile.getDatentyp()); 
+						}
+						//ModelVariable (String variable, String calculation, String aggregation,  String varfilter, String include, String exclude, String hideme, String[] columns, String[] filter, Model mymodel) throws ModelConfigException{
+						this.modelfiles.get(myinputfile).addVariable(
 									fields_data.get(Consts.modVariableCol),
-									fields_data.get(Consts.modColumnCol),
-									fields_data.get(Consts.modFilterCol),
 									fields_data.get(Consts.modCalcCol),
 									fields_data.get(Consts.modAggCol),
+									fields_data.get(Consts.modFilterCol),
 									fields_data.get(Consts.modIncludeCol),
 									fields_data.get(Consts.modExcludeCol),
 									fields_data.get(Consts.modHideCol),
+									columns,
+									filters,
 									this);
 					}
 				}

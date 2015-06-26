@@ -37,7 +37,7 @@ class PatientModel {
 	private void calcProfValues () {
 		if (!profValuesAreCalculated) {
 			//1. Determine calculation sequence
-			Set<String> allVars = variables.keySet();
+			List<String> allVars = new ArrayList<String>(variables.keySet());
 			@SuppressWarnings("unchecked")
 			List<String>[] rounds = (ArrayList<String>[])new ArrayList[5];
 			List<String> allIncludedVars = new ArrayList<String>();
@@ -57,8 +57,8 @@ class PatientModel {
 			for (int i=0; i<rounds.length; i++) {
 				for (String var : rounds[i]) {
 					variables.get(var).calcProfvalue(variables);
-					if (variables.get(var).isInclude()) amIincluded=true;
-					if (variables.get(var).isExclude()) amIexcluded=true;
+					if (variables.get(var).isAllowed() && variables.get(var).isInclude()) amIincluded=true;
+					if (variables.get(var).isAllowed() && variables.get(var).isExclude()) amIexcluded=true;
 				}
 			}
 			profValuesAreCalculated = true;
