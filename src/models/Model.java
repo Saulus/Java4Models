@@ -47,13 +47,15 @@ class ModelFile {
 	 */
 	public HashMap<String,Variable> updateVariables(InputFile inputrow, HashMap<String,Variable> existingVars) {
 		Variable myVar;
+		String[] colvalues;
+		String myname;
 		for(ModelVariable variable : filevars) {
 			//1. create column values array -> returns null if not allowed by rowfilter
-			String[] colvalues = variable.getColumnValues(inputrow);
+			colvalues = variable.getColumnValues(inputrow);
 			//1b: Test for filters
 			if (colvalues!=null) {
 				//create variable name
-				String myname = variable.getName(colvalues);
+				myname = variable.getName(colvalues);
 				//test filters
 				if (!existingVars.containsKey(myname)) {
 					myVar = new Variable();
@@ -116,6 +118,7 @@ public class Model {
 		HashMap<String,String> fields_data = new HashMap<String,String>(); //(header -> value)
 		CSVReader reader = new CSVReader(new FileReader(configfile), ';', '"');
 		List<String[]> myEntries = reader.readAll();
+		reader.close();
 		//first line = header-line
 		String[] headerline = myEntries.get(0);
 		//count number of column/filters
@@ -158,15 +161,14 @@ public class Model {
 			}
 		}
 		
-		reader.close();
 	   //read Coeffs -> if error model creates profile only
 		try {
 			reader = new CSVReader(new FileReader(coefffile), ';', '"', 1);
 			myEntries = reader.readAll();
+			reader.close();
 		    for (String[] nextline1 : myEntries) {
 		    	this.coeffs.put(nextline1[0].toUpperCase(), Double.parseDouble(nextline1[1].replace(",", ".")));
 		    }
-		    reader.close();
 		} catch (IOException e) {
 			System.out.println("Fehler beim Einlesen der Koeffizienten für Modell "+ name + ". Es werden nur Profile für das Modell gebildet.");
 			this.iHaveCoeffs = false;

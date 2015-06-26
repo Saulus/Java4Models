@@ -426,6 +426,10 @@ public class ModelVariable {
 			if (cols[i].getColumn()!= null ) {
 				//get value from inputrow - only if
 				myval = inputrow.getValue(cols[i].getColumn());
+				//if value is empty -> return null as well
+				if (myval.equals("")) return null;
+				//if value is shorter than filter -> return null
+				if (cols[i].getMinPos()>=myval.length()) return null;
 				//substring (max length)
 				mymax=Math.min(cols[i].getMaxPos(), myval.length());
 				myval =myval.substring(cols[i].getMinPos(), mymax);
