@@ -225,7 +225,7 @@ class ModelVariableCols {
 			String[] tokens = filter.split("-");
 			
 			filterstart=tokens[0];
-			if (tokens.length>1) filterend=tokens[1];
+			if (tokens.length>1) filterend=tokens[1]; else filterend = filterstart;
 		}
 	}
 	
@@ -422,9 +422,9 @@ public class ModelVariable {
 		int mymax;
 		String myval;
 		for (int i=0; i<myCols.length;i++) {
-			//column definition might be empty
+			//column definition in config file might be empty
 			if (cols[i].getColumn()!= null ) {
-				//get value from inputrow - only if
+				//get value from inputrow
 				myval = inputrow.getValue(cols[i].getColumn());
 				//if value is empty -> return null as well
 				if (myval.equals("")) return null;
@@ -433,6 +433,7 @@ public class ModelVariable {
 				//substring (max length)
 				mymax=Math.min(cols[i].getMaxPos(), myval.length());
 				myval =myval.substring(cols[i].getMinPos(), mymax);
+				//if value is not allowed due to filter -> return null
 				if (!cols[i].isAllowed(myval)) return null; 
 				myCols[i]=myval;
 			}
