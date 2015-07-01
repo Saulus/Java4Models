@@ -8,6 +8,7 @@ import org.joda.time.LocalDate;
 import org.joda.time.Days;
 
 import configuration.Consts;
+import configuration.Konfiguration;
 import configuration.Utils;
 
 
@@ -19,7 +20,7 @@ class ModelVariableCalcPart {
 	private String refVariable;
 	private double value;
 	private LocalDate mydate;
-	private LocalDate myreferencedate = Utils.parseDate(Consts.reference_date);
+	private LocalDate myreferencedate = Utils.parseDate(Konfiguration.reference_date);
 	
 	private boolean isConstant = false; //
 	private boolean isDate;

@@ -102,9 +102,6 @@ public final class Consts {
 	 * for Model config */
 	public static final String comment_indicator = "#";
 	
-	//days are counted starting here
-	public static final String reference_date = "01JAN2006";
-	
 	 /**
  	 * Instantiates a new consts.
  	 */

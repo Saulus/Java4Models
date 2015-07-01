@@ -31,7 +31,7 @@ public final class Utils {
 	}
 
 	/**
-	 * @param board in format: "wBA1 for "weiﬂer Bauer auf A2" and sSA7 for "schwarzer Springer auf A7"
+	 * @param b
 	 */
 	public final static LocalDate parseDate (String date) {
 		try {

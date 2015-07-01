@@ -63,7 +63,12 @@ public class Konfiguration {
 	/** The outputfile. */
 	@Element(defaultValue="scores.csv")
 	public String outputfile;
-
+	
+	/** The reference_date. 
+	 * days are counted starting here
+	 * */
+	@Element(defaultValue="01JAN2006")
+	public static String reference_date;
 	
 	/**
 	 * Gets the inputfiles.
@@ -192,4 +197,5 @@ public class Konfiguration {
 	public String getTmpPath() {
 		return outputpfad;
 	}
+
 }
