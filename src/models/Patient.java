@@ -19,6 +19,7 @@ class PatientModel {
 	private boolean profValuesAreCalculated=false;
 	private boolean amIincluded=true;
 	private boolean amIexcluded=false;
+	String interceptname;
 
 	
 	public PatientModel(Model model) {
@@ -67,9 +68,9 @@ class PatientModel {
 	
 	public double getCoeffSum () {
 		calcProfValues();
-		double mysum = model.getCoeff(Consts.interceptname);
+		double mysum = model.getCoeffIntercept();
 		for (String var : variables.keySet()) {
-			if (!variables.get(var).hideme() && variables.get(var).isAllowed())
+			if (!variables.get(var).hideme() && variables.get(var).isAllowed() && !variables.get(var).isTarget())
 				mysum += variables.get(var).getCalcCoeff(model.getCoeff(var));
 		} 
 		if (this.model.getType().equals(Consts.logRegFlag)) {
@@ -80,13 +81,13 @@ class PatientModel {
 	
 	/**
 	 * adds Variables from that model to the list of knownVars
-	 * @param knownVars
+	 * @param knownVars, isTarget (find target vars?)
 	 * @return
 	 */
-	public ArrayList<String> addToKnownVariables (ArrayList<String> knownVars) {
+	public ArrayList<String> addToKnownVariables (ArrayList<String> knownVars, boolean isTarget) {
 		ArrayList<String> newKnownVars = knownVars;
 		for (String var : variables.keySet()) {
-			if (!knownVars.contains(var) && !variables.get(var).hideme() && variables.get(var).isAllowed()) { //Variable ist bisher nicht bekannt Und ist gültig -> add
+			if (!knownVars.contains(var) && !variables.get(var).hideme() && variables.get(var).isAllowed() && variables.get(var).isTarget()==isTarget) { //Variable ist bisher nicht bekannt Und ist gültig -> add
 				newKnownVars.add(var);	
 			}
 		}
@@ -212,8 +213,8 @@ public class Patient {
 		return models.get(model).amIincluded();
 	}
 	
-	public ArrayList<String> addToKnownVariables (Model m, ArrayList<String> knownVars) {
-		return models.get(m).addToKnownVariables(knownVars);
+	public ArrayList<String> addToKnownVariables (Model m, ArrayList<String> knownVars, boolean isTarget) {
+		return models.get(m).addToKnownVariables(knownVars,isTarget);
 	}
 	
 }

@@ -1,11 +1,15 @@
 package models;
 
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import org.joda.time.LocalDate;
 import org.joda.time.Days;
+
+import au.com.bytecode.opencsv.CSVReader;
 
 import configuration.Consts;
 import configuration.Konfiguration;
@@ -20,7 +24,7 @@ class ModelVariableCalcPart {
 	private String refVariable;
 	private double value;
 	private LocalDate mydate;
-	private LocalDate myreferencedate = Utils.parseDate(Konfiguration.reference_date);
+	private LocalDate myreferencedate;
 	
 	private boolean isConstant = false; //
 	private boolean isDate;
@@ -28,6 +32,9 @@ class ModelVariableCalcPart {
 	
 	
 	public ModelVariableCalcPart (String type, String value) throws Exception {
+			if (Konfiguration.reference_date == null) 
+				myreferencedate=Utils.parseDate(Consts.reference_date);
+			else myreferencedate=Utils.parseDate(Konfiguration.reference_date);
 			parseType(type);
 			parseValue(value);
 	}
@@ -193,6 +200,7 @@ class ModelVariableCols {
 	private int pos_min = 0;
 	private int pos_max = 10000; //dummy value
 	private String filterstart = "";
+	private HashSet<String> filtervalues = null; //if read in from file
 	private String filterend = "";
 	
 	public ModelVariableCols (String col, String filter) throws Exception {
@@ -223,10 +231,20 @@ class ModelVariableCols {
 	
 	private void parseFilter (String filter) throws Exception {
 		if (!filter.equals("")) {
-			String[] tokens = filter.split("-");
-			
-			filterstart=tokens[0];
-			if (tokens.length>1) filterend=tokens[1]; else filterend = filterstart;
+			//1: test whether File as in (File)
+			if (filter.startsWith("(")) {
+				String[] parts = filter.split(Consts.bracketEsc);
+				CSVReader reader = new CSVReader(new FileReader(parts[1]), ';', '"');
+				List<String[]> myEntries = reader.readAll();
+				reader.close();
+				for (String[] nextline : myEntries) {
+					filtervalues.add(nextline[0]);
+				}
+			} else {
+				String[] tokens = filter.split("-");
+				filterstart=tokens[0];
+				if (tokens.length>1) filterend=tokens[1]; else filterend = filterstart;
+			}
 		}
 	}
 	
@@ -243,11 +261,15 @@ class ModelVariableCols {
 	}
 	
 	public boolean isAllowed(String value) {
-		return ((filterstart.equals("") ||  value.compareTo(this.filterstart)>=0) // value >= firstvalue 
-				&& (filterend.equals("") ||  value.compareTo(this.filterend)<=0)); //value <= filterend
+		if (filtervalues == null) //i.e. no list from file
+			return ((filterstart.equals("") ||  value.compareTo(this.filterstart)>=0) // value >= firstvalue 
+					&& (filterend.equals("") ||  value.compareTo(this.filterend)<=0)); //value <= filterend
+		else //list from file
+			return filtervalues.contains(value);
 	}
-	
 }
+
+
 
 class ModelVariableAgg {
 	private boolean isSum;
@@ -317,7 +339,7 @@ class ModelVariableAgg {
 				myvalmin = Math.min(myvalmin, d);
 				myvalmax = Math.max(myvalmax, d);
 			}
-			return myvalmax-myvalmin;
+			return myvalmax-myvalmin+1; //returns 1 if myvalmax=myvalmin (to separate from 0)
 		}
 		return myval;
 	}
@@ -349,13 +371,14 @@ public class ModelVariable {
 	private double filterend = -1;
 	private boolean include; //if true: only include patients that have this
 	private boolean exclude; //if true: exclude all patients that have this
+	private boolean target; //if target: print separately, do not include in coeff-calculation
 	private boolean hideme; //if true: do not print var
 	
-	public ModelVariable (String variable, String calculation, String aggregation,  String varfilter, String include, String exclude, String hideme, String[] columns, String[] filter, Model mymodel) throws ModelConfigException{
+	public ModelVariable (ModelVariableReadIn readvar, Model mymodel) throws ModelConfigException{
 		String[] tokens;
 		//parse variable name
 		try {
-			tokens = variable.split(Consts.referenceEsc);
+			tokens = readvar.getVariableCol().split(Consts.referenceEsc);
 			namePrefixes = new String[tokens.length];
 			nameColumnNumbers = new int[tokens.length-1];
 			for (int i=0; i<tokens.length; i++) {
@@ -364,40 +387,41 @@ public class ModelVariable {
 				if (i<tokens.length-1) nameColumnNumbers[i]=Integer.parseInt(tokens[i+1].substring(0,1))-1;
 			}
 		} catch (Exception e) {
-			throw new ModelConfigException("Fehler bei Variable "+ variable + ": "+ Consts.modVariableCol + " nicht lesbar",e); 
+			throw new ModelConfigException("Fehler bei Variable "+  readvar.getVariableCol() + ": "+ Consts.modVariableCol + " nicht lesbar",e); 
 		}
 		//parse var filter
 		try {
-			parseFilter(varfilter);
+			parseFilter(readvar.getFilterCol());
 		} catch (Exception e) {
-			throw new ModelConfigException("Fehler bei Variable "+ variable + ": "+ Consts.modFilterCol + " nicht lesbar",e); 
+			throw new ModelConfigException("Fehler bei Variable "+  readvar.getVariableCol() + ": "+ Consts.modFilterCol + " nicht lesbar",e); 
 		}
 		//parse calculation
 		try {
-			this.calc = new ModelVariableCalc(calculation);
+			this.calc = new ModelVariableCalc(readvar.getCalcCol());
 		} catch (Exception e) {
-			throw new ModelConfigException("Fehler bei Variable "+ variable + ": "+ Consts.modCalcCol + " nicht lesbar",e); 
+			throw new ModelConfigException("Fehler bei Variable "+  readvar.getVariableCol() + ": "+ Consts.modCalcCol + " nicht lesbar",e); 
 		}
 		//parse aggregation
 		try {
-			this.agg = new ModelVariableAgg(aggregation);
+			this.agg = new ModelVariableAgg(readvar.getAggCol());
 		} catch (Exception e) {
-			throw new ModelConfigException("Fehler bei Variable "+ variable + ": "+ Consts.modAggCol + " nicht lesbar",e); 
+			throw new ModelConfigException("Fehler bei Variable "+  readvar.getVariableCol() + ": "+ Consts.modAggCol + " nicht lesbar",e); 
 		}
 		//parse rest
-		this.include=Consts.wahr.equals(include); if (this.include) mymodel.setInclusion(true);
-		this.exclude=Consts.wahr.equals(exclude); if (this.exclude) mymodel.setExclusion(true);
-		this.hideme=Consts.wahr.equals(hideme);
-		//parse columns
+		this.include=Consts.wahr.equals(readvar.getIncludeCol()); if (this.include) mymodel.setInclusion(true);
+		this.exclude=Consts.wahr.equals(readvar.getExcludeCol()); if (this.exclude) mymodel.setExclusion(true);
+		this.target=Consts.wahr.equals(readvar.getTargetCol()); if (this.target) mymodel.setHasTargets(true);
+		this.hideme=Consts.wahr.equals(readvar.getHideCol());
+		//parse columns + their filters
 		int number = 0;
 		try {
-			cols = new ModelVariableCols[columns.length]; 
-			for (int i=0; i<columns.length; i++) {
+			cols = new ModelVariableCols[readvar.getColumns().length]; 
+			for (int i=0; i<readvar.getColumns().length; i++) {
 				number=i+1;
-				cols[i] = new ModelVariableCols(columns[i],filter[i]);	
+				cols[i] = new ModelVariableCols(readvar.getColumns()[i],readvar.getFilters()[i]);	
 			}
 		} catch (Exception e) {
-			throw new ModelConfigException("Fehler bei Variable "+ variable + ": " + Consts.modColumnCol + number + " bzw. " + Consts.modColfilterCol + number + " nicht lesbar",e); 
+			throw new ModelConfigException("Fehler bei Variable "+  readvar.getVariableCol() + ": " + Consts.modColumnCol + number + " bzw. " + Consts.modColfilterCol + number + " nicht lesbar",e); 
 		}
 	}
 	
@@ -465,6 +489,11 @@ public class ModelVariable {
 	public boolean isExclude () {
 		return exclude;
 	}
+	
+	public boolean isTarget () {
+		return target;
+	}
+	
 	
 	public boolean hideme () {
 		return hideme;

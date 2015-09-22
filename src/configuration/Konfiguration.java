@@ -21,16 +21,19 @@ public class Konfiguration {
 	private String modelConfigExt = ".config";
 	
 	/** The profilfile dense. */
-	private String profilfileDense = "profil_dn.csv";
+	private String profilfileDense = "profil_dense";
 	
 	/** The profilfile sparse. */
-	private String profilfileSparse = "profil_sp.csv";
+	private String profilfileSparse = "profil_matlab";
 	
 	/** The profilfile sparse col. */
-	private String profilfileSparseCol = "profil_sp_cols.csv";
+	private String profilfileSparseCol = "profil_matlab_cols";
 	
 	/** The profilfile sparse row. */
-	private String profilfileSparseRow = "profil_sp_rows.csv";
+	private String profilfileSparseRow = "profil_matlab_rows";
+	
+	private String profilfileSvmlight = "profil_svmlight";
+	private String profilfileSvmlightHead = "profil_svmlight_head";
 	
 	/** The input. */
 	@Element
@@ -50,19 +53,22 @@ public class Konfiguration {
 	
 	/** The create profil sparse. */
 	@Element(defaultValue="false")
-	public boolean createProfilSparse;
+	public boolean createProfilMatlab;
+	
+	@Element(defaultValue="false")
+	public boolean createProfilSvmlight;
 	
 	/** The createScores. */
 	@Element(defaultValue="true")
 	public boolean createScores;
 	
-	/** The id field. */
-	@Element(defaultValue="PID")
-	public String idField;
-	
 	/** The outputfile. */
 	@Element(defaultValue="scores.csv")
 	public String outputfile;
+	
+	
+	@Element(defaultValue="INTERCEPT")
+	public static String interceptname;
 	
 	/** The reference_date. 
 	 * days are counted starting here
@@ -85,6 +91,7 @@ public class Konfiguration {
 	 * @return the outputfile
 	 */
 	public String getOutputfile() {
+		if (outputfile==null) outputfile = "scores.csv";
 		return outputpfad + "\\" + outputfile;
 	}
 	
@@ -115,14 +122,6 @@ public class Konfiguration {
 		return modelConfigExt;
 	}
 	
-	/**
-	 * Gets the id field.
-	 *
-	 * @return the id field
-	 */
-	public String getIdField() {
-		return idField;
-	}
 	
 	/**
 	 * Gets the profilfile dense.
@@ -130,8 +129,11 @@ public class Konfiguration {
 	 * @param model the model
 	 * @return the profilfile dense
 	 */
-	public String getProfilfileDense(String model) {
-		return outputpfad + "\\" + model + profilfileDense;
+	public String getProfilfileDense(String model, boolean targets) {
+		if (targets)
+			return outputpfad + "\\" + model + profilfileDense + "_targets.csv";
+		else 
+			return outputpfad + "\\" + model + profilfileDense + ".csv";
 	}
 	
 	/**
@@ -140,8 +142,11 @@ public class Konfiguration {
 	 * @param model the model
 	 * @return the profilfile dense tmp
 	 */
-	public String getProfilfileDenseTmp(String model) {
-		return outputpfad + "\\" + model + profilfileDense + ".tmp";
+	public String getProfilfileDenseTmp(String model, boolean targets) {
+		if (targets)
+			return outputpfad + "\\" + model + profilfileDense + "_targets.tmp";
+		else 
+			return outputpfad + "\\" + model + profilfileDense + ".tmp";
 	}
 	
 	/**
@@ -150,8 +155,11 @@ public class Konfiguration {
 	 * @param model the model
 	 * @return the profilfile sparse
 	 */
-	public String getProfilfileSparse(String model) {
-		return outputpfad + "\\" + model + profilfileSparse;
+	public String getProfilfileSparse(String model, boolean targets) {
+		if (targets)
+			return outputpfad + "\\" + model + profilfileSparse + "_targets.csv";
+		else 
+			return outputpfad + "\\" + model + profilfileSparse + ".csv";
 	}
 	
 	/**
@@ -160,8 +168,11 @@ public class Konfiguration {
 	 * @param model the model
 	 * @return the profilfile sparse co ls
 	 */
-	public String getProfilfileSparseCOLs(String model) {
-		return outputpfad + "\\" + model + profilfileSparseCol;
+	public String getProfilfileSparseCOLs(String model, boolean targets) {
+		if (targets)
+			return outputpfad + "\\" + model + profilfileSparseCol + "_targets.csv";
+		else 
+			return outputpfad + "\\" + model + profilfileSparseCol + ".csv";
 	}
 	
 	/**
@@ -171,7 +182,23 @@ public class Konfiguration {
 	 * @return the profilfile sparse ro ws
 	 */
 	public String getProfilfileSparseROWs(String model) {
-		return outputpfad + "\\" + model + profilfileSparseRow;
+		return outputpfad + "\\" + model + profilfileSparseRow + ".csv";
+	}
+	
+	
+	public String getProfilfileSvmlight(String model, boolean targets) {
+		if (targets)
+			return outputpfad + "\\" + model + profilfileSvmlight + "_targets.csv";
+		else 
+			return outputpfad + "\\" + model + profilfileSvmlight + ".csv";
+	}
+	
+	
+	public String getProfilfileSvmlightHeader(String model, boolean targets) {
+		if (targets)
+			return outputpfad + "\\" + model + profilfileSvmlightHead + "_targets.csv";
+		else 
+			return outputpfad + "\\" + model + profilfileSvmlightHead + ".csv";
 	}
 	
 	
@@ -181,7 +208,11 @@ public class Konfiguration {
 	
 	
 	public boolean createProfilSparse() {
-		return createProfilSparse;
+		return createProfilMatlab;
+	}
+	
+	public boolean createProfilSvmlight() {
+		return createProfilSvmlight;
 	}
 	
 	public boolean createScores() {

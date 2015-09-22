@@ -32,8 +32,8 @@ public class Sorter extends InputFile {
 	 * @param tmppath the tmppath
 	 * @throws Exception the exception
 	 */
-	public Sorter(String datentyp, String path, String filetype, String tmppath) throws Exception {
-		super(datentyp, path, filetype);
+	public Sorter(String datentyp, String path, String filetype, String[] idfields, String tmppath) throws Exception {
+		super(datentyp, path, filetype, idfields);
 		//use "in memory" if possible
 		long allocatedMemory = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
 		long presumableFreeMemory = Runtime.getRuntime().maxMemory() - allocatedMemory;
@@ -57,7 +57,7 @@ public class Sorter extends InputFile {
 	 * @return String newFile (incl. path) (=csv)
 	 * @throws Exception the exception
 	 */
-	public String sortFile(String sortfield) throws Exception {
+	public String sortFileByID() throws Exception {
 		Statement stmt = sqldb.createStatement();
 		//1. create table with headers and one hash information
 		String createSQL = "create table sortdb (";
@@ -74,14 +74,14 @@ public class Sorter extends InputFile {
 		stmt.close();
 		//2. read and import csv data
 		PreparedStatement prep = sqldb.prepareStatement(insertSQL);
-		while (this.nextRow()) {
+		while (this.nextRow(false)) {
 			for (int i=0; i<50000;i++) {
 				if (this.hasRow()) {
 					for (int j=0; j<colcount; j++) {
 				        	prep.setString(j+1, this.getValue(headerline[j])); //i+1 as statements start with 1
 				    }
 				    prep.addBatch();
-				    this.nextRow();
+				    this.nextRow(false);
 				} else {
 					break;
 				}
@@ -93,12 +93,12 @@ public class Sorter extends InputFile {
 		this.close();
 		//create index -> helps sorting
 		stmt = sqldb.createStatement();
-		stmt.executeUpdate("create index sort_id on sortdb ("+ sortfield +");");
+		stmt.executeUpdate("create index sort_id on sortdb ("+ this.getIDFields() +");");
 		stmt.close();   
 		//3. dump db sorted
 		CSVWriter outputfile = new CSVWriter(new FileWriter(this.getPath()+sortedfileext), ';', CSVWriter.NO_QUOTE_CHARACTER);
 		stmt = sqldb.createStatement();
-	    ResultSet orderedTable = stmt.executeQuery( "SELECT * FROM sortdb order by "+ sortfield + ";" );
+	    ResultSet orderedTable = stmt.executeQuery( "SELECT * FROM sortdb order by "+ this.getIDFields() + ";" );
 	    outputfile.writeAll(orderedTable, true);
 	    outputfile.close();
 	    stmt.close();

@@ -37,6 +37,7 @@ public class Variable {
 	private HashMap<ModelVariable,Allrows> rows = new  HashMap<ModelVariable,Allrows>();
 	private boolean include = false; //if true: only include patients that have this
 	private boolean exclude = false; //if true: exclude all patients that have this
+	private boolean isTarget = false; //if true: is Target
 	private boolean hideme = false; //if true: do not print var
 	private boolean dependsOnOtherVars = false;
 	
@@ -60,6 +61,7 @@ public class Variable {
 		} else rows.get(v).add(values);
 		if (v.isInclude()) include=true; //i.e.: if true for one ModelVar -> true for all
 		if (v.isExclude()) exclude=true; //i.e.: if true for one ModelVar -> true for all
+		if (v.isTarget()) isTarget=true; //i.e.: if true for one ModelVar -> true for all
 		if (v.hideme()) hideme=true; //i.e.: if true for one ModelVar -> true for all
 		if (v.dependsOnOtherVar()) dependsOnOtherVars=true;  //if true for one -> must be calculated later
 		if (!v.isStdAgg()) aggIsStd = false;
@@ -71,6 +73,10 @@ public class Variable {
 	
 	public boolean isExclude () {
 		return exclude;
+	}
+	
+	public boolean isTarget () {
+		return isTarget;
 	}
 	
 	public boolean hideme () {

@@ -1,5 +1,9 @@
 package configuration;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.util.List;
 import java.util.Locale;
 
 import org.joda.time.LocalDate;
@@ -7,6 +11,9 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
+
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 
 /**
  * @author HellwigP
@@ -39,5 +46,28 @@ public final class Utils {
 		} catch (IllegalArgumentException e) {
 			return new LocalDate(formatterDE.parseDateTime(date));
 		}
+	}
+	
+	public final static void addHeaderToCsv (String csvfilename, List<String> header, String newfilename) throws Exception {
+		CSVWriter newfile = new CSVWriter(new FileWriter(newfilename), ';', CSVWriter.NO_QUOTE_CHARACTER);
+		newfile.writeNext(header.toArray(new String[header.size()]));
+		CSVReader tmpfile = new CSVReader(new FileReader(csvfilename), ';');
+		//now write line for line
+		String[] nextLine;
+		String[] tmpline;
+	    while ((nextLine = tmpfile.readNext()) != null) {
+	    	//add missing delimiters (i.e. empty columns) -> required for some csv parsers
+	    	if (nextLine.length < header.size()) {
+	    		tmpline = new String[header.size()];
+	    		System.arraycopy(nextLine, 0, tmpline, 0, nextLine.length);
+	    		for (int i=nextLine.length;i<header.size();i++) tmpline[i]=Consts.navalue; //set navalue
+	    		newfile.writeNext(tmpline);
+	    	} else newfile.writeNext(nextLine);
+	    }
+	    //close and delete tmpfile
+	    newfile.close();
+	    tmpfile.close();
+	    File file = new File(csvfilename);
+	    file.delete();
 	}
 }

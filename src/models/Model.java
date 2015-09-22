@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.*;
 
 import configuration.Consts;
+import configuration.Konfiguration;
 import au.com.bytecode.opencsv.CSVReader;
 
 
@@ -30,9 +31,9 @@ class ModelFile {
 	 * @param otherfieldfilter the otherfieldfilter String from Model.config
 	 * @param variable the variablefrom Model.config
 	 */
-	public void addVariable (String variable, String calculation, String aggregation,  String varfilter, String include, String exclude, String hideme, String[] columns, String[] filter, Model mymodel) throws ModelConfigException {
-		if (!variable.equals("") && !columns[0].equals("")) {
-			ModelVariable v = new ModelVariable(variable, calculation, aggregation,  varfilter, include, exclude, hideme, columns, filter, mymodel);
+	public void addVariable (ModelVariableReadIn readvar, Model mymodel) throws ModelConfigException {
+		if (!readvar.getVariableCol().equals("") && !readvar.getColumns()[0].equals("")) {
+			ModelVariable v = new ModelVariable(readvar, mymodel);
 			filevars.add(v);
 		}
 	}
@@ -66,6 +67,7 @@ class ModelFile {
 		}
 		return existingVars;
 	}
+
 }
 
 
@@ -98,6 +100,11 @@ public class Model {
 	/** The i have exclusion criteria. */
 	private boolean iHaveExclusion = false;
 	
+	private boolean iHaveTargets = false;
+	
+	private String interceptname = Consts.interceptname;
+
+	
 	/**
 	 * Instantiates a new model.
 	 *
@@ -124,9 +131,8 @@ public class Model {
 		//count number of column/filters
 		int columnnumber=0;
 		for (int j=0; j<headerline.length; j++) { if (headerline[j].toUpperCase().startsWith(Consts.modColumnCol)) columnnumber++; }
-		String[] columns = new String[columnnumber];
-		String[] filters = new String[columnnumber];
 		myEntries.remove(0);
+		ModelVariableReadIn newvar;
 		for (String[] nextline : myEntries) {
 			//ignore comments
 			if (!nextline[0].substring(0, 1).equals(Consts.comment_indicator)) {
@@ -138,42 +144,36 @@ public class Model {
 				//find inputfile(s) for this line / fields_data
 				for (InputFile myinputfile : inputfiles) {
 					if (myinputfile.isDatentyp(fields_data.get(Consts.modInputfileCol))) {
-						//combine columns and filters to array
-						for (int j=0; j<columnnumber; j++) {
-							columns[j]=fields_data.get(Consts.modColumnCol + (j+1));
-							filters[j]=fields_data.get(Consts.modColfilterCol + (j+1));
-							if (!columns[j].isEmpty() && !myinputfile.hasField(columns[j].split(Consts.bracketEsc)[0])) throw new ModelConfigException("Fehler bei Variable "+ fields_data.get(Consts.modVariableCol) + ": "+ columns[j] + " existiert nicht in File "+ myinputfile.getDatentyp()); 
-						}
-						//ModelVariable (String variable, String calculation, String aggregation,  String varfilter, String include, String exclude, String hideme, String[] columns, String[] filter, Model mymodel) throws ModelConfigException{
-						this.modelfiles.get(myinputfile).addVariable(
-									fields_data.get(Consts.modVariableCol),
-									fields_data.get(Consts.modCalcCol),
-									fields_data.get(Consts.modAggCol),
-									fields_data.get(Consts.modFilterCol),
-									fields_data.get(Consts.modIncludeCol),
-									fields_data.get(Consts.modExcludeCol),
-									fields_data.get(Consts.modHideCol),
-									columns,
-									filters,
-									this);
+						newvar = new ModelVariableReadIn(fields_data,columnnumber,myinputfile);
+						this.modelfiles.get(myinputfile).addVariable(newvar,this);
 					}
 				}
 			}
 		}
 		
-	   //read Coeffs -> if error model creates profile only
-		try {
-			reader = new CSVReader(new FileReader(coefffile), ';', '"', 1);
-			myEntries = reader.readAll();
-			reader.close();
-		    for (String[] nextline1 : myEntries) {
-		    	this.coeffs.put(nextline1[0].toUpperCase(), Double.parseDouble(nextline1[1].replace(",", ".")));
-		    }
-		} catch (IOException e) {
-			System.out.println("Fehler beim Einlesen der Koeffizienten für Modell "+ name + ". Es werden nur Profile für das Modell gebildet.");
-			this.iHaveCoeffs = false;
+		if (!coefffile.isEmpty()) {
+		   //read Coeffs -> if error model creates profile only
+			try {
+				reader = new CSVReader(new FileReader(coefffile), ';', '"', 1);
+				myEntries = reader.readAll();
+				reader.close();
+			    for (String[] nextline1 : myEntries) {
+			    	this.coeffs.put(nextline1[0].toUpperCase(), Double.parseDouble(nextline1[1].replace(",", ".")));
+			    }
+			} catch (IOException e) {
+				System.out.println("Fehler beim Einlesen der Koeffizienten für Modell "+ name + ". Es werden nur Profile für das Modell gebildet.");
+				this.iHaveCoeffs = false;
+			}
 		}
+		//set Interceptname
+		if (Konfiguration.interceptname != null) this.interceptname=Konfiguration.interceptname;
 	}
+	
+	//ohne Koeffizienten 
+		public Model (String name, List<InputFile> inputfiles, String configfile) throws Exception {
+			this(name,inputfiles,configfile,"");
+		}
+	
 	
 	
 	/**
@@ -224,6 +224,10 @@ public class Model {
 		return mycoeff;
 	}
 	
+	public double getCoeffIntercept () {
+		return getCoeff(this.interceptname);
+	}
+	
 	/**
 	 * Checks for coeffs.
 	 *
@@ -247,6 +251,14 @@ public class Model {
 	
 	public void setExclusion (boolean b) {
 		iHaveExclusion = b;
+	}
+	
+	public boolean hasTargets () {
+		return iHaveTargets;
+	}
+	
+	public void setHasTargets (boolean b) {
+		iHaveTargets = b;
 	}
 	
 }

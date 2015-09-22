@@ -6,7 +6,7 @@ Collected constants of general utility.
 **/
 public final class Consts {
 	
-	public static final String version = "2.0";
+	public static final String version = "2.1";
 	
 	/** The Constant satzartFlag. */
 	public static final String satzartFlag = "SATZART";
@@ -38,6 +38,7 @@ public final class Consts {
 	
 	public static final String modIncludeCol = "EINSCHLUSS";
 	public static final String modExcludeCol = "AUSSCHLUSS";
+	public static final String modTargetCol = "TARGET";
 	public static final String modHideCol = "HIDEME";
 	
 	/** The Constant modColumnCol.
@@ -88,11 +89,15 @@ public final class Consts {
 	public static final String bracketEsc = "[\\(\\)]";
 	
 	public static final String wahr = "TRUE";
+	public static final String idfieldseparator = ",";
+	public static final String idfieldheader = "ID";
 	
 	
 	/** The Constant interceptname. 
 	 * Intercept Row in model.coeff(icients) file */
 	public static final String interceptname = "INTERCEPT";
+	
+	public static final String reference_date = "01JAN2012";
 	
 	/** The Constant navalue. 
 	 * for dense profile creation */
@@ -101,6 +106,7 @@ public final class Consts {
 	/** The Constant comment_indicator. 
 	 * for Model config */
 	public static final String comment_indicator = "#";
+	
 	
 	 /**
  	 * Instantiates a new consts.

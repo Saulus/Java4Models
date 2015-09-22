@@ -12,3 +12,7 @@ Parameter configuration: see Models/occ.coeffs (-> model parameters to be applie
 Input files should all be sorted by patient in similar (ascending) order.
 If not, files can be flagged in config, and are sorted before processing.
 
+
+
+Load data in python, and to H2O using svmlight:
+https://groups.google.com/forum/#!topic/h2ostream/VvWWA7ZjVfc

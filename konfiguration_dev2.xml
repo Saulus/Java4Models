@@ -2,25 +2,30 @@
 <konfiguration>
 	<input>
 		<datei>
-			<datentyp>Stamm</datentyp> 
+			<!--  <datentyp>Stamm</datentyp> -->
+			<datentyp>stamm2012</datentyp>
 			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\stamm_v.csv</pfad>
 			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
 			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->
 		</datei>
 		<datei>
-			<datentyp>Arzneimittel</datentyp>
+			<!--  <datentyp>Arzneimittel</datentyp>-->
+			<datentyp>am_evo2012</datentyp>
 			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\am_evo_v.csv</pfad>
 			<dateityp>csv</dateityp> <!-- Satzart / csv -->
 			<istsortiert>False</istsortiert>
 		</datei>
 		<datei>
-			<datentyp>Stationaer</datentyp>
+			<!--  <datentyp>Stationaer</datentyp>-->
+			<datentyp>kh_diagnose2012</datentyp>
 			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\kh_diagnose_v.csv</pfad>
 			<dateityp>csv</dateityp> <!-- Satzart / csv -->
 			<istsortiert>False</istsortiert>
 		</datei>
 		<datei>
-			<datentyp>Ambulant</datentyp>
+			<!--  <datentyp>Ambulant</datentyp>-->
+			<datentyp>arzt_diagnose2012</datentyp>
 			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\arzt_diagnose_v.csv</pfad>
 			<dateityp>csv</dateityp> <!-- Satzart / csv -->
 			<istsortiert>False</istsortiert>
@@ -30,9 +35,9 @@
 	<modellpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\Java4Models\Models</modellpfad>
 	<!-- optionale Parameter -->
 	<createProfilDense>True</createProfilDense>
-	<createProfilSparse>True</createProfilSparse>
+	<createProfilMatlab>True</createProfilMatlab>
+	<createProfilSvmlight>True</createProfilSvmlight>
 	<createScores>False</createScores>
-	<idField>PID</idField>
 	<outputfile>scores.csv</outputfile>
 	<interceptname>INTERCEPT</interceptname>
 	<reference_date>01JAN2012</reference_date>

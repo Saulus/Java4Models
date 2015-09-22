@@ -6,6 +6,7 @@
 			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\stamm_v.csv</pfad>
 			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
 			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr+value(8)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->
 		</datei>
 		<datei>
 			<datentyp>Arzneimittel</datentyp>
@@ -24,15 +25,16 @@
 			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\arzt_diagnose_v.csv</pfad>
 			<dateityp>csv</dateityp> <!-- Satzart / csv -->
 			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr+value(8)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->
 		</datei>
 	</input>
 	<outputpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall</outputpfad>
 	<modellpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\Java4Models\Models</modellpfad>
 	<!-- optionale Parameter -->
 	<createProfilDense>True</createProfilDense>
-	<createProfilSparse>True</createProfilSparse>
+	<createProfilMatlab>False</createProfilMatlab>
+	<createProfilSvmlight>True</createProfilSvmlight>
 	<createScores>False</createScores>
-	<idField>PID</idField>
 	<outputfile>scores.csv</outputfile>
 	<interceptname>INTERCEPT</interceptname>
 	<reference_date>01JAN2012</reference_date>

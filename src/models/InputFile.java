@@ -48,6 +48,10 @@ public class InputFile {
 	/** The has row. */
 	private boolean hasRow = false; 
 	
+	private IDfield[] idfields;
+	private String currentID;
+	
+	
 	/**
 	 * Instantiates a new input file.
 	 *
@@ -56,11 +60,13 @@ public class InputFile {
 	 * @param filetype the filetype
 	 * @throws Exception the exception
 	 */
-	public InputFile (String datentyp, String path, String filetype) throws Exception {
+	public InputFile (String datentyp, String path, String filetype, String[] idfields) throws Exception {
 		//ToDo: Eigene Reader-Classe als Wrapper für z.B. flatpack, csvreader usw.
 		this.datentyp = datentyp;
 		this.filetype = filetype;
 		this.path = path;
+		this.idfields = new IDfield[idfields.length];
+		for (int i=0;i<idfields.length;i++) this.idfields[i] = new IDfield(idfields[i]);
 		if (filetype.equals(Consts.satzartFlag)) {
 				FileDefinitions filedef = new FileDefinitions();
 				String myDef = filedef.getDefinition(datentyp);
@@ -113,9 +119,26 @@ public class InputFile {
 	 *
 	 * @return true, if successful
 	 */
-	public boolean nextRow () {
+	public boolean nextRow(boolean checkID) throws Exception {
 		hasRow = myDataset.next();
+		if (hasRow && checkID) {
+			currentID = "";
+			try {
+				for (int i=0; i<idfields.length; i++) 
+					currentID += idfields[i].getFinalValue(this.getValue(idfields[i].getField()));
+			} catch (Exception e) {
+				currentID="";
+			}
+			if (currentID=="") {
+				hasRow = false;
+				throw new Exception("Keine ID in File " + this.datentyp + ", Zeile "+myDataset.getRowNo()+". Zeile wird ignoriert.");
+			}
+		}
 		return hasRow;
+	}
+	
+	public boolean nextRow() throws Exception {
+		return this.nextRow(true);
 	}
 	
 	/**
@@ -126,6 +149,20 @@ public class InputFile {
 	 */
 	public String getValue (String field) {
 		return myDataset.getString(field);
+	}
+	
+	public String getID() {
+		return currentID;
+	}
+	
+	//returns fields in one String, Komma-separated
+	public String getIDFields() {
+		String fields="";
+		for (int i=0; i<idfields.length; i++) {
+			if (i==0) fields=idfields[i].getField();
+			else fields+=","+idfields[i].getField();
+		}
+		return fields;
 	}
 	
 	/**

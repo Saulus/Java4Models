@@ -25,6 +25,10 @@ public class Datei {
 	@Element(defaultValue="false")
 	public boolean istsortiert;
 	
+	/** The id field. */
+	@Element(defaultValue="PID")
+	public String idfeld;
+	
 	/**
 	 * Checks if is sorted.
 	 *
@@ -86,6 +90,12 @@ public class Datei {
 	 */
 	public void setFiletype(String f) {
 		dateityp = f;
+	}
+	
+	public String[] getIdfeld() {
+		if (idfeld==null) idfeld = "PID";
+		String[] tokens = idfeld.split(Consts.idfieldseparator);
+		return tokens;
 	}
 
 }
