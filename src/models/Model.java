@@ -31,9 +31,9 @@ class ModelFile {
 	 * @param otherfieldfilter the otherfieldfilter String from Model.config
 	 * @param variable the variablefrom Model.config
 	 */
-	public void addVariable (ModelVariableReadIn readvar, Model mymodel) throws ModelConfigException {
+	public void addVariable (ModelVariableReadIn readvar, Model mymodel,Konfiguration config) throws ModelConfigException {
 		if (!readvar.getVariableCol().equals("") && !readvar.getColumns()[0].equals("")) {
-			ModelVariable v = new ModelVariable(readvar, mymodel);
+			ModelVariable v = new ModelVariable(readvar, mymodel,config);
 			filevars.add(v);
 		}
 	}
@@ -114,8 +114,9 @@ public class Model {
 	 * @param coefffile the coefffile
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public Model (String name, List<InputFile> inputfiles, String configfile, String coefffile) throws Exception {
+	public Model (String name, List<InputFile> inputfiles, Konfiguration config) throws Exception {
 		this.name = name;
+		String configfile = config.getModelpath() + "\\" + name+config.getModelConfigExt();
 		//Create one modelfile object per inputfile
 		for (InputFile myinputfile : inputfiles) {
 			ModelFile mymodelfile = new ModelFile();
@@ -145,14 +146,15 @@ public class Model {
 				for (InputFile myinputfile : inputfiles) {
 					if (myinputfile.isDatentyp(fields_data.get(Consts.modInputfileCol))) {
 						newvar = new ModelVariableReadIn(fields_data,columnnumber,myinputfile);
-						this.modelfiles.get(myinputfile).addVariable(newvar,this);
+						this.modelfiles.get(myinputfile).addVariable(newvar,this,config);
 					}
 				}
 			}
 		}
 		
-		if (!coefffile.isEmpty()) {
-		   //read Coeffs -> if error model creates profile only
+		if (config.createScores()) {
+		   //read Coeffs, if available
+			String coefffile=config.getModelpath() + "\\" + name+config.getModelCoeffExt();
 			try {
 				reader = new CSVReader(new FileReader(coefffile), ';', '"', 1);
 				myEntries = reader.readAll();
@@ -168,12 +170,6 @@ public class Model {
 		//set Interceptname
 		if (Konfiguration.interceptname != null) this.interceptname=Konfiguration.interceptname;
 	}
-	
-	//ohne Koeffizienten 
-		public Model (String name, List<InputFile> inputfiles, String configfile) throws Exception {
-			this(name,inputfiles,configfile,"");
-		}
-	
 	
 	
 	/**

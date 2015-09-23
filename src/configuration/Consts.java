@@ -107,6 +107,11 @@ public final class Consts {
 	 * for Model config */
 	public static final String comment_indicator = "#";
 	
+	/** 
+	 * looking for (datei) in Model config-filters
+	 */
+	public static final String filterfilelocation="\\filter";
+	
 	
 	 /**
  	 * Instantiates a new consts.

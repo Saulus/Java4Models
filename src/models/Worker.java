@@ -158,18 +158,13 @@ public class Worker {
 			System.out.println("Keine Modellkonfiguration in " + config.getModelpath() + " gefunden");
 			worked = false;
 		} else {
+			Model newmodel;
 			for (File file : listOfFiles) {
 			    if (file.isFile()) {
 			    	String modelname = file.getName().replaceFirst("[.][^.]+$", "");
 			    	if (!processedModels.contains(modelname)) {
 			    		try {
-			    			Model newmodel;
-			    			if (config.createScores()) {
-			    				newmodel = new Model(modelname, inputfiles, config.getModelpath() + "\\" + modelname+config.getModelConfigExt(), config.getModelpath() + "\\" + modelname+config.getModelCoeffExt());
-			    			}
-			    			else { 
-			    				newmodel = new Model(modelname, inputfiles, config.getModelpath() + "\\" + modelname+config.getModelConfigExt());
-			    			}
+			    			newmodel = new Model(modelname, inputfiles, config);
 			    			models.add(newmodel);
 			    			knownVariables.put(newmodel,  new ArrayList<String>()); //init
 			    			knownVariables_targets.put(newmodel,  new ArrayList<String>()); //init

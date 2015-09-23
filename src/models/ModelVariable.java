@@ -203,9 +203,9 @@ class ModelVariableCols {
 	private HashSet<String> filtervalues = null; //if read in from file
 	private String filterend = "";
 	
-	public ModelVariableCols (String col, String filter) throws Exception {
+	public ModelVariableCols (String col, String filter, Konfiguration config) throws Exception {
 		parseCol(col);
-		parseFilter(filter);
+		parseFilter(filter,config);
 	}
 	
 	private void parseCol (String col) throws Exception {
@@ -229,14 +229,15 @@ class ModelVariableCols {
 		}
 	}
 	
-	private void parseFilter (String filter) throws Exception {
+	private void parseFilter (String filter, Konfiguration config) throws Exception {
 		if (!filter.equals("")) {
 			//1: test whether File as in (File)
 			if (filter.startsWith("(")) {
 				String[] parts = filter.split(Consts.bracketEsc);
-				CSVReader reader = new CSVReader(new FileReader(parts[1]), ';', '"');
+				CSVReader reader = new CSVReader(new FileReader(config.getModelpath() + Consts.filterfilelocation  + "\\" + parts[1]), ';', '"');
 				List<String[]> myEntries = reader.readAll();
 				reader.close();
+				filtervalues = new HashSet<String>();
 				for (String[] nextline : myEntries) {
 					filtervalues.add(nextline[0]);
 				}
@@ -374,7 +375,7 @@ public class ModelVariable {
 	private boolean target; //if target: print separately, do not include in coeff-calculation
 	private boolean hideme; //if true: do not print var
 	
-	public ModelVariable (ModelVariableReadIn readvar, Model mymodel) throws ModelConfigException{
+	public ModelVariable (ModelVariableReadIn readvar, Model mymodel, Konfiguration config) throws ModelConfigException{
 		String[] tokens;
 		//parse variable name
 		try {
@@ -418,7 +419,7 @@ public class ModelVariable {
 			cols = new ModelVariableCols[readvar.getColumns().length]; 
 			for (int i=0; i<readvar.getColumns().length; i++) {
 				number=i+1;
-				cols[i] = new ModelVariableCols(readvar.getColumns()[i],readvar.getFilters()[i]);	
+				cols[i] = new ModelVariableCols(readvar.getColumns()[i],readvar.getFilters()[i],config);	
 			}
 		} catch (Exception e) {
 			throw new ModelConfigException("Fehler bei Variable "+  readvar.getVariableCol() + ": " + Consts.modColumnCol + number + " bzw. " + Consts.modColfilterCol + number + " nicht lesbar",e); 
