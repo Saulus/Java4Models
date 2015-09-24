@@ -29,6 +29,9 @@ public class Datei {
 	@Element(defaultValue="PID")
 	public String idfeld;
 	
+	@Element
+	public String zusatzinfo;
+	
 	/**
 	 * Checks if is sorted.
 	 *
@@ -97,5 +100,15 @@ public class Datei {
 		String[] tokens = idfeld.split(Consts.idfieldseparator);
 		return tokens;
 	}
+	
+	public boolean hasZusatzinfo() {
+		return (zusatzinfo != null && !zusatzinfo.equals(""));
+	}
+	
+	public String getZusatzinfo() {
+		if (zusatzinfo != null) return zusatzinfo;
+		return "";
+	}
+	
 
 }

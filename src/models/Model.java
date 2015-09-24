@@ -129,9 +129,12 @@ public class Model {
 		reader.close();
 		//first line = header-line
 		String[] headerline = myEntries.get(0);
-		//count number of column/filters
+		//make uppercase and count number of column/filters
 		int columnnumber=0;
-		for (int j=0; j<headerline.length; j++) { if (headerline[j].toUpperCase().startsWith(Consts.modColumnCol)) columnnumber++; }
+		for (int j=0; j<headerline.length; j++) {
+			headerline[j] = headerline[j].toUpperCase();
+			if (headerline[j].startsWith(Consts.modColumnCol)) columnnumber++; 
+		}
 		myEntries.remove(0);
 		ModelVariableReadIn newvar;
 		for (String[] nextline : myEntries) {
@@ -140,7 +143,7 @@ public class Model {
 				//add current line values to Hashmap (header -> value)
 				//this prohibits errors from wrong column order in config file
 				for (int j=0; j<nextline.length; j++) {
-					fields_data.put(headerline[j].toUpperCase(), nextline[j].toUpperCase());
+					fields_data.put(headerline[j], nextline[j]);
 				}
 				//find inputfile(s) for this line / fields_data
 				for (InputFile myinputfile : inputfiles) {

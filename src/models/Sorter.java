@@ -3,6 +3,8 @@ package models;
 import java.io.File;
 import java.io.FileWriter;
 import java.sql.*;
+import java.util.HashMap;
+
 import au.com.bytecode.opencsv.CSVWriter;
 
 /**
@@ -51,13 +53,13 @@ public class Sorter extends InputFile {
 	}
 
 	/**
-	 * reads CSV into database.
+	 * reads CSV into database. Adds a new column if needed
 	 *
 	 * @param sortfield the sortfield
 	 * @return String newFile (incl. path) (=csv)
 	 * @throws Exception the exception
 	 */
-	public String sortFileByID() throws Exception {
+	public String sortFileByID(boolean addColumn, String sourcecol, String targetcol, HashMap<String,String> translator) throws Exception {
 		Statement stmt = sqldb.createStatement();
 		//1. create table with headers and one hash information
 		String createSQL = "create table sortdb (";
@@ -68,18 +70,29 @@ public class Sorter extends InputFile {
 			createSQL +=  "'"+headerline[i] + "' TEXT, ";
 			insertSQL += "?,";
 		}
-		createSQL +=  "'" + headerline[colcount-1] + "' TEXT);";
-		insertSQL +=  "?);";
+		if (addColumn) {
+			insertSQL += "?,?);";
+			createSQL +=  "'" + headerline[colcount-1] + "' TEXT, ";
+			createSQL +=  "'"+targetcol + "' TEXT);";
+		} else {
+			createSQL +=  "'" + headerline[colcount-1] + "' TEXT);";
+			insertSQL +=  "?);";
+		}
 		stmt.executeUpdate(createSQL);
 		stmt.close();
 		//2. read and import csv data
 		PreparedStatement prep = sqldb.prepareStatement(insertSQL);
+		String targetcolval = null;
 		while (this.nextRow(false)) {
 			for (int i=0; i<50000;i++) {
 				if (this.hasRow()) {
 					for (int j=0; j<colcount; j++) {
 				        	prep.setString(j+1, this.getValue(headerline[j])); //i+1 as statements start with 1
+				        	if (addColumn && headerline[j].equals(sourcecol)) {
+				        		targetcolval=translator.get(this.getValue(headerline[j]));
+				        	}
 				    }
+					if (addColumn) if (targetcolval != null) prep.setString(colcount+1,targetcolval); else prep.setString(colcount+1,"");
 				    prep.addBatch();
 				    this.nextRow(false);
 				} else {
@@ -110,5 +123,10 @@ public class Sorter extends InputFile {
 	    }
 	    return this.getPath()+sortedfileext;
 	}	
+	
+	//without adding a new column
+	public String sortFileByID() throws Exception {
+		return this.sortFileByID(false, null, null, null);
+	}
 
 }

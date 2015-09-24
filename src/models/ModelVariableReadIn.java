@@ -6,7 +6,8 @@ import configuration.Consts;
 
 /**
  * The Class ModelVariableReadIn.
- * Just for reading in Strings from csv-row, and returning as needed
+ * Just for reading in Strings from csv-row, and returning as needed (e.e. uppercase if needed) 
+ * Non-Uppercase for filters only!
  * 
  *  
  */
@@ -20,7 +21,7 @@ public class ModelVariableReadIn {
 		columns = new String[filtercolumns];
 		filters = new String[filtercolumns];
 		for (int j=0; j<filtercolumns; j++) {
-			columns[j]=myrow.get(Consts.modColumnCol + (j+1));
+			columns[j]=myrow.get(Consts.modColumnCol + (j+1)).toUpperCase();
 			filters[j]=myrow.get(Consts.modColfilterCol + (j+1));
 			if (!columns[j].isEmpty() && !myinputfile.hasField(columns[j].split(Consts.bracketEsc)[0])) throw new ModelConfigException("Fehler bei Variable "+ myrow.get(Consts.modVariableCol) + ": "+ columns[j] + " existiert nicht in File "+ myinputfile.getDatentyp()); 
 		}
@@ -29,28 +30,28 @@ public class ModelVariableReadIn {
 
 	
 	public String getVariableCol() {
-		return this.myrow.get(Consts.modVariableCol);
+		return this.myrow.get(Consts.modVariableCol).toUpperCase();
 	}
 	public String getCalcCol() {
-		return this.myrow.get(Consts.modCalcCol);
+		return this.myrow.get(Consts.modCalcCol).toUpperCase();
 	}
 	public String getAggCol() {
-		return this.myrow.get(Consts.modAggCol);
+		return this.myrow.get(Consts.modAggCol).toUpperCase();
 	}
 	public String getFilterCol() {
 		return this.myrow.get(Consts.modFilterCol);
 	}
 	public String getIncludeCol() {
-		return this.myrow.get(Consts.modIncludeCol);
+		return this.myrow.get(Consts.modIncludeCol).toUpperCase();
 	}
 	public String getExcludeCol() {
-		return this.myrow.get(Consts.modExcludeCol);
+		return this.myrow.get(Consts.modExcludeCol).toUpperCase();
 	}
 	public String getTargetCol() {
-		return this.myrow.get(Consts.modTargetCol);
+		return this.myrow.get(Consts.modTargetCol).toUpperCase();
 	}
 	public String getHideCol() {
-		return this.myrow.get(Consts.modHideCol);
+		return this.myrow.get(Consts.modHideCol).toUpperCase();
 	}
 	public String[] getColumns() {		
 		return this.columns;

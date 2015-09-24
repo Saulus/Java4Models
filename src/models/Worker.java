@@ -1,6 +1,7 @@
 package models;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import configuration.Consts;
 import configuration.Datei;
 import configuration.Konfiguration;
 import configuration.Utils;
+import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
 /**
@@ -126,7 +128,22 @@ public class Worker {
 					Sorter sortfile = new Sorter(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld(),config.getTmpPath());
 					timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 					System.out.println(timeStamp + " Sortieren gestartet von " + nextfile.getPath());
-					String newpath = sortfile.sortFileByID();
+					String newpath;
+					//add new column from zusatzinfo?
+					if (nextfile.hasZusatzinfo()) {
+						CSVReader reader = new CSVReader(new FileReader(nextfile.getZusatzinfo()), ';', '"');
+						List<String[]> myEntries = reader.readAll();
+						reader.close();
+						//first line = header-line
+						String[] headerline = myEntries.get(0); myEntries.remove(0);
+						for (int j=0; j<headerline.length; j++) { headerline[j] = headerline[j].toUpperCase(); }
+						//create HashMap for easy translation
+						HashMap<String,String> translator = new HashMap<String,String>(); 
+						for (String[] nextline : myEntries) {
+							translator.put(nextline[0], nextline[1]);
+						}
+						newpath = sortfile.sortFileByID(true,headerline[0],headerline[1],translator);
+					} else newpath = sortfile.sortFileByID();
 					timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 					System.out.println(timeStamp + " Sortieren beendet von " + nextfile.getPath());
 					nextfile.setPath(newpath);
