@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<konfiguration>
+	<input>
+	<!--g1:2009->2010-->
+		<datei>
+			<datentyp>stamm2009_g1</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\stamm_v_2009.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2009_g1</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\arzt_diagnose_v_2009.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+		<datei>
+			<datentyp>kh_diagnose2009_g1</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\kh_diagnose_v_2009.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+		<datei>
+			<datentyp>am_evo2009_g1</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\am_evo_v_2009.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>stamm2010_g1</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\stamm_v_2010.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2010_g1</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\arzt_diagnose_v_2010.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+		<datei>
+			<datentyp>kh_diagnose2010_g1</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\kh_diagnose_v_2010.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+	<!--g2:2010->2011-->
+		<datei>
+			<datentyp>stamm2010_g2</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\stamm_v_2010.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2010_g2</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\arzt_diagnose_v_2010.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+		</datei>
+		<datei>
+			<datentyp>kh_diagnose2010_g2</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\kh_diagnose_v_2010.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+		</datei>
+		<datei>
+			<datentyp>am_evo2010_g2</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\am_evo_v_2010.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>stamm2011_g2</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\stamm_v_2011.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2011_g2</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\arzt_diagnose_v_2011.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+		<datei>
+			<datentyp>kh_diagnose2011_g2</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\kh_diagnose_v_2011.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+	<!--g3:2011->2012-->
+		<datei>
+			<datentyp>stamm2011_g3</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\stamm_v_2011.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2011_g3</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\arzt_diagnose_v_2011.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+		</datei>
+		<datei>
+			<datentyp>kh_diagnose2011_g3</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\kh_diagnose_v_2011.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>am_evo2011_g3</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\am_evo_v_2011.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>stamm2012_g3</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\stamm_v_2012.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2012_g3</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\arzt_diagnose_v_2012.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+		<datei>
+			<datentyp>kh_diagnose2012_g3</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\kh_diagnose_v_2012.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+	<!--g4:2012->2013-->
+		<datei>
+			<datentyp>stamm2012_g4</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\stamm_v_2012.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2012_g4</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\arzt_diagnose_v_2012.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+		</datei>
+		<datei>
+			<datentyp>kh_diagnose2012_g4</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\kh_diagnose_v_2012.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>am_evo2012_g4</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\am_evo_v_2012.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>stamm2013_g4</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\stamm_v_2013.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2013_g4</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\arzt_diagnose_v_2013.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+		<datei>
+			<datentyp>kh_diagnose2013_g4</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\kh_diagnose_v_2013.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+	<!--g5:2013->2014-->
+		<datei>
+			<datentyp>stamm2013_g5</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\stamm_v_2013.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2013_g5</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\arzt_diagnose_v_2013.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+		</datei>
+		<datei>
+			<datentyp>kh_diagnose2013_g5</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\kh_diagnose_v_2013.csv.sorted.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>am_evo2013_g5</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\am_evo_v_2013.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>stamm2014_g5</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\stamm_v_2014.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2014_g5</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\arzt_diagnose_v_2014.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+		<datei>
+			<datentyp>kh_diagnose2014_g5</datentyp> 
+			<pfad>D:\Quelldaten\ANALYSE\kh_diagnose_v_2014.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>False</istsortiert>
+			<idfeld>PID,Bezugsjahr-value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+			<zusatzinfo>D:\Quelldaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
+		</datei>
+	</input>
+	<outputpfad>D:\Quelldaten\ANALYSE\automatic</outputpfad>
+	<modellpfad>D:\Userdata\HellwigP\Eigene Dokumente\Java4Models\automatic</modellpfad>
+	<!-- optionale Parameter -->
+	<createProfilDense>False</createProfilDense>
+	<createProfilMatlab>False</createProfilMatlab>
+	<createProfilSvmlight>True</createProfilSvmlight>
+	<createScores>False</createScores>
+	<outputfile>scores.csv</outputfile>
+	<interceptname>INTERCEPT</interceptname>
+	<reference_date>01JAN2009</reference_date>
+</konfiguration>

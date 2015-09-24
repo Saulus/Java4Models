@@ -147,7 +147,7 @@ public class Model {
 				}
 				//find inputfile(s) for this line / fields_data
 				for (InputFile myinputfile : inputfiles) {
-					if (myinputfile.isDatentyp(fields_data.get(Consts.modInputfileCol))) {
+					if (myinputfile.isDatentyp(fields_data.get(Consts.modInputfileCol).toUpperCase())) {
 						newvar = new ModelVariableReadIn(fields_data,columnnumber,myinputfile);
 						this.modelfiles.get(myinputfile).addVariable(newvar,this,config);
 					}

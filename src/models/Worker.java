@@ -191,7 +191,9 @@ public class Worker {
 			    			worked = true; //if one files is ok, then start
 			    		} catch (Exception e) {
 							System.err.println("Fehler gefunden bei Konfiguration des Modells " + modelname + ". Das Modell wird nicht verwendet.");
-							e.printStackTrace();
+							System.err.println("Ort: "+ e.getMessage());
+							System.err.println("Ursache: "+ e.getCause());
+							//e.printStackTrace();
 						}
 			    	}
 			    }
@@ -263,7 +265,7 @@ public class Worker {
 						String[] newline1 = {"#Profile features in svmlight format, see http://svmlight.joachims.org (targets always 1, pids in #info part)"};
 						profilsvmlightfile.get(model).writeNext(newline1);
 						
-						profilsvmlightfileHeader.put(model, new CSVWriter(new FileWriter(config.getProfilfileSvmlight(model.getName(),false)), ' ', CSVWriter.NO_QUOTE_CHARACTER));
+						profilsvmlightfileHeader.put(model, new CSVWriter(new FileWriter(config.getProfilfileSvmlightHeader(model.getName(),false)), ' ', CSVWriter.NO_QUOTE_CHARACTER));
 						String[] newline2 = {"#Header to features, separated by linespace"};
 						profilsvmlightfileHeader.get(model).writeNext(newline2);
 						
@@ -272,7 +274,7 @@ public class Worker {
 							String[] newline3 = {"#Profile targets in svmlight format, see http://svmlight.joachims.org (targets always 1, pids in #info part)"};
 							profilsvmlightfile_targets.get(model).writeNext(newline3);
 							
-							profilsvmlightfileHeader_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileSvmlight(model.getName(),true)), ' ', CSVWriter.NO_QUOTE_CHARACTER));
+							profilsvmlightfileHeader_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileSvmlightHeader(model.getName(),true)), ' ', CSVWriter.NO_QUOTE_CHARACTER));
 							String[] newline4 = {"#Header to targets, separated by linespace"};
 							profilsvmlightfileHeader_targets.get(model).writeNext(newline4);
 						}
@@ -571,13 +573,40 @@ public class Worker {
 					System.out.println("Outputdatei " + config.getProfilfileSparse(model.getName(),false) + " wurde erfolgreich geschrieben.");
 				}
 				if (config.createProfilSvmlight()) { 
+					//write header
+					for (int i =0; i<knownVariables.get(model).size(); i++) {
+						String[] varhead = {Integer.toString(i+1), knownVariables.get(model).get(i)};
+						try {
+							profilsvmlightfileHeader.get(model).writeNext(varhead);
+						} catch (Exception e) {
+							System.out.println("In die Outputdatei " + config.getProfilfileSvmlightHeader(model.getName(),false) + " konnte nicht geschrieben werden.");
+							e.printStackTrace();
+							worked = false;
+						}	
+					}
+					//same for targets
+					 if (model.hasTargets()) {
+						//write COL-translation file for sparse profile (vars)
+						for (int i =0; i<knownVariables_targets.get(model).size(); i++) {
+							String[] varhead = {Integer.toString(i+1), knownVariables_targets.get(model).get(i)};
+							try {
+								profilsvmlightfileHeader_targets.get(model).writeNext(varhead);
+							} catch (Exception e) {
+								System.out.println("In die Outputdatei " + config.getProfilfileSvmlightHeader(model.getName(),true) + " konnte nicht geschrieben werden.");
+								e.printStackTrace();
+								worked = false;
+							}	
+						}
+					 }
 					//close file
 					profilsvmlightfile.get(model).close();
+					profilsvmlightfileHeader.get(model).close();
 				    System.out.println("Outputdatei " + config.getProfilfileSvmlight(model.getName(),false) + " wurde erfolgreich geschrieben.");
 				    //same for targets
 				    if (model.hasTargets()) {
 				    	//close file
 						profilsvmlightfile_targets.get(model).close();
+						profilsvmlightfileHeader_targets.get(model).close();
 					    System.out.println("Outputdatei " + config.getProfilfileSvmlight(model.getName(),true) + " wurde erfolgreich geschrieben.");
 				    }
 				}

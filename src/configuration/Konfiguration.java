@@ -33,7 +33,7 @@ public class Konfiguration {
 	private String profilfileSparseRow = "profil_matlab_rows";
 	
 	private String profilfileSvmlight = "profil_svmlight";
-	private String profilfileSvmlightHead = "profil_svmlight_head";
+	private String profilfileSvmlightHeadExt = "_head";
 	
 	/** The input. */
 	@Element
@@ -196,9 +196,9 @@ public class Konfiguration {
 	
 	public String getProfilfileSvmlightHeader(String model, boolean targets) {
 		if (targets)
-			return outputpfad + "\\" + model + profilfileSvmlightHead + "_targets.csv";
+			return outputpfad + "\\" + model + profilfileSvmlight + "_targets"+profilfileSvmlightHeadExt+".csv";
 		else 
-			return outputpfad + "\\" + model + profilfileSvmlightHead + ".csv";
+			return outputpfad + "\\" + model + profilfileSvmlight + profilfileSvmlightHeadExt+".csv";
 	}
 	
 	
