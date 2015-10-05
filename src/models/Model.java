@@ -32,7 +32,7 @@ class ModelFile {
 	 * @param variable the variablefrom Model.config
 	 */
 	public void addVariable (ModelVariableReadIn readvar, Model mymodel,Konfiguration config) throws ModelConfigException {
-		if (!readvar.getVariableCol().equals("") && !readvar.getColumns()[0].equals("")) {
+		if (!readvar.getVariableCol().equals("") && !readvar.getColumns()[0].isEmpty()) {
 			ModelVariable v = new ModelVariable(readvar, mymodel,config);
 			filevars.add(v);
 		}
@@ -138,12 +138,13 @@ public class Model {
 		myEntries.remove(0);
 		ModelVariableReadIn newvar;
 		for (String[] nextline : myEntries) {
-			//ignore comments
-			if (!nextline[0].substring(0, 1).equals(Consts.comment_indicator)) {
+			//ignore comments and empty lines
+			if (!nextline[0].isEmpty() && !nextline[0].substring(0, 1).equals(Consts.comment_indicator)) {
 				//add current line values to Hashmap (header -> value)
 				//this prohibits errors from wrong column order in config file
-				for (int j=0; j<nextline.length; j++) {
-					fields_data.put(headerline[j], nextline[j]);
+				for (int j=0; j<headerline.length; j++) {
+					if (j<nextline.length)
+						fields_data.put(headerline[j], nextline[j]);
 				}
 				//find inputfile(s) for this line / fields_data
 				for (InputFile myinputfile : inputfiles) {

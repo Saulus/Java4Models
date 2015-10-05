@@ -280,15 +280,13 @@ class ModelVariableAgg {
 	private boolean isMax;
 	private boolean isMaxDistance;
 	private boolean isOccurence;
-	private boolean isStd;
 	
 	
 	
 	public ModelVariableAgg (String type) throws Exception {
-		if (type.equals("")) this.isStd=true;
+		if (type.equals("")) this.isMax=true; //Default: MAX
 		else {
 			this.parseType(type);
-			this.isStd=this.isOccurence;
 		}
 	}
 	
@@ -304,7 +302,7 @@ class ModelVariableAgg {
 	
 	public double aggregateValues (List<Double> values) {
 		double myval=0;
-		if (isOccurence || isStd) return 1;
+		if (isOccurence) return 1;
 		if (isSum) {
 			for (double d: values) myval+=d;
 			//needs rounding.... double not precise; gives not exactly correct numbers
@@ -345,8 +343,8 @@ class ModelVariableAgg {
 		return myval;
 	}
 	
-	public boolean isStd() {
-		return isStd;
+	public boolean isOccurence() {
+		return isOccurence;
 	}
 }
 
@@ -508,8 +506,8 @@ public class ModelVariable {
 		return calc.getOtherVarsDependent();
 	}
 	
-	public boolean isStdAgg () {
-		return agg.isStd();
+	public boolean isOccAgg () {
+		return agg.isOccurence();
 	}
 	
 	public double getValue (String[] columnvalues, HashMap<String,Variable> vars) {

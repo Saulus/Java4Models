@@ -47,7 +47,7 @@ public class Variable {
 	
 	private boolean profvalueIsCalulated = false;
 	
-	private boolean aggIsStd = true; //i.e. 1 (=occurence)
+	private boolean aggIsOccurence = true; //i.e. 1 (=occurence)
 
 
 	public Variable() {
@@ -64,7 +64,7 @@ public class Variable {
 		if (v.isTarget()) isTarget=true; //i.e.: if true for one ModelVar -> true for all
 		if (v.hideme()) hideme=true; //i.e.: if true for one ModelVar -> true for all
 		if (v.dependsOnOtherVar()) dependsOnOtherVars=true;  //if true for one -> must be calculated later
-		if (!v.isStdAgg()) aggIsStd = false;
+		if (!v.isOccAgg()) aggIsOccurence = false;
 	}
 	
 	public boolean isInclude () {
@@ -114,7 +114,7 @@ public class Variable {
 	public void calcProfvalue (HashMap<String,Variable> vars) {
 		if (profvalueIsCalulated) return; 
 		profvalueIsCalulated=true;
-		if (aggIsStd) this.profvalue=1;
+		if (aggIsOccurence) this.profvalue=1;
 		else {
 			List<Double> allvalues = new ArrayList<Double>();
 			//work through variables, filter and consolidate rows, aggregate

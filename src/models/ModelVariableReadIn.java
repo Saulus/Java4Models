@@ -23,7 +23,8 @@ public class ModelVariableReadIn {
 		for (int j=0; j<filtercolumns; j++) {
 			columns[j]=myrow.get(Consts.modColumnCol + (j+1)).toUpperCase();
 			filters[j]=myrow.get(Consts.modColfilterCol + (j+1));
-			if (!columns[j].isEmpty() && !myinputfile.hasField(columns[j].split(Consts.bracketEsc)[0])) throw new ModelConfigException("Fehler bei Variable "+ myrow.get(Consts.modVariableCol) + ": "+ columns[j] + " existiert nicht in File "+ myinputfile.getDatentyp()); 
+			if (!columns[j].isEmpty() && !myinputfile.hasField(columns[j].split(Consts.bracketEsc)[0]))
+					throw new ModelConfigException("Fehler bei Variable "+ myrow.get(Consts.modVariableCol) + ": "+ columns[j] + " existiert nicht in File "+ myinputfile.getDatentyp());
 		}
 	}
 	
