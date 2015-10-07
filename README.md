@@ -16,3 +16,8 @@ If not, files can be flagged in config, and are sorted before processing.
 
 Load data in python, and to H2O using svmlight:
 https://groups.google.com/forum/#!topic/h2ostream/VvWWA7ZjVfc
+
+
+Open issues:
+- ID fiels missing in svmlight header
+- empty ;; row in matlab matrix 

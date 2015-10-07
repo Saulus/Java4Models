@@ -29,6 +29,10 @@ public class Datei {
 	@Element(defaultValue="PID")
 	public String idfeld;
 	
+	/** The istsortiert. */
+	@Element(defaultValue="false")
+	public boolean leadingtable;
+	
 	@Element
 	public String zusatzinfo;
 	
@@ -108,6 +112,10 @@ public class Datei {
 	public String getZusatzinfo() {
 		if (zusatzinfo != null) return zusatzinfo;
 		return "";
+	}
+	
+	public boolean isLeadingTable() {
+		return leadingtable;
 	}
 	
 

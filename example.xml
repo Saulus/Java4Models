@@ -6,7 +6,8 @@
 			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\stamm_v.csv</pfad>
 			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
 			<istsortiert>False</istsortiert>
-			<idfeld>PID,Bezugsjahr+value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+			<idfeld>PID,Bezugsjahr+value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->
+			<leadingtable>True</leadingtable><!-- optional; diese Tabelle wird um Features erweitert, dh. alle Zeile bleiben erhalten -->			
 		</datei>
 		<datei>
 			<datentyp>stamm2010_g1</datentyp> 
@@ -42,7 +43,7 @@
 	<modellpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\Java4Models\Models</modellpfad>
 	<!-- optionale Parameter -->
 	<createProfilDense>True</createProfilDense>
-	<createProfilMatlab>False</createProfilMatlab>
+	<createProfilMatlab>True</createProfilMatlab>
 	<createProfilSvmlight>True</createProfilSvmlight>
 	<createScores>False</createScores>
 	<outputfile>scores.csv</outputfile>

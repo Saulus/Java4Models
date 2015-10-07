@@ -19,7 +19,6 @@ class PatientModel {
 	private boolean profValuesAreCalculated=false;
 	private boolean amIincluded=true;
 	private boolean amIexcluded=false;
-	String interceptname;
 
 	
 	public PatientModel(Model model) {

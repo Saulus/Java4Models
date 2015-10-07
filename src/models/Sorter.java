@@ -83,7 +83,7 @@ public class Sorter extends InputFile {
 		//2. read and import csv data
 		PreparedStatement prep = sqldb.prepareStatement(insertSQL);
 		String targetcolval = null;
-		while (this.nextRow(false)) {
+		while (this.nextRow()) {
 			for (int i=0; i<50000;i++) {
 				if (this.hasRow()) {
 					for (int j=0; j<colcount; j++) {
@@ -94,7 +94,7 @@ public class Sorter extends InputFile {
 				    }
 					if (addColumn) if (targetcolval != null) prep.setString(colcount+1,targetcolval); else prep.setString(colcount+1,"");
 				    prep.addBatch();
-				    this.nextRow(false);
+				    this.nextRow();
 				} else {
 					break;
 				}

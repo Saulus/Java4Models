@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,6 +47,8 @@ public class Worker {
 	/** The config. */
 	private Konfiguration config;
 	
+	private InputFile ourLeaderfile = null;
+	
 	/** The outputfile. */
 	private CSVWriter outputfile; 
 	
@@ -55,36 +58,45 @@ public class Worker {
 	
 	/** Matlab format */
 	private HashMap<Model,CSVWriter> profilsparsefile = new HashMap<Model,CSVWriter>();
-	private HashMap<Model,CSVWriter> profilsparsefileCols = new HashMap<Model,CSVWriter>();
 	private HashMap<Model,CSVWriter> profilsparsefileRows = new HashMap<Model,CSVWriter>();
 	private HashMap<Model,CSVWriter> profilsparsefile_targets = new HashMap<Model,CSVWriter>();
-	private HashMap<Model,CSVWriter> profilsparsefileCols_targets = new HashMap<Model,CSVWriter>();
 	
 	/** Svmlight format */
 	private HashMap<Model,CSVWriter> profilsvmlightfile = new HashMap<Model,CSVWriter>();
-	private HashMap<Model,CSVWriter> profilsvmlightfileHeader = new HashMap<Model,CSVWriter>();
 	private HashMap<Model,CSVWriter> profilsvmlightfile_targets = new HashMap<Model,CSVWriter>();
-	private HashMap<Model,CSVWriter> profilsvmlightfileHeader_targets = new HashMap<Model,CSVWriter>();
 	
 	/** The known variables. */
 	private HashMap<Model,ArrayList<String>> knownVariables = new HashMap<Model,ArrayList<String>>();//holds known variables per Model    
 	private HashMap<Model,ArrayList<String>> knownVariables_targets = new HashMap<Model,ArrayList<String>>();//holds known variables per Model (targets only)
 	
 	/**
-	 * Find next patient.
+	 * Find next patient. Uses either the first available ID from all files (sorted by ID),
+	 * or in case of leaderfile the next id from that... warps back all other files where last id fits
 	 *
 	 * @return the patient
 	 */
 	private Patient findNextPatient() {
 		Patient newpatient= null;
-		List<String> pidliste = new ArrayList<String>();
-		for (InputFile infile : inputfiles) {
-			if (infile.hasRow()) 
-				pidliste.add(infile.getID());
-		}
-		if (!pidliste.isEmpty()) {
-			Collections.sort(pidliste);
-			newpatient= new Patient(pidliste.get(0));
+		if (ourLeaderfile == null) { 
+			// traditional work through; pid by pid
+			List<String> pidliste = new ArrayList<String>();
+			for (InputFile infile : inputfiles) {
+				if (infile.hasRow()) 
+					pidliste.add(infile.getID());
+			}
+			if (!pidliste.isEmpty()) {
+				Collections.sort(pidliste);
+				newpatient= new Patient(pidliste.get(0));
+			}
+		} else {
+			//leaderfile: row by row in that file
+			//warp back all others
+			if (ourLeaderfile.hasRow()) {
+				newpatient= new Patient(ourLeaderfile.getID());
+				for (InputFile infile : inputfiles) {
+					if (infile != ourLeaderfile) infile.warpBackForID(newpatient.getPid());
+				}
+			}
 		}
 		return newpatient;
 	}
@@ -96,7 +108,7 @@ public class Worker {
 	private void nextRowAllFiles () {
 		for (InputFile infile : inputfiles) {
 			try {
-				infile.nextRow();
+				infile.nextRow(true,ourLeaderfile != null);
 			} catch (Exception e) {
 				System.out.println(e.getMessage());
 			}
@@ -160,6 +172,8 @@ public class Worker {
 				timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 				System.out.println(timeStamp + " Einlesen der Inputdatei "+ nextfile.getPath() + " gestartet.");
 				InputFile newfile = new InputFile(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld());
+				newfile.setLeader(nextfile.isLeadingTable());
+				if (newfile.isLeader()) ourLeaderfile=newfile;
 				inputfiles.add(newfile);
 				worked = true; //if one files is ok, then start
 			} catch (Exception e) {
@@ -239,13 +253,6 @@ public class Worker {
 						//write header
 						profilsparsefile.get(model).writeNext(newline);
 						if (model.hasTargets()) profilsparsefile_targets.get(model).writeNext(newline);
-						//Col-&Row-Translation File
-						profilsparsefileCols.put(model, new CSVWriter(new FileWriter(config.getProfilfileSparseCOLs(model.getName(),false)), ';', CSVWriter.NO_QUOTE_CHARACTER));
-						if (model.hasTargets()) profilsparsefileCols_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileSparseCOLs(model.getName(),true)), ';', CSVWriter.NO_QUOTE_CHARACTER));
-						//write header
-						String[] colline = {"COL_NO","VARIABLE"};
-						profilsparsefileCols.get(model).writeNext(colline);
-						if (model.hasTargets()) profilsparsefileCols_targets.get(model).writeNext(colline);
 						//write header
 						profilsparsefileRows.put(model, new CSVWriter(new FileWriter(config.getProfilfileSparseROWs(model.getName())), ';', CSVWriter.NO_QUOTE_CHARACTER));
 						String[] rowline = {"ROW_NO",Consts.idfieldheader};
@@ -265,18 +272,10 @@ public class Worker {
 						String[] newline1 = {"#Profile features in svmlight format, see http://svmlight.joachims.org (targets always 1, pids in #info part)"};
 						profilsvmlightfile.get(model).writeNext(newline1);
 						
-						profilsvmlightfileHeader.put(model, new CSVWriter(new FileWriter(config.getProfilfileSvmlightHeader(model.getName(),false)), ' ', CSVWriter.NO_QUOTE_CHARACTER));
-						String[] newline2 = {"#Header to features, separated by linespace"};
-						profilsvmlightfileHeader.get(model).writeNext(newline2);
-						
 						if (model.hasTargets()) {
 							profilsvmlightfile_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileSvmlight(model.getName(),true)), ' ', CSVWriter.NO_QUOTE_CHARACTER));
 							String[] newline3 = {"#Profile targets in svmlight format, see http://svmlight.joachims.org (targets always 1, pids in #info part)"};
 							profilsvmlightfile_targets.get(model).writeNext(newline3);
-							
-							profilsvmlightfileHeader_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileSvmlightHeader(model.getName(),true)), ' ', CSVWriter.NO_QUOTE_CHARACTER));
-							String[] newline4 = {"#Header to targets, separated by linespace"};
-							profilsvmlightfileHeader_targets.get(model).writeNext(newline4);
 						}
 					} catch (Exception e) {
 						System.err.println("Die Outputdatei " + config.getProfilfileSvmlight(model.getName(),false) + " konnte nicht erstellt werden.");
@@ -287,6 +286,14 @@ public class Worker {
 			}
 		} //Ende test listOfFiles==null
 		return  worked;
+	}
+	
+	private void workThroughInfile (InputFile infile, Patient patient) throws Exception {
+		//loop though models and process row for the patient
+		for (Model model : models) {
+			patient.processRow(model, infile);
+		}
+		infile.nextRow(true,ourLeaderfile != null);
 	}
 	
 	/**
@@ -309,22 +316,25 @@ public class Worker {
 			rowNo++;
 		    //for each input file... 
 			for (InputFile infile : inputfiles) {
-				//..that still has a valid Row and the correct Patient  
-				while ((infile.hasRow()) && patient.isPatient(infile.getID())) {
-					//loop though models
-					for (Model model : models) {
+				//it its the leaderfile: process only once
+				if (infile == ourLeaderfile) {
+					try {
+						workThroughInfile(infile,patient);
+					} catch (Exception e) {
+						System.err.println(e.getMessage());
+						worked=false;
+						break;
+					}
+				} else {
+					//if no leaderfile: ..loop...that still has a valid Row and the correct Patient  
+					while ((infile.hasRow()) && patient.isPatient(infile.getID())) {
 						try {
-							patient.processRow(model, infile);
+							workThroughInfile(infile,patient);
 						} catch (Exception e) {
 							System.err.println(e.getMessage());
 							worked=false;
 							break;
 						}
-					}
-					try {
-						infile.nextRow();
-					} catch (Exception e) {
-						System.out.println(e.getMessage());
 					}
 				}
 			}
@@ -349,6 +359,12 @@ public class Worker {
 				}
 				//2. Profiles
 				if (config.createProfilDense() || config.createProfilSparse() || config.createProfilSvmlight()) {
+					//if leaderfile: get all leaderfile_columns
+					String[] leaderrow = null;
+					if (this.ourLeaderfile!=null) {
+						leaderrow = new String[this.ourLeaderfile.getColnames().length];
+						for (int i=0;i<leaderrow.length;i++) leaderrow[i]=this.ourLeaderfile.getValue(this.ourLeaderfile.getColnames()[i]);
+					}
 					boolean isincluded = false;
 					for (Model model : models) {
 						if (patient.areYouIncluded(model)) {
@@ -368,108 +384,24 @@ public class Worker {
 								profValues_targets = patient.getProfvalues(model,knownVars_targets);
 							}
 							if (config.createProfilDense()) {
-								//output PID+Profilvalues only
-								newline = new ArrayList<String>();
-								newline.add(patient.getPid());
-								newline.addAll(profValues);
-								try {
-									profildensefile.get(model).writeNext(newline.toArray(new String[newline.size()]));
-								} catch (Exception e) {
-									System.err.println("In die Outputdatei " + config.getProfilfileDense(model.getName(),false) + " konnte nicht geschrieben werden.");
-									e.printStackTrace();
-									worked = false;
-								}
-								//same for targets
-								if (model.hasTargets()) {
-									newline = new ArrayList<String>();
-									newline.add(patient.getPid());
-									newline.addAll(profValues_targets);
-									try {
-										profildensefile_targets.get(model).writeNext(newline.toArray(new String[newline.size()]));
-									} catch (Exception e) {
-										System.err.println("In die Outputdatei " + config.getProfilfileDense(model.getName(),true) + " konnte nicht geschrieben werden.");
-										e.printStackTrace();
-										worked = false;
-									}
-								}
+								//output PID+Profilvalues
+								worked = writeDenseProfileRow(profildensefile.get(model), config.getProfilfileDense(model.getName(),false), patient, profValues, leaderrow);
+								//same for targets, w/o leaderrow
+								if (worked && model.hasTargets()) 
+									worked = writeDenseProfileRow(profildensefile_targets.get(model), config.getProfilfileDense(model.getName(),true), patient, profValues_targets, null);								
 							} //end dense profile
 							if (config.createProfilSparse()) {
-								//output: row PID No, column (=Variable no.), value
-								String[] sparseline = new String[3];
-								for (int i =0; i<profValues.size(); i++) {
-									if (!profValues.get(i).equals(Consts.navalue)) {
-										sparseline[0]=Long.toString(rowNo); //Row
-										sparseline[1]=Integer.toString(i+1); //Col; matrix starts from 1
-										sparseline[2]=profValues.get(i); //Val
-										if (!sparseline.equals(new String[3])) {
-											try {
-												profilsparsefile.get(model).writeNext(sparseline);
-											} catch (Exception e) {
-												System.out.println("In die Outputdatei " + config.getProfilfileSparse(model.getName(),false) + " konnte nicht geschrieben werden.");
-												e.printStackTrace();
-												worked = false;
-											}	
-											sparseline = new String[3];
-										}
-									}
-								}	
-								//same for targets
-								if (model.hasTargets()) {
-									for (int i =0; i<profValues_targets.size(); i++) {
-										if (!profValues_targets.get(i).equals(Consts.navalue)) {
-											sparseline[0]=Long.toString(rowNo); //Row
-											sparseline[1]=Integer.toString(i+1); //Col; matrix starts from 1
-											sparseline[2]=profValues_targets.get(i); //Val
-											if (!sparseline.equals(new String[3])) {
-												try {
-													profilsparsefile_targets.get(model).writeNext(sparseline);
-												} catch (Exception e) {
-													System.out.println("In die Outputdatei " + config.getProfilfileSparse(model.getName(),true) + " konnte nicht geschrieben werden.");
-													e.printStackTrace();
-													worked = false;
-												}	
-												sparseline = new String[3];
-											}
-										}
-									}
-								}
+								worked = writeMatlabProfileRow(profilsparsefile.get(model), config.getProfilfileSparse(model.getName(),false), patient, profValues, leaderrow, rowNo);
+								//same for targets, w/o leaderrow
+								if (worked && model.hasTargets()) 
+									worked = writeMatlabProfileRow(profilsparsefile_targets.get(model), config.getProfilfileSparse(model.getName(),true), patient, profValues_targets, null,rowNo);
 							} //end sparse profile
 							if (config.createProfilSvmlight()) {
 								//output: "1 column(=VariableNo.):value #PID"
-								newline = new ArrayList<String>();
-								newline.add("1");
-								for (int i =0; i<profValues.size(); i++) {
-									if (!profValues.get(i).equals(Consts.navalue)) {
-										newline.add(Integer.toString(i+1) + ":" + profValues.get(i));
-									}
-								}
-								newline.add("#"+patient.getPid());
-								try {
-									profilsvmlightfile.get(model).writeNext(newline.toArray(new String[newline.size()]));
-								} catch (Exception e) {
-									System.err.println("In die Outputdatei " + config.getProfilfileSvmlight(model.getName(),false) + " konnte nicht geschrieben werden.");
-									e.printStackTrace();
-									worked = false;
-								}
-								//same for targets
-								if (model.hasTargets()) {
-									//output: "1 column(=VariableNo.):value #PID"
-									newline = new ArrayList<String>();
-									newline.add("1");
-									for (int i =0; i<profValues_targets.size(); i++) {
-										if (!profValues_targets.get(i).equals(Consts.navalue)) {
-											newline.add(Integer.toString(i+1) + ":" + profValues_targets.get(i));
-										}
-									}
-									newline.add("#"+patient.getPid());
-									try {
-										profilsvmlightfile_targets.get(model).writeNext(newline.toArray(new String[newline.size()]));
-									} catch (Exception e) {
-										System.err.println("In die Outputdatei " + config.getProfilfileSvmlight(model.getName(),true) + " konnte nicht geschrieben werden.");
-										e.printStackTrace();
-										worked = false;
-									}
-								}
+								worked = writeSvmlightProfileRow(profilsvmlightfile.get(model), config.getProfilfileSparse(model.getName(),false), patient, profValues, leaderrow);
+								//same for targets, w/o leaderrow
+								if (worked && model.hasTargets()) 
+									worked = writeSvmlightProfileRow(profilsvmlightfile_targets.get(model), config.getProfilfileSparse(model.getName(),true), patient, profValues_targets, null);
 							} //end svmlight
 						}
 					} //end rolling through models
@@ -508,6 +440,8 @@ public class Worker {
 	 */
 	public boolean finish() { 
 		boolean worked = true;
+		String[] leaderheader = null;
+		if (this.ourLeaderfile!=null) leaderheader = this.ourLeaderfile.getColnames();
 		//close all files
 		try {
 			if (config.createScores()) {
@@ -522,92 +456,51 @@ public class Worker {
 					//close file
 					profildensefile.get(model).close();
 					//add header by creating new file, and write all rows from tmpfile to new file
-					ArrayList<String> header = new ArrayList<String>();
-					header.add(Consts.idfieldheader);
-					header.addAll(knownVariables.get(model));
-					Utils.addHeaderToCsv(config.getProfilfileDenseTmp(model.getName(),false),header, config.getProfilfileDense(model.getName(),false));
-				    System.out.println("Outputdatei " + config.getProfilfileDense(model.getName(),false) + " wurde erfolgreich geschrieben.");
+					worked = writeDenseHeader(config.getProfilfileDenseTmp(model.getName(),false),config.getProfilfileDense(model.getName(),false),knownVariables.get(model),leaderheader);
 				    //same for targets
-				    if (model.hasTargets()) {
+				    if (worked && model.hasTargets()) {
 					  	//close file
 				    	profildensefile_targets.get(model).close();
 						//add header by creating new file, and write all rows from tmpfile to new file
-						header = new ArrayList<String>();
-						header.add(Consts.idfieldheader);
-						header.addAll(knownVariables_targets.get(model));
-						Utils.addHeaderToCsv(config.getProfilfileDenseTmp(model.getName(),true),header, config.getProfilfileDense(model.getName(),true));
-					    System.out.println("Outputdatei " + config.getProfilfileDense(model.getName(),true) + " wurde erfolgreich geschrieben.");
+				    	worked = writeDenseHeader(config.getProfilfileDenseTmp(model.getName(),true),config.getProfilfileDense(model.getName(),true),knownVariables_targets.get(model),null);
 				    }
 				}
 				if (config.createProfilSparse()) { 
-					//write COL-translation file for sparse profile (vars)
-					for (int i =0; i<knownVariables.get(model).size(); i++) {
-						String[] varcol = {Integer.toString(i+1), knownVariables.get(model).get(i)};
-						try {
-							profilsparsefileCols.get(model).writeNext(varcol);
-						} catch (Exception e) {
-							System.out.println("In die Outputdatei " + config.getProfilfileSparseCOLs(model.getName(),false) + " konnte nicht geschrieben werden.");
-							e.printStackTrace();
-							worked = false;
-						}	
-					}
-					//same for targets
-					 if (model.hasTargets()) {
-						//write COL-translation file for sparse profile (vars)
-						for (int i =0; i<knownVariables_targets.get(model).size(); i++) {
-							String[] varcol = {Integer.toString(i+1), knownVariables_targets.get(model).get(i)};
-							try {
-								profilsparsefileCols_targets.get(model).writeNext(varcol);
-							} catch (Exception e) {
-								System.out.println("In die Outputdatei " + config.getProfilfileSparseCOLs(model.getName(),true) + " konnte nicht geschrieben werden.");
-								e.printStackTrace();
-								worked = false;
-							}	
-						}
-					 }
 					//close files
 					profilsparsefile.get(model).close();
-					profilsparsefileRows.get(model).close();
-					profilsparsefileCols.get(model).close();
-					if (model.hasTargets()) profilsparsefileCols_targets.get(model).close();
 					System.out.println("Outputdatei " + config.getProfilfileSparse(model.getName(),false) + " wurde erfolgreich geschrieben.");
+					profilsparsefileRows.get(model).close();
+					if (model.hasTargets()) {
+				    	//close file
+						profilsparsefile_targets.get(model).close();
+					    System.out.println("Outputdatei " + config.getProfilfileSparse(model.getName(),true) + " wurde erfolgreich geschrieben.");
+				    }
+					//add header by creating new file, and write all rows from tmpfile to new file
+					worked = writeMatlabHeader(config.getProfilfileSparseCOLs(model.getName(),false),knownVariables.get(model),leaderheader);
+				    //same for targets
+				    if (worked && model.hasTargets()) {
+					  	//close file
+				    	profildensefile_targets.get(model).close();
+						//add header by creating new file, and write all rows from tmpfile to new file
+				    	worked = writeMatlabHeader(config.getProfilfileSparseCOLs(model.getName(),true),knownVariables_targets.get(model),null);
+				    }
 				}
 				if (config.createProfilSvmlight()) { 
-					//write header
-					for (int i =0; i<knownVariables.get(model).size(); i++) {
-						String[] varhead = {Integer.toString(i+1), knownVariables.get(model).get(i)};
-						try {
-							profilsvmlightfileHeader.get(model).writeNext(varhead);
-						} catch (Exception e) {
-							System.out.println("In die Outputdatei " + config.getProfilfileSvmlightHeader(model.getName(),false) + " konnte nicht geschrieben werden.");
-							e.printStackTrace();
-							worked = false;
-						}	
-					}
-					//same for targets
-					 if (model.hasTargets()) {
-						//write COL-translation file for sparse profile (vars)
-						for (int i =0; i<knownVariables_targets.get(model).size(); i++) {
-							String[] varhead = {Integer.toString(i+1), knownVariables_targets.get(model).get(i)};
-							try {
-								profilsvmlightfileHeader_targets.get(model).writeNext(varhead);
-							} catch (Exception e) {
-								System.out.println("In die Outputdatei " + config.getProfilfileSvmlightHeader(model.getName(),true) + " konnte nicht geschrieben werden.");
-								e.printStackTrace();
-								worked = false;
-							}	
-						}
-					 }
 					//close file
 					profilsvmlightfile.get(model).close();
-					profilsvmlightfileHeader.get(model).close();
-				    System.out.println("Outputdatei " + config.getProfilfileSvmlight(model.getName(),false) + " wurde erfolgreich geschrieben.");
-				    //same for targets
-				    if (model.hasTargets()) {
+					if (model.hasTargets()) {
 				    	//close file
 						profilsvmlightfile_targets.get(model).close();
-						profilsvmlightfileHeader_targets.get(model).close();
 					    System.out.println("Outputdatei " + config.getProfilfileSvmlight(model.getName(),true) + " wurde erfolgreich geschrieben.");
+				    }
+					//write header
+					worked = writeSvmlightHeader(config.getProfilfileSvmlightHeader(model.getName(),false),knownVariables.get(model),leaderheader);
+				    //same for targets
+				    if (worked && model.hasTargets()) {
+					  	//close file
+				    	profildensefile_targets.get(model).close();
+						//add header by creating new file, and write all rows from tmpfile to new file
+				    	worked = writeSvmlightHeader(config.getProfilfileSvmlightHeader(model.getName(),true),knownVariables_targets.get(model),null);
 				    }
 				}
 			}
@@ -619,5 +512,178 @@ public class Worker {
 		return worked;
 	}
 	
+	
+	//helper functions for profile output
+	private boolean writeDenseProfileRow(CSVWriter file, String filename, Patient patient, ArrayList<String> profValues, String[] leaderrow) {
+		//output PID+Profilvalues only
+		ArrayList<String> newline = new ArrayList<String>();
+		newline.add(patient.getPid());
+		newline.addAll(profValues);
+		try {
+			//first write leaderfile columns (only for profiles)
+			if (leaderrow!=null) file.writeNext(Utils.concatArrays(leaderrow,newline.toArray(new String[newline.size()])));
+			//else write rest
+			else file.writeNext(newline.toArray(new String[newline.size()]));
+		} catch (Exception e) {
+			System.err.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean writeDenseHeader(String filename_old, String filename_new, ArrayList<String> variables, String[] leaderheader) {
+		ArrayList<String> header;
+		//first:add leadercolumns
+		if (leaderheader != null) header = new ArrayList<String>(Arrays.asList(leaderheader));
+		else header = new ArrayList<String>();
+		header.add(Consts.idfieldheader);
+		header.addAll(variables);
+		try {
+			Utils.addHeaderToCsv(filename_old,header, filename_new);
+		} catch (Exception e) {
+			System.err.println("In die Outputdatei " + filename_new + " konnte nicht geschrieben werden.");
+			e.printStackTrace();
+			return false;
+		}
+	    System.out.println("Outputdatei " + filename_new + " wurde erfolgreich geschrieben.");
+	    return true;
+	}
 
+	
+	private boolean writeMatlabProfileRow(CSVWriter file, String filename, Patient patient, ArrayList<String> profValues, String[] leaderrow, long rowNo) {
+		//output: row PID No, column (=Variable no.), value
+		String[] sparseline = new String[3];
+		int starterno=0;
+		//first write leaderrow
+		if (leaderrow!=null) {
+			for (int i =0; i<leaderrow.length; i++) {
+				if (!leaderrow[i].equals(Consts.navalue)) {
+					sparseline[0]=Long.toString(rowNo); //Row
+					sparseline[1]=Integer.toString(i+1); //Col; matrix starts from 1
+					sparseline[2]=leaderrow[i]; //Val
+				}
+				if (!sparseline.equals(new String[3])) {
+					try {
+						file.writeNext(sparseline);
+					} catch (Exception e) {
+						System.out.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
+						e.printStackTrace();
+						return false;
+					}	
+					sparseline = new String[3];
+				}
+			}
+			starterno = leaderrow.length;
+		}
+		//Next: profvalues
+		for (int i =0; i<profValues.size(); i++) {
+			if (!profValues.get(i).equals(Consts.navalue)) {
+				sparseline[0]=Long.toString(rowNo); //Row
+				sparseline[1]=Integer.toString(i+1+starterno); //Col; matrix starts from 1
+				sparseline[2]=profValues.get(i); //Val
+				if (!sparseline.equals(new String[3])) {
+					try {
+						file.writeNext(sparseline);
+					} catch (Exception e) {
+						System.out.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
+						e.printStackTrace();
+						return false;
+					}	
+					sparseline = new String[3];
+				}
+			}
+		}
+		return true;
+	}
+	
+	private boolean writeMatlabHeader(String filename, ArrayList<String> variables, String[] leaderrow) {
+		//Col-&Row-Translation File
+		int starterno=0;
+		try {
+			CSVWriter file= new CSVWriter(new FileWriter(filename), ';', CSVWriter.NO_QUOTE_CHARACTER);
+			//write header
+			String[] colline = {"COL_NO","VARIABLE"};
+			file.writeNext(colline);
+			if (leaderrow!=null) {
+				for (int i =0; i<leaderrow.length; i++) {
+					String[] varcol = {Integer.toString(i+1),leaderrow[i]};
+					file.writeNext(varcol);
+				}
+				starterno=leaderrow.length;
+			}
+			for (int i =0; i<variables.size(); i++) {
+				String[] varcol = {Integer.toString(i+1+starterno), variables.get(i)};
+				file.writeNext(varcol);
+			}
+			file.close();
+		} catch (Exception e) {
+			System.err.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
+			e.printStackTrace();
+			return false;
+		}
+	    System.out.println("Outputdatei " + filename + " wurde erfolgreich geschrieben.");
+	    return true;
+	}
+	
+	
+	
+	private boolean writeSvmlightProfileRow(CSVWriter file, String filename, Patient patient, ArrayList<String> profValues, String[] leaderrow) {
+		//output: "1 column(=VariableNo.):value #PID"
+		ArrayList<String> newline = new ArrayList<String>();
+		newline.add("1");
+		int starterno=0;
+		//first write leaderrow
+		if (leaderrow!=null) {
+			for (int i =0; i<leaderrow.length; i++) {
+				if (!leaderrow[i].equals(Consts.navalue)) 
+					newline.add(Integer.toString(i+1) + ":" + leaderrow[i]);
+			}
+			starterno = leaderrow.length;
+		}
+		//Next: profvalues
+		for (int i =0; i<profValues.size(); i++) {
+			if (!profValues.get(i).equals(Consts.navalue))
+				newline.add(Integer.toString(i+1+starterno) + ":" + profValues.get(i));
+		}
+		newline.add("#"+patient.getPid());
+		try {
+			file.writeNext(newline.toArray(new String[newline.size()]));
+		} catch (Exception e) {
+			System.err.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean writeSvmlightHeader(String filename, ArrayList<String> variables, String[] leaderrow) {
+		int starterno=0;
+		try {
+			CSVWriter file= new CSVWriter(new FileWriter(filename), ';', CSVWriter.NO_QUOTE_CHARACTER);
+			//write header
+			String[] newline = {"#Header to features, separated by linespace"};
+			file.writeNext(newline);
+			if (leaderrow!=null) {
+				for (int i =0; i<leaderrow.length; i++) {
+					String[] varhead = {Integer.toString(i+1),leaderrow[i]};
+					file.writeNext(varhead);
+				}
+				starterno=leaderrow.length;
+			}
+			for (int i =0; i<variables.size(); i++) {
+				String[] varhead = {Integer.toString(i+1+starterno),variables.get(i)};
+				file.writeNext(varhead);
+			}
+			file.close();
+		} catch (Exception e) {
+			System.err.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
+			e.printStackTrace();
+			return false;
+		}
+	    System.out.println("Outputdatei " + filename + " wurde erfolgreich geschrieben.");
+	    return true;
+	}
+	
+	
 }

@@ -1,6 +1,9 @@
 package models;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+
 import java.io.FileReader;
 import java.io.StringReader;
 
@@ -33,23 +36,33 @@ public class InputFile {
 	/** The path. */
 	private String path; 
 	
-	/** The fixparse. */
+	/** The fixparse file. */
 	private BuffReaderFixedParser fixparse = null;
 	
-	/** The csvparse. */
+	/** The csvparse file. */
 	private BuffReaderDelimParser csvparse = null;
 	
-	/** The my dataset. */
-	private DataSet myDataset;
+	private DataSet flatpackDataset;
 	
-	/** The col names. */
-	private String[] colNames = null; 
+	/** colnames **/
+	private String[] colnames;
 	
-	/** The has row. */
+	/** cached rows if needed */
+	private ArrayList<LinkedHashMap<String,String>> rowcache = new ArrayList<LinkedHashMap<String,String>>();
+	
+	/** points to last element in case that is to be used **/
+	private int currentcachepointer=0;
+	private String currentCachedID = "";
+	
+	private boolean inWarpMode = false;
+	
+	/** do I still have a row? */
 	private boolean hasRow = false; 
 	
 	private IDfield[] idfields;
 	private String currentID;
+	
+	private boolean isLeader = false; //leadingtable: diese Tabelle wird um Features erweitert, dh. alle Zeilen bleiben erhalten
 	
 	
 	/**
@@ -73,32 +86,30 @@ public class InputFile {
 				fixparse = (BuffReaderFixedParser) BuffReaderParseFactory.getInstance().newFixedLengthParser(new StringReader(myDef), new FileReader(path));
 				fixparse.setIgnoreExtraColumns(true); //ignores extra characters in lines that are too long; lines that are too short are ignored (i.e. first line)
 				//fixparse.setStoreRawDataToDataSet(true); //for Testing only
-				myDataset = fixparse.parse();
-				colNames = myDataset.getColumns();
+				flatpackDataset = fixparse.parse();
+				colnames=flatpackDataset.getColumns();
 		} else {
 				//Issue: Flatpack will not give back CSV column name correctly, when BuffReaderDelimParser is used (getValue works fine)
 				//Workaround: Open csv beforehand and read first line
-					CSVReader reader = new CSVReader(new FileReader(path), ';', '"');
-					String [] firstLine;
-					if ((firstLine = reader.readNext()) != null) {
-						colNames = firstLine;  
-					}
-					reader.close();
-					//make Uppercase
-					for(int i=0; i<colNames.length; i++) {
-						colNames[i]=colNames[i].toUpperCase();
-					}
+				CSVReader reader = new CSVReader(new FileReader(path), ';', '"');
+				String [] firstLine;
+				if ((firstLine = reader.readNext()) != null) {
+					colnames = firstLine;  
+				}
+				reader.close();
+				//make Uppercase
+				for(int i=0; i<colnames.length; i++) {
+					colnames[i]=colnames[i].toUpperCase();
+				}
 				csvparse = (BuffReaderDelimParser) BuffReaderParseFactory.getInstance().newDelimitedParser(new FileReader(path),';','"');
 				//csvparse.setStoreRawDataToDataSet(true);//for Testing only
-				myDataset = csvparse.parse();
-				//not working:
-				//colNames = myDataset.getColumns();
+				flatpackDataset = csvparse.parse();
 		}
 		
-		if (myDataset.getErrors() != null && !myDataset.getErrors().isEmpty()) {
+		if (flatpackDataset.getErrors() != null && !flatpackDataset.getErrors().isEmpty()) {
 	            System.out.println("Fehler gefunden beim Einlesen von " + path);
-	            for (int i = 0; i < myDataset.getErrors().size(); i++) {
-	                final DataError de = (DataError) myDataset.getErrors().get(i);
+	            for (int i = 0; i < flatpackDataset.getErrors().size(); i++) {
+	                final DataError de = (DataError) flatpackDataset.getErrors().get(i);
 	                System.out.println("Fehler: " + de.getErrorDesc() + " Zeile: " + de.getLineNo());
 	            }
 	    }
@@ -111,7 +122,7 @@ public class InputFile {
 	 * @return true, if successful
 	 */
 	public boolean hasField (String field) {
-		return Arrays.asList(colNames).contains(field);
+		return Arrays.asList(colnames).contains(field);
 	}
 	
 	/**
@@ -119,26 +130,75 @@ public class InputFile {
 	 *
 	 * @return true, if successful
 	 */
-	public boolean nextRow(boolean checkID) throws Exception {
-		hasRow = myDataset.next();
-		if (hasRow && checkID) {
-			currentID = "";
+	public boolean nextRow(boolean checkID, boolean allowWarpBack) throws Exception {
+		if (this.inWarpMode) {
+			//i.e. use current cache only!
+			currentcachepointer++;
+			//checkID only if last entry
+			if (currentcachepointer==rowcache.size()) checkID=true;
+			//stop warp mode if overshooting
+			if (currentcachepointer>rowcache.size()) {
+				//stop warp
+				this.inWarpMode= false;
+				currentcachepointer--;
+			} else hasRow=true;
+		}
+		if (!this.inWarpMode) {
+			hasRow = flatpackDataset.next();
+			if (!hasRow) return false;
+			if (!allowWarpBack) this.clearcache();
+			//add current row to rowcache
+			LinkedHashMap<String,String> nextrow = new LinkedHashMap<String,String>();
+			for (int i=0; i<colnames.length; i++) {
+				nextrow.put(colnames[i],flatpackDataset.getString(colnames[i]));
+			}
+			rowcache.add(nextrow);
+			currentcachepointer++;
+		}
+		if (checkID) {
+			String newID = "";
 			try {
 				for (int i=0; i<idfields.length; i++) 
-					currentID += idfields[i].getFinalValue(this.getValue(idfields[i].getField()));
+					newID += idfields[i].getFinalValue(this.getValue(idfields[i].getField()));
 			} catch (Exception e) {
-				currentID="";
+				newID="";
 			}
-			if (currentID=="") {
+			if (newID=="") {
 				hasRow = false;
-				throw new Exception("Keine ID in File " + this.datentyp + ", Zeile "+myDataset.getRowNo()+". Zeile wird ignoriert.");
+				throw new Exception("Keine ID in File " + this.datentyp + ", Zeile "+flatpackDataset.getRowNo()+". Zeile wird ignoriert.");
 			}
+			if (currentcachepointer>1) {
+				//refresh cache, once a new ID is seen second time, i.e. flush all but last 2 entries
+				if (newID.equals(currentID) && !currentCachedID.equals(newID)) {
+					LinkedHashMap<String,String> last = rowcache.get(rowcache.size()-1);
+					LinkedHashMap<String,String> lastbutone = rowcache.get(rowcache.size()-2);
+					this.clearcache();
+					rowcache.add(lastbutone);
+					rowcache.add(last);
+					currentcachepointer=2;
+					currentCachedID=newID;
+				}
+			}
+			currentID=newID;
 		}
 		return hasRow;
 	}
 	
 	public boolean nextRow() throws Exception {
-		return this.nextRow(true);
+		return this.nextRow(false, false);
+	}
+	
+	/**
+	 * Warps back to beginning of last ID, to repeat readin
+	 *
+	 * @return true, if successful
+	 */
+	public void warpBackForID (String warpID) {
+		if (warpID.equals(currentCachedID)) {
+			currentcachepointer=0;
+			inWarpMode=true;
+			currentID=currentCachedID;
+		}
 	}
 	
 	/**
@@ -148,7 +208,7 @@ public class InputFile {
 	 * @return the value
 	 */
 	public String getValue (String field) {
-		return myDataset.getString(field);
+		return rowcache.get(currentcachepointer-1).get(field);
 	}
 	
 	public String getID() {
@@ -199,7 +259,7 @@ public class InputFile {
 	 * @return the colnames
 	 */
 	public String[] getColnames () {
-		return this.colNames;
+		return this.colnames;
 	}
 	
 	/**
@@ -211,6 +271,20 @@ public class InputFile {
 		return hasRow;
 	}
 	
+	
+	public boolean isLeader() {
+		return isLeader;
+	}
+
+	public void setLeader(boolean isLeader) {
+		this.isLeader = isLeader;
+	}
+	
+	public void clearcache () {
+		rowcache.clear();
+		currentcachepointer=0;
+	}
+
 	/**
 	 * Close.
 	 *
