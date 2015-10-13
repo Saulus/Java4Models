@@ -172,8 +172,10 @@ class ModelVariableCalc {
 			for (ModelVariableCalcPart p : plusParts) {
 				if (p.needsCol()) addval=p.getValue(columnvalues[p.getColnumber()]);
 				else if (p.needsVariable()) {
-					if (vars != null)
+					if (vars != null) {
 						addval=p.getValue(vars.get(p.getRefVariable()).getProfvalue());
+						if (!vars.get(p.getRefVariable()).isAllowed()) addval=0;
+					}
 					else addval=0;
 				}
 				else addval=p.getValue();
@@ -182,8 +184,10 @@ class ModelVariableCalc {
 			for (ModelVariableCalcPart p : minusParts) {
 				if (p.needsCol()) addval=p.getValue(columnvalues[p.getColnumber()]);
 				else if (p.needsVariable()) {
-					if (vars != null)
+					if (vars != null) {
 						addval=p.getValue(vars.get(p.getRefVariable()).getProfvalue());
+						if (!vars.get(p.getRefVariable()).isAllowed()) addval=0;
+					}
 					else addval=0;
 				}
 				else addval=p.getValue();
