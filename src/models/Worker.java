@@ -559,19 +559,17 @@ public class Worker {
 		//first write leaderrow
 		if (leaderrow!=null) {
 			for (int i =0; i<leaderrow.length; i++) {
-				if (!leaderrow[i].equals(Consts.navalue)) {
+				if (!leaderrow[i].equals(Consts.navalue) && !leaderrow[i].isEmpty()) {
 					sparseline[0]=Long.toString(rowNo); //Row
 					sparseline[1]=Integer.toString(i+1); //Col; matrix starts from 1
 					sparseline[2]=leaderrow[i]; //Val
-				}
-				if (!sparseline.equals(new String[3])) {
 					try {
 						file.writeNext(sparseline);
 					} catch (Exception e) {
 						System.out.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
 						e.printStackTrace();
 						return false;
-					}	
+					}
 					sparseline = new String[3];
 				}
 			}

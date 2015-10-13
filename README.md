@@ -18,5 +18,3 @@ Load data in python, and to H2O using svmlight:
 https://groups.google.com/forum/#!topic/h2ostream/VvWWA7ZjVfc
 
 
-Open issues:
-- empty ;; row in matlab matrix 
