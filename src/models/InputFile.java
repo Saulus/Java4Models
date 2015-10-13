@@ -60,7 +60,7 @@ public class InputFile {
 	private boolean hasRow = false; 
 	
 	private IDfield[] idfields;
-	private String currentID;
+	private String currentID = "";
 	
 	private boolean isLeader = false; //leadingtable: diese Tabelle wird um Features erweitert, dh. alle Zeilen bleiben erhalten
 	
@@ -168,17 +168,20 @@ public class InputFile {
 				throw new Exception("Keine ID in File " + this.datentyp + ", Zeile "+flatpackDataset.getRowNo()+". Zeile wird ignoriert.");
 			}
 			if (currentcachepointer>1) {
-				//refresh cache, once a new ID is seen second time, i.e. flush all but last 2 entries
-				if (newID.equals(currentID) && !currentCachedID.equals(newID)) {
+				//refresh cache, if
+				// a) newID <> currentID <> currentCachedID 
+				// b) newID == currentID && newID <> currentCachedID 
+				// -> i.e. flush all but last entries
+				if (!newID.equals(currentCachedID) && !currentCachedID.equals("")) {
 					LinkedHashMap<String,String> last = rowcache.get(rowcache.size()-1);
 					LinkedHashMap<String,String> lastbutone = rowcache.get(rowcache.size()-2);
 					this.clearcache();
 					rowcache.add(lastbutone);
 					rowcache.add(last);
 					currentcachepointer=2;
-					currentCachedID=newID;
 				}
 			}
+			currentCachedID=currentID;
 			currentID=newID;
 		}
 		return hasRow;
@@ -209,6 +212,10 @@ public class InputFile {
 	 */
 	public String getValue (String field) {
 		return rowcache.get(currentcachepointer-1).get(field);
+	}
+	
+	public String getValueLastCached (String field) {
+		return rowcache.get(currentcachepointer-2).get(field);
 	}
 	
 	public String getID() {

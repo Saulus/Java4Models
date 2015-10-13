@@ -363,7 +363,8 @@ public class Worker {
 					String[] leaderrow = null;
 					if (this.ourLeaderfile!=null) {
 						leaderrow = new String[this.ourLeaderfile.getColnames().length];
-						for (int i=0;i<leaderrow.length;i++) leaderrow[i]=this.ourLeaderfile.getValue(this.ourLeaderfile.getColnames()[i]);
+						//get Value nor from current but from last chached row 
+						for (int i=0;i<leaderrow.length;i++) leaderrow[i]=this.ourLeaderfile.getValueLastCached(this.ourLeaderfile.getColnames()[i]);
 					}
 					boolean isincluded = false;
 					for (Model model : models) {

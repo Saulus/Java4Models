@@ -19,5 +19,4 @@ https://groups.google.com/forum/#!topic/h2ostream/VvWWA7ZjVfc
 
 
 Open issues:
-- ID fiels missing in svmlight header
 - empty ;; row in matlab matrix 
