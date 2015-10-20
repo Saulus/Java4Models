@@ -201,6 +201,8 @@ public class InputFile {
 			currentcachepointer=0;
 			inWarpMode=true;
 			currentID=currentCachedID;
+			//set pointer to correct row
+			try { this.nextRow(true,true); } catch (Exception e) {} //after warp back this always works
 		}
 	}
 	
