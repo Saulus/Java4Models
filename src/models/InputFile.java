@@ -172,7 +172,7 @@ public class InputFile {
 				// a) newID <> currentID <> currentCachedID 
 				// b) newID == currentID && newID <> currentCachedID 
 				// -> i.e. flush all but last entries
-				if (!newID.equals(currentCachedID) && !currentCachedID.equals("")) {
+				if (!currentCachedID.isEmpty() && !newID.equals(currentCachedID) && !currentID.equals(currentCachedID)) {
 					LinkedHashMap<String,String> last = rowcache.get(rowcache.size()-1);
 					LinkedHashMap<String,String> lastbutone = rowcache.get(rowcache.size()-2);
 					this.clearcache();
@@ -193,16 +193,20 @@ public class InputFile {
 	
 	/**
 	 * Warps back to beginning of last ID, to repeat readin
+	 * alternatively warps forward until correct ID is reached
 	 *
 	 * @return true, if successful
 	 */
-	public void warpBackForID (String warpID) {
+	public void warpToCorrectID (String warpID) throws Exception {
 		if (warpID.equals(currentCachedID)) {
 			currentcachepointer=0;
 			inWarpMode=true;
 			currentID=currentCachedID;
-			//set pointer to correct row
-			try { this.nextRow(true,true); } catch (Exception e) {} //after warp back this always works
+			//set pointer to correct row, no checkid required
+			this.nextRow(false,true); 
+		} else {
+			//warp forward until ID is equal or bigger (i.e. later), check ID but do not cache
+			while (this.currentID.compareTo(warpID)<0 && this.nextRow(true,false)) {}
 		}
 	}
 	

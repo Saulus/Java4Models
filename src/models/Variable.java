@@ -2,6 +2,7 @@ package models;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -128,7 +129,17 @@ public class Variable {
 				}
 				aggV=v; //use last for aggregation & check
 			}
-			//2:aggregate and filter
+			//2:filter, aggregate and filter again
+			//1. filter before aggregation -> only for MAX, MIN
+			if (aggV.filterBeforeAggregation()) {
+				for (Iterator<Double> iterator = allvalues.iterator(); iterator.hasNext();) {
+				    double x = iterator.next();
+				    if (!aggV.varIsAllowed(x)) {
+				        // Remove the current element from the iterator and the list.
+				        iterator.remove();
+				    }
+				}
+			}
 			if (allvalues.size()>0) {
 				this.profvalue=aggV.aggregateValues(allvalues);
 				if (aggV.varIsAllowed(this.profvalue)) isAllowed=true; else isAllowed=false;

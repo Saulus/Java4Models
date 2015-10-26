@@ -350,6 +350,14 @@ class ModelVariableAgg {
 	public boolean isOccurence() {
 		return isOccurence;
 	}
+	
+	public boolean isMax() {
+		return isMax;
+	}
+	
+	public boolean isMin() {
+		return isMin;
+	}
 }
 
 /**
@@ -520,6 +528,10 @@ public class ModelVariable {
 	
 	public double aggregateValues (List<Double> values) {
 		return this.agg.aggregateValues(values);
+	}
+	
+	public boolean filterBeforeAggregation() {
+		return this.agg.isMax() ||  this.agg.isMin();
 	}
 	
 	

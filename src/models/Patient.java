@@ -103,7 +103,7 @@ class PatientModel {
 		ArrayList<String> profvalues = new ArrayList<String>();
 		for (int i = 0; i < knownVars.size(); i++) {
 			//has Patient this Variable? If not, return ""
-			if (variables.get(knownVars.get(i)) == null) {
+			if (variables.get(knownVars.get(i)) == null || !variables.get(knownVars.get(i)).isAllowed()) {
 				profvalues.add(Consts.navalue);
 			} else { 
 				profvalues.add(String.valueOf(variables.get(knownVars.get(i)).getProfvalue())); //gets the Profil-value from PatientVariable, ordered by KnownVars order

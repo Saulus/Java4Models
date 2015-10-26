@@ -94,7 +94,11 @@ public class Worker {
 			if (ourLeaderfile.hasRow()) {
 				newpatient= new Patient(ourLeaderfile.getID());
 				for (InputFile infile : inputfiles) {
-					if (infile != ourLeaderfile) infile.warpBackForID(newpatient.getPid());
+					try {
+						if (infile != ourLeaderfile) infile.warpToCorrectID(newpatient.getPid());
+					} catch (Exception e) {
+						System.out.println(e.getMessage());
+					}
 				}
 			}
 		}
@@ -480,10 +484,8 @@ public class Worker {
 					worked = writeMatlabHeader(config.getProfilfileSparseCOLs(model.getName(),false),knownVariables.get(model),leaderheader);
 				    //same for targets
 				    if (worked && model.hasTargets()) {
-					  	//close file
-				    	profildensefile_targets.get(model).close();
-						//add header by creating new file, and write all rows from tmpfile to new file
-				    	worked = writeMatlabHeader(config.getProfilfileSparseCOLs(model.getName(),true),knownVariables_targets.get(model),null);
+				    	//add header by creating new file, and write all rows from tmpfile to new file
+					  	worked = writeMatlabHeader(config.getProfilfileSparseCOLs(model.getName(),true),knownVariables_targets.get(model),null);
 				    }
 				}
 				if (config.createProfilSvmlight()) { 
@@ -498,8 +500,6 @@ public class Worker {
 					worked = writeSvmlightHeader(config.getProfilfileSvmlightHeader(model.getName(),false),knownVariables.get(model),leaderheader);
 				    //same for targets
 				    if (worked && model.hasTargets()) {
-					  	//close file
-				    	profildensefile_targets.get(model).close();
 						//add header by creating new file, and write all rows from tmpfile to new file
 				    	worked = writeSvmlightHeader(config.getProfilfileSvmlightHeader(model.getName(),true),knownVariables_targets.get(model),null);
 				    }
@@ -645,7 +645,7 @@ public class Worker {
 			if (!profValues.get(i).equals(Consts.navalue))
 				newline.add(Integer.toString(i+1+starterno) + ":" + profValues.get(i));
 		}
-		newline.add("#"+patient.getPid());
+		newline.add("# "+patient.getPid());
 		try {
 			file.writeNext(newline.toArray(new String[newline.size()]));
 		} catch (Exception e) {
