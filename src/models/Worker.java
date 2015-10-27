@@ -659,7 +659,7 @@ public class Worker {
 	private boolean writeSvmlightHeader(String filename, ArrayList<String> variables, String[] leaderrow) {
 		int starterno=0;
 		try {
-			CSVWriter file= new CSVWriter(new FileWriter(filename), ';', CSVWriter.NO_QUOTE_CHARACTER);
+			CSVWriter file= new CSVWriter(new FileWriter(filename), ' ', CSVWriter.NO_QUOTE_CHARACTER);
 			//write header
 			String[] newline = {"#Header to features, separated by linespace"};
 			file.writeNext(newline);
