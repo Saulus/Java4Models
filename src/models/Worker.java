@@ -635,7 +635,7 @@ public class Worker {
 		//first write leaderrow
 		if (leaderrow!=null) {
 			for (int i =0; i<leaderrow.length; i++) {
-				if (!leaderrow[i].equals(Consts.navalue)) 
+				if (!leaderrow[i].equals(Consts.navalue) && !leaderrow[i].isEmpty()) 
 					newline.add(Integer.toString(i+1) + ":" + leaderrow[i]);
 			}
 			starterno = leaderrow.length;
