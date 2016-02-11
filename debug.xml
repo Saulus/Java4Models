@@ -12,6 +12,13 @@
 			<!--   <idfeld>PID,Bezugsjahr</idfeld> --><!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->	
 			<!--<zusatzinfo>D:\Quelldaten\Strukturdaten\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> --> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->			
 		</datei>
+		<datei>
+			<datentyp>arzt_diagnose2011</datentyp> 
+			<pfad>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\debug\arzt_diagnose.csv</pfad>
+			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<istsortiert>True</istsortiert>
+			<!-- Aufruf für Sortierung in Memory mit Mehr RAM: java -Xmx2048m -Xms256m -jar java4models.jar <konfiguration.xml> -->
+		</datei>
 	</input>
 	<outputpfad>C:\temp\debug</outputpfad>
 	<modellpfad>C:\temp\debug\Models</modellpfad>

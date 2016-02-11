@@ -371,7 +371,7 @@ public class Worker {
 					String[] leaderrow = null;
 					if (this.ourLeaderfile!=null && this.ourLeaderfile.hasLeaderCols()) {
 						leaderrow = new String[this.ourLeaderfile.getLeaderColnames().length];
-						//get Value nor from current but from last chached row 
+						//get Value nor from current but from last cached row 
 						for (int i=0;i<leaderrow.length;i++) leaderrow[i]=this.ourLeaderfile.getValueLastCached(this.ourLeaderfile.getLeaderColnames()[i]);
 					}
 					boolean isincluded = false;
@@ -456,7 +456,7 @@ public class Worker {
 	public boolean finish() { 
 		boolean worked = true;
 		String[] leaderheader = null;
-		if (this.ourLeaderfile!=null) leaderheader = this.ourLeaderfile.getColnames();
+		if (this.ourLeaderfile!=null && this.ourLeaderfile.hasLeaderCols()) leaderheader = this.ourLeaderfile.getLeaderColnames();
 		//close all files
 		try {
 			if (config.createScores()) {
