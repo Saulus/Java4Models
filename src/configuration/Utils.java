@@ -3,6 +3,9 @@ package configuration;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
+
+import org.mozilla.universalchardet.UniversalDetector;
 import java.util.List;
 import java.util.Locale;
 
@@ -80,4 +83,27 @@ public final class Utils {
 		   System.arraycopy(b, 0, c, aLen, bLen);
 		   return c;
 		}
+	
+	
+	
+	//fix encoding when reading colnames from csv
+	public static String checkEncoding(String fileName) throws IOException {
+		byte[] buf = new byte[4096];
+        java.io.FileInputStream fis = new java.io.FileInputStream(fileName);
+
+        // (1)
+        UniversalDetector detector = new UniversalDetector(null);
+
+        // (2)
+        int nread;
+        while ((nread = fis.read(buf)) > 0 && !detector.isDone()) {
+            detector.handleData(buf, 0, nread);
+        }
+        // (3)
+        detector.dataEnd();
+        fis.close();
+        
+     // (4)
+       return detector.getDetectedCharset();
+	}
 }

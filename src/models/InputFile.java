@@ -3,12 +3,13 @@ package models;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 
 import configuration.Consts;
 import configuration.FileDefinitions;
+import configuration.Utils;
 import au.com.bytecode.opencsv.CSVReader;
 import net.sf.flatpack.DataError;
 import net.sf.flatpack.DataSet;
@@ -85,10 +86,19 @@ public class InputFile {
 		this.path = path;
 		this.idfields = new IDfield[idfields.length];
 		for (int i=0;i<idfields.length;i++) this.idfields[i] = new IDfield(idfields[i]);
+		
+		//check encoding first
+		String encoding = Utils.checkEncoding(path);
+		if (encoding==null) encoding="UTF-8";
+		
+		//new InputStreamReader(new FileInputStream(myFile), encoding)
+		
+		//new FileReader(path)
 		if (filetype.equals(Consts.satzartFlag)) {
 				FileDefinitions filedef = new FileDefinitions();
 				String myDef = filedef.getDefinition(datentyp);
-				fixparse = (BuffReaderFixedParser) BuffReaderParseFactory.getInstance().newFixedLengthParser(new StringReader(myDef), new FileReader(path));
+				//old: new FileReader(path));
+				fixparse = (BuffReaderFixedParser) BuffReaderParseFactory.getInstance().newFixedLengthParser(new StringReader(myDef), new InputStreamReader(new FileInputStream(path), encoding));
 				fixparse.setIgnoreExtraColumns(true); //ignores extra characters in lines that are too long; lines that are too short are ignored (i.e. first line)
 				//fixparse.setStoreRawDataToDataSet(true); //for Testing only
 				flatpackDataset = fixparse.parse();
@@ -96,7 +106,7 @@ public class InputFile {
 		} else {
 				//Issue: Flatpack will not give back CSV column name correctly, when BuffReaderDelimParser is used (getValue works fine)
 				//Workaround: Open csv beforehand and read first line
-				CSVReader reader = new CSVReader(new FileReader(path), ';', '"');
+				CSVReader reader = new CSVReader(new InputStreamReader(new FileInputStream(path), encoding), ';', '"');
 				String [] firstLine;
 				if ((firstLine = reader.readNext()) != null) {
 					colnames = firstLine;  
@@ -106,7 +116,7 @@ public class InputFile {
 				for(int i=0; i<colnames.length; i++) {
 					colnames[i]=colnames[i].toUpperCase();
 				}
-				csvparse = (BuffReaderDelimParser) BuffReaderParseFactory.getInstance().newDelimitedParser(new FileReader(path),';','"');
+				csvparse = (BuffReaderDelimParser) BuffReaderParseFactory.getInstance().newDelimitedParser(new InputStreamReader(new FileInputStream(path), encoding),';','"');
 				//csvparse.setStoreRawDataToDataSet(true);//for Testing only
 				flatpackDataset = csvparse.parse();
 		}
