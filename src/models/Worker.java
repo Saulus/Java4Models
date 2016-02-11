@@ -177,7 +177,11 @@ public class Worker {
 				System.out.println(timeStamp + " Einlesen der Inputdatei "+ nextfile.getPath() + " gestartet.");
 				InputFile newfile = new InputFile(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld());
 				newfile.setLeader(nextfile.isLeadingTable());
-				if (newfile.isLeader()) ourLeaderfile=newfile;
+				if (newfile.isLeader()) {
+					ourLeaderfile=newfile;
+					if (nextfile.hasSpecificColumns()) ourLeaderfile.setLeaderColnames(nextfile.getSpecificColumns());
+					if (nextfile.hasNumfield()) ourLeaderfile.setLeaderNumfield(nextfile.getNumfield());
+				}
 				inputfiles.add(newfile);
 				worked = true; //if one files is ok, then start
 			} catch (Exception e) {
@@ -365,10 +369,10 @@ public class Worker {
 				if (config.createProfilDense() || config.createProfilSparse() || config.createProfilSvmlight()) {
 					//if leaderfile: get all leaderfile_columns
 					String[] leaderrow = null;
-					if (this.ourLeaderfile!=null) {
-						leaderrow = new String[this.ourLeaderfile.getColnames().length];
+					if (this.ourLeaderfile!=null && this.ourLeaderfile.hasLeaderCols()) {
+						leaderrow = new String[this.ourLeaderfile.getLeaderColnames().length];
 						//get Value nor from current but from last chached row 
-						for (int i=0;i<leaderrow.length;i++) leaderrow[i]=this.ourLeaderfile.getValueLastCached(this.ourLeaderfile.getColnames()[i]);
+						for (int i=0;i<leaderrow.length;i++) leaderrow[i]=this.ourLeaderfile.getValueLastCached(this.ourLeaderfile.getLeaderColnames()[i]);
 					}
 					boolean isincluded = false;
 					for (Model model : models) {
@@ -396,10 +400,16 @@ public class Worker {
 									worked = writeDenseProfileRow(profildensefile_targets.get(model), config.getProfilfileDense(model.getName(),true), patient, profValues_targets, null);								
 							} //end dense profile
 							if (config.createProfilSparse()) {
-								worked = writeMatlabProfileRow(profilsparsefile.get(model), config.getProfilfileSparse(model.getName(),false), patient, profValues, leaderrow, rowNo);
+								String myrowno;
+								if (this.ourLeaderfile!=null && this.ourLeaderfile.hasLeaderNumfield())
+									//get Value nor from current but from last chached row 
+									myrowno=this.ourLeaderfile.getValueLastCached(this.ourLeaderfile.getLeaderNumfield());
+								else 
+									myrowno = Long.toString(rowNo);
+								worked = writeMatlabProfileRow(profilsparsefile.get(model), config.getProfilfileSparse(model.getName(),false), patient, profValues, leaderrow, myrowno);
 								//same for targets, w/o leaderrow
 								if (worked && model.hasTargets()) 
-									worked = writeMatlabProfileRow(profilsparsefile_targets.get(model), config.getProfilfileSparse(model.getName(),true), patient, profValues_targets, null,rowNo);
+									worked = writeMatlabProfileRow(profilsparsefile_targets.get(model), config.getProfilfileSparse(model.getName(),true), patient, profValues_targets, null,myrowno);
 							} //end sparse profile
 							if (config.createProfilSvmlight()) {
 								//output: "1 column(=VariableNo.):value #PID"
@@ -552,7 +562,7 @@ public class Worker {
 	}
 
 	
-	private boolean writeMatlabProfileRow(CSVWriter file, String filename, Patient patient, ArrayList<String> profValues, String[] leaderrow, long rowNo) {
+	private boolean writeMatlabProfileRow(CSVWriter file, String filename, Patient patient, ArrayList<String> profValues, String[] leaderrow, String rowNo) {
 		//output: row PID No, column (=Variable no.), value
 		String[] sparseline = new String[3];
 		int starterno=0;
@@ -560,7 +570,7 @@ public class Worker {
 		if (leaderrow!=null) {
 			for (int i =0; i<leaderrow.length; i++) {
 				if (!leaderrow[i].equals(Consts.navalue) && !leaderrow[i].isEmpty()) {
-					sparseline[0]=Long.toString(rowNo); //Row
+					sparseline[0]=rowNo; //Row
 					sparseline[1]=Integer.toString(i+1); //Col; matrix starts from 1
 					sparseline[2]=leaderrow[i]; //Val
 					try {
@@ -578,7 +588,7 @@ public class Worker {
 		//Next: profvalues
 		for (int i =0; i<profValues.size(); i++) {
 			if (!profValues.get(i).equals(Consts.navalue)) {
-				sparseline[0]=Long.toString(rowNo); //Row
+				sparseline[0]=rowNo; //Row
 				sparseline[1]=Integer.toString(i+1+starterno); //Col; matrix starts from 1
 				sparseline[2]=profValues.get(i); //Val
 				if (!sparseline.equals(new String[3])) {

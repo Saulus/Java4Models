@@ -29,9 +29,14 @@ public class Datei {
 	@Element(defaultValue="PID")
 	public String idfeld;
 	
-	/** The istsortiert. */
 	@Element(defaultValue="false")
 	public boolean leadingtable;
+	
+	@Element
+	public String leadingtable_columns;
+	
+	@Element
+	public String leadingtable_numfield;
 	
 	@Element
 	public String zusatzinfo;
@@ -116,6 +121,27 @@ public class Datei {
 	
 	public boolean isLeadingTable() {
 		return leadingtable;
+	}
+	
+	public boolean hasSpecificColumns() {
+		if (leadingtable_columns==null) return false;
+		else return true;
+	}
+	
+	public String[] getSpecificColumns() {
+		String[] tokens = null;
+		if (leadingtable_columns==null) return tokens;
+		tokens = leadingtable_columns.split(Consts.idfieldseparator);
+		return tokens;
+	}
+	
+	public boolean hasNumfield() {
+		if (leadingtable_numfield==null) return false;
+		else return true;
+	}
+	
+	public String getNumfield() {
+		return leadingtable_numfield;
 	}
 	
 

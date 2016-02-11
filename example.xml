@@ -8,6 +8,8 @@
 			<istsortiert>False</istsortiert>
 			<idfeld>PID,Bezugsjahr+value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->
 			<leadingtable>True</leadingtable><!-- optional; diese Tabelle wird um Features erweitert, dh. alle Zeile bleiben erhalten -->			
+			<leadingtable_columns>A,B,C</leadingtable_columns><!-- optional; Columns der Leadingtable, die behalten werden; wenn leer; keine; wenn nicht vorhanden: alle -->
+			<leadingtable_numfield>D</leadingtable_numfield><!-- optional; Spalte der Leadingtable, die die rowno (für Matlab Sparse Matrix) enthält -->
 		</datei>
 		<datei>
 			<datentyp>stamm2010_g1</datentyp> 

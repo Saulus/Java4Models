@@ -64,6 +64,11 @@ public class InputFile {
 	
 	private boolean isLeader = false; //leadingtable: diese Tabelle wird um Features erweitert, dh. alle Zeilen bleiben erhalten
 	
+	private boolean hasLeaderCols = false; //returns true if columns from leaderfile are to be added  
+	private String[] leaderColnames;
+	private boolean hasLeaderNumfield = false; //returns true if there is a specific rowno from leaderdile
+	private String leaderNumfield;
+	
 	
 	/**
 	 * Instantiates a new input file.
@@ -291,7 +296,57 @@ public class InputFile {
 
 	public void setLeader(boolean isLeader) {
 		this.isLeader = isLeader;
+		this.hasLeaderCols = true;
+		this.leaderColnames = colnames;
+		this.hasLeaderNumfield = false;
 	}
+	
+	public void setLeaderNumfield (String numfield) {
+		boolean exists = false;
+		numfield = numfield.toUpperCase();
+		for(int i=0; i<colnames.length; i++) {
+			if (colnames[i].equals(numfield)) { exists=true; break; }
+		}
+		if (exists) {
+			hasLeaderNumfield=true;
+			leaderNumfield=numfield;
+		}
+	}
+	
+	public void setLeaderColnames (String[] cols) {
+		this.leaderColnames = null; //reset leadercolnames
+		this.hasLeaderCols=false;
+		if (cols.length > 0 && !cols[0].equals("")) {
+			ArrayList<String> addcols= new ArrayList<String>();
+			for(int i=0; i<cols.length; i++) {
+				cols[i]=cols[i].toUpperCase();
+				for(int j=0; j<this.colnames.length; j++) {
+					if (this.colnames[j].equals(cols[i])) { addcols.add(cols[i]); break; }
+				}
+			}
+			if (addcols.size()>0) {
+				this.leaderColnames = addcols.toArray(new String[addcols.size()]);
+				this.hasLeaderCols=true;
+			}
+		}
+	}
+	
+	public boolean hasLeaderCols () {
+		return hasLeaderCols;
+	}
+	
+	public String[] getLeaderColnames () {
+		return leaderColnames;
+	}
+	
+	public boolean hasLeaderNumfield () {
+		return hasLeaderNumfield;
+	}
+	
+	public String getLeaderNumfield () {
+		return leaderNumfield;
+	}
+	
 	
 	public void clearcache () {
 		rowcache.clear();
