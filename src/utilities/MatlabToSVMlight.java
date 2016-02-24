@@ -34,27 +34,31 @@ public class MatlabToSVMlight {
 		// modelpath
 		// Outputfile
 		boolean ignore1 = false;
+		boolean noindex = false;
 		boolean sort = false;
 		boolean set1 = false;
 		boolean addpid = false;
 		String[] set1_xy = new String[0];
 		String source;
 		String target;
+		if (args.length == 1) {
+			if (args[0].equals("--version")) {
+				System.out.println("Java4Models / MatlabToSVMlight. Elsevier Health Analytics. Version: " + Consts.version);
+				System.exit(1);
+			}
+			
+			if (args[0].equals("--help")) {
+				System.out.println("MatlabToSVMlight.");
+				System.out.println("-sort: Sortieren Quell-Datei (ins gleiche Verzeichnis). Optional.");
+				System.out.println("-ignore1: Ignoriere 1. Spalte (wenn dort eine Zeilen-ID z.B. aus R gespeichert ist). Optional.");
+				System.out.println("-set1[x,y]: Setze alle Variablen AUßER x und y auf 1 (0 werden ignoriert). Optional.");
+				System.out.println("-addpid: Füge Kommentar mit PID zum Ende der Zeile hinzu in der Form: # PIDa. Optional.");
+				System.out.println("-noindex: Keine Indizierung bei Sortierung (Speicher sparen). Optional.");
+				System.exit(1);
+			}
+		}
 		if (args.length < 2) {
-			System.err.println("Aufruf: java -jar MatlabToSVMlight.jar [-sort] [-ignore1] [-set1[x,y]] [-addpid] quelle ziel");
-			System.exit(1);
-		}
-		if (args[0].equals("--version")) {
-			System.out.println("Java4Models / MatlabToSVMlight. Elsevier Health Analytics. Version: " + Consts.version);
-			System.exit(1);
-		}
-		
-		if (args[0].equals("--help")) {
-			System.out.println("MatlabToSVMlight.");
-			System.out.println("-sort: Sortieren Quell-Datei (ins gleiche Verzeichnis). Optional.");
-			System.out.println("-ignore1: Ignoriere 1. Spalte (wenn dort eine Zeilen-ID z.B. aus R gespeichert ist). Optional.");
-			System.out.println("-set1[x,y]: Setze alle Variablen AUßER x und y auf 1 (0 werden ignoriert). Optional.");
-			System.out.println("-addpid: Füge Kommentar mit PID zum Ende der Zeile hinzu in der Form: # PIDa. Optional.");
+			System.err.println("Aufruf: java -jar MatlabToSVMlight.jar [-sort] [-ignore1] [-set1[x,y]] [-addpid] [-noindex] quelle ziel");
 			System.exit(1);
 		}
 		int source_argNo = 0;
@@ -78,6 +82,10 @@ public class MatlabToSVMlight {
 				source_argNo++;
 				if (args[i].length()>6)
 				set1_xy = args[i].substring(6,args[i].length()-1).split(",");
+			}
+			if (args[i].equals("-noindex")) {
+				noindex=true;
+				source_argNo++;
 			}
 		}
 		
@@ -106,7 +114,7 @@ public class MatlabToSVMlight {
 				reader.close();
 				
 				Sorter sortfile = new Sorter("matlab",source,Consts.csvFlag,idfield,path);
-				source = sortfile.sortFileByID();
+				source = sortfile.sortFileByID(noindex);
 			} catch (Exception e) {
 				System.err.println("Fehler beim Sortieren von " + source + " im Ordner " + path);
 				e.printStackTrace();
@@ -129,6 +137,7 @@ public class MatlabToSVMlight {
 	}
 	
 	private static void transform(String readfile, String writefile, boolean ignore1, boolean set1, String[] set1_cols, boolean addpid) throws Exception {
+		String timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		CSVReader reader = null;
 		CSVWriter writer = null;
 		reader = new CSVReader(new FileReader(readfile), ';', '"');
@@ -149,7 +158,9 @@ public class MatlabToSVMlight {
 			col_z = 3;
 		}
 		boolean doset1;
+		long rowid = 0;
 		while ((row = reader.readNext()) != null) {
+			rowid++;
 			if (currentid != null && !row[col_x].equals(currentid)) {
 				writeSvmlighRow(writer,profValues,currentid, addpid);
 				profValues = new ArrayList<Column>();
@@ -164,7 +175,14 @@ public class MatlabToSVMlight {
 			}
 			profValues.add(col);
 			currentid=row[col_x];
+			if (rowid % 100000 == 0) {
+				timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
+				System.out.println(timeStamp +" - "+ Long.toString(rowid) + " Rows verarbeitet (RowNo: "+currentid+").");
+			}
 		}
+		writeSvmlighRow(writer,profValues,currentid, addpid);
+		timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
+		System.out.println(timeStamp +" - "+ Long.toString(rowid) + " Rows verarbeitet (RowNo: "+currentid+").");
 		reader.close();
 		writer.close();
 	}

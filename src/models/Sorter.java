@@ -41,7 +41,7 @@ public class Sorter extends InputFile {
 		long presumableFreeMemory = Runtime.getRuntime().maxMemory() - allocatedMemory;
 		File me = new File(path);
         long filelength = me.length();
-		if (presumableFreeMemory > (filelength+filelength/5)) { //memory must be filesize + ~20%
+		if (presumableFreeMemory > (filelength+filelength/2)) { //memory must be filesize + ~50%
 			dbfile = ":memory:";
 		} else {
 			dbfile = tmppath+"/sorter.db";
@@ -59,7 +59,7 @@ public class Sorter extends InputFile {
 	 * @return String newFile (incl. path) (=csv)
 	 * @throws Exception the exception
 	 */
-	public String sortFileByID(boolean addColumn, String sourcecol, String targetcol, HashMap<String,String> translator) throws Exception {
+	public String sortFileByID(boolean addColumn, String sourcecol, String targetcol, HashMap<String,String> translator, boolean noindex) throws Exception {
 		Statement stmt = sqldb.createStatement();
 		//1. create table with headers and one hash information
 		String createSQL = "create table sortdb (";
@@ -105,9 +105,11 @@ public class Sorter extends InputFile {
 		}
 		this.close();
 		//create index -> helps sorting
-		stmt = sqldb.createStatement();
-		stmt.executeUpdate("create index sort_id on sortdb ("+ this.getIDFields() +");");
-		stmt.close();   
+		if (!noindex) {
+			stmt = sqldb.createStatement();
+			stmt.executeUpdate("create index sort_id on sortdb ("+ this.getIDFields() +");");
+			stmt.close();   
+		}
 		//3. dump db sorted
 		CSVWriter outputfile = new CSVWriter(new FileWriter(this.getPath()+sortedfileext), ';', CSVWriter.NO_QUOTE_CHARACTER);
 		stmt = sqldb.createStatement();
@@ -122,11 +124,21 @@ public class Sorter extends InputFile {
 		    file.delete();
 	    }
 	    return this.getPath()+sortedfileext;
-	}	
-	
-	//without adding a new column
-	public String sortFileByID() throws Exception {
-		return this.sortFileByID(false, null, null, null);
 	}
+	
+	//without noindex
+	public String sortFileByID(boolean addColumn, String sourcecol, String targetcol, HashMap<String,String> translator) throws Exception {
+		return this.sortFileByID(addColumn, sourcecol,targetcol, translator,false);
+	}
+	
+	//without adding a new column, but noindex
+	public String sortFileByID() throws Exception {
+		return this.sortFileByID(false, null, null, null, false);
+	}
+	
+	//without adding a new column, but noindex
+		public String sortFileByID(boolean noindex) throws Exception {
+			return this.sortFileByID(false, null, null, null, noindex);
+		}
 
 }
