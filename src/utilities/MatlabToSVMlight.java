@@ -175,7 +175,7 @@ public class MatlabToSVMlight {
 			}
 			profValues.add(col);
 			currentid=row[col_x];
-			if (rowid % 100000 == 0) {
+			if (rowid % 10000000 == 0) {
 				timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 				System.out.println(timeStamp +" - "+ Long.toString(rowid) + " Rows verarbeitet (RowNo: "+currentid+").");
 			}
