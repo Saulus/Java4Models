@@ -7,6 +7,9 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import configuration.Consts;
@@ -16,17 +19,26 @@ import models.Sorter;
 
 class Column {
 	public String key;
+	public Integer key_num;
 	public String value;
 	
 	Column(String key, String value) throws NumberFormatException {
-		@SuppressWarnings("unused")
-		int test = Integer.parseInt(key); //test that key is numeric
-		this.key=key;
+		this.key_num=Integer.parseInt(key); //test that key is numeric
+		this.key = key;
 		this.value=value;
 	}
 }
 
+class ColComparator implements Comparator<Column> {
+
+	   public int compare(Column first, Column second) {
+		   return first.key_num.compareTo(second.key_num);
+	}
+}
+
 public class MatlabToSVMlight {
+	
+	private static ColComparator colComparator = new ColComparator();
 
 	public static void main(String[] args) {
 		// 0. Get Configs
@@ -34,10 +46,10 @@ public class MatlabToSVMlight {
 		// modelpath
 		// Outputfile
 		boolean ignore1 = false;
-		boolean noindex = false;
 		boolean sort = false;
 		boolean set1 = false;
 		boolean addpid = false;
+		boolean sortColOnly = false;
 		String[] set1_xy = new String[0];
 		String source;
 		String target;
@@ -49,11 +61,11 @@ public class MatlabToSVMlight {
 			
 			if (args[0].equals("--help")) {
 				System.out.println("MatlabToSVMlight.");
-				System.out.println("-sort: Sortieren Quell-Datei (ins gleiche Verzeichnis). Optional.");
+				System.out.println("-sort: Sortieren Quell-Datei (ins gleiche Verzeichnis, by ROW, COL -> müssen beide numerisch sein). Optional.");
 				System.out.println("-ignore1: Ignoriere 1. Spalte (wenn dort eine Zeilen-ID z.B. aus R gespeichert ist). Optional.");
 				System.out.println("-set1[x,y]: Setze alle Variablen AUßER x und y auf 1 (0 werden ignoriert). Optional.");
 				System.out.println("-addpid: Füge Kommentar mit PID zum Ende der Zeile hinzu in der Form: # PIDa. Optional.");
-				System.out.println("-noindex: Keine Indizierung bei Sortierung (Speicher sparen). Optional.");
+				System.out.println("-sortcolonly: Sortiert nur COL-Spalte (falls ROWs bereits sortiert). Optional.");
 				System.exit(1);
 			}
 		}
@@ -83,8 +95,8 @@ public class MatlabToSVMlight {
 				if (args[i].length()>6)
 				set1_xy = args[i].substring(6,args[i].length()-1).split(",");
 			}
-			if (args[i].equals("-noindex")) {
-				noindex=true;
+			if (args[i].equals("-sortcolonly")) {
+				sortColOnly=true;
 				source_argNo++;
 			}
 		}
@@ -106,15 +118,21 @@ public class MatlabToSVMlight {
 			try {
 				CSVReader reader = new CSVReader(new FileReader(source), ';', '"');
 				String [] firstLine;
-				String[] idfield = {"PID"};
+				String[] idfield = {"ROW","COL"};
 				if ((firstLine = reader.readNext()) != null) {
-					if (ignore1) idfield[0]=firstLine[1];
-					else idfield[0]=firstLine[0];
+					if (ignore1) {
+						idfield[0]=firstLine[1];
+						idfield[1]=firstLine[2];
+					}
+					else {
+						idfield[0]=firstLine[0];
+						idfield[1]=firstLine[1];
+					}
 				}
 				reader.close();
 				
 				Sorter sortfile = new Sorter("matlab",source,Consts.csvFlag,idfield,path);
-				source = sortfile.sortFileByID(noindex);
+				source = sortfile.sortFileByID(true);
 			} catch (Exception e) {
 				System.err.println("Fehler beim Sortieren von " + source + " im Ordner " + path);
 				e.printStackTrace();
@@ -126,7 +144,7 @@ public class MatlabToSVMlight {
 		timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		System.out.println(timeStamp + " Starte Transformation von " + source + " nach " + target);
 		try {
-			transform(source,target,ignore1,set1,set1_xy, addpid);
+			transform(source,target,ignore1,set1,set1_xy, addpid,sortColOnly);
 		} catch (Exception e) {
 			System.err.println("Fehler beim Schreiben oder Lesen von " + source + " oder " + target + ".");
 			e.printStackTrace();
@@ -136,7 +154,7 @@ public class MatlabToSVMlight {
 		System.out.println(timeStamp + " Transformation beendet von " + source + " nach " + target);
 	}
 	
-	private static void transform(String readfile, String writefile, boolean ignore1, boolean set1, String[] set1_cols, boolean addpid) throws Exception {
+	private static void transform(String readfile, String writefile, boolean ignore1, boolean set1, String[] set1_cols, boolean addpid, boolean sortColOnly) throws Exception {
 		String timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		CSVReader reader = null;
 		CSVWriter writer = null;
@@ -162,7 +180,7 @@ public class MatlabToSVMlight {
 		while ((row = reader.readNext()) != null) {
 			rowid++;
 			if (currentid != null && !row[col_x].equals(currentid)) {
-				writeSvmlighRow(writer,profValues,currentid, addpid);
+				writeSvmlighRow(writer,profValues,currentid, addpid,sortColOnly);
 				profValues = new ArrayList<Column>();
 			}
 			col = new Column(row[col_y],row[col_z]);
@@ -180,17 +198,21 @@ public class MatlabToSVMlight {
 				System.out.println(timeStamp +" - "+ Long.toString(rowid) + " Rows verarbeitet (RowNo: "+currentid+").");
 			}
 		}
-		writeSvmlighRow(writer,profValues,currentid, addpid);
+		writeSvmlighRow(writer,profValues,currentid, addpid, sortColOnly);
 		timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		System.out.println(timeStamp +" - "+ Long.toString(rowid) + " Rows verarbeitet (RowNo: "+currentid+").");
 		reader.close();
 		writer.close();
 	}
 	
-	private static void writeSvmlighRow(CSVWriter file, ArrayList<Column> profValues, String rowInfo, boolean addpid) {
+	
+	private static void writeSvmlighRow(CSVWriter file, ArrayList<Column> profValues, String rowInfo, boolean addpid, boolean sortColOnly) {
 		//output: "1 column(=VariableNo.):value #PID"
 		ArrayList<String> newline = new ArrayList<String>();
 		newline.add("1");
+		//Sort profValues by key (numerically!)
+		if (sortColOnly)
+			Collections.sort(profValues, colComparator);
 		for (Column col : profValues) {
 			if (!col.key.equals(Consts.navalue))
 				newline.add(col.key + ":" + col.value);

@@ -59,7 +59,7 @@ public class Sorter extends InputFile {
 	 * @return String newFile (incl. path) (=csv)
 	 * @throws Exception the exception
 	 */
-	public String sortFileByID(boolean addColumn, String sourcecol, String targetcol, HashMap<String,String> translator, boolean noindex) throws Exception {
+	public String sortFileByID(boolean addColumn, String sourcecol, String targetcol, HashMap<String,String> translator,boolean makeInt2Cols) throws Exception {
 		Statement stmt = sqldb.createStatement();
 		//1. create table with headers and one hash information
 		String createSQL = "create table sortdb (";
@@ -67,7 +67,9 @@ public class Sorter extends InputFile {
 		String [] headerline = getColnames();
 		int colcount = headerline.length;
 		for (int i=0; i< colcount-1; i++) {
-			createSQL +=  "'"+headerline[i] + "' TEXT, ";
+			createSQL +=  "'"+headerline[i];
+			if (i<2 && makeInt2Cols) createSQL += "' INTEGER, ";
+			else createSQL += "' TEXT, ";
 			insertSQL += "?,";
 		}
 		if (addColumn) {
@@ -88,7 +90,9 @@ public class Sorter extends InputFile {
 			for (int i=1; i<=max_buffer;i++) {
 				if (this.hasRow()) {
 					for (int j=0; j<colcount; j++) {
-				        	prep.setString(j+1, this.getValue(headerline[j])); //i+1 as statements start with 1
+							if (j<2 && makeInt2Cols)
+								prep.setInt(j+1, Integer.parseInt(this.getValue(headerline[j]))); //i+1 as statements start with 1
+							else prep.setString(j+1, this.getValue(headerline[j])); //i+1 as statements start with 1
 				        	if (addColumn && headerline[j].equals(sourcecol)) {
 				        		targetcolval=translator.get(this.getValue(headerline[j]));
 				        	}
@@ -106,11 +110,9 @@ public class Sorter extends InputFile {
 		}
 		this.close();
 		//create index -> helps sorting
-		if (!noindex) {
 			stmt = sqldb.createStatement();
 			stmt.executeUpdate("create index sort_id on sortdb ("+ this.getIDFields() +");");
 			stmt.close();   
-		}
 		//3. dump db sorted
 		CSVWriter outputfile = new CSVWriter(new FileWriter(this.getPath()+sortedfileext), ';', CSVWriter.NO_QUOTE_CHARACTER);
 		stmt = sqldb.createStatement();
@@ -127,19 +129,17 @@ public class Sorter extends InputFile {
 	    return this.getPath()+sortedfileext;
 	}
 	
-	//without noindex
-	public String sortFileByID(boolean addColumn, String sourcecol, String targetcol, HashMap<String,String> translator) throws Exception {
-		return this.sortFileByID(addColumn, sourcecol,targetcol, translator,false);
-	}
-	
-	//without adding a new column, but noindex
+	//without adding a new column, but do not make columns int
 	public String sortFileByID() throws Exception {
 		return this.sortFileByID(false, null, null, null, false);
 	}
 	
-	//without adding a new column, but noindex
-		public String sortFileByID(boolean noindex) throws Exception {
-			return this.sortFileByID(false, null, null, null, noindex);
-		}
+	public String sortFileByID(boolean makeInt2Cols ) throws Exception {
+		return this.sortFileByID(false, null, null, null, makeInt2Cols);
+	}
+	
+	public String sortFileByID(boolean addColumn, String sourcecol, String targetcol, HashMap<String,String> translator) throws Exception {
+		return this.sortFileByID(addColumn,sourcecol,targetcol,translator,false);
+	}
 
 }
