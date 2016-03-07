@@ -35,7 +35,7 @@ public class Sorter extends InputFile {
 	 * @throws Exception the exception
 	 */
 	public Sorter(String datentyp, String path, String filetype, String[] idfields, String tmppath) throws Exception {
-		super(datentyp, path, filetype, idfields);
+		super(datentyp, path, filetype, idfields,false);
 		//use "in memory" if possible
 		long allocatedMemory = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
 		long presumableFreeMemory = Runtime.getRuntime().maxMemory() - allocatedMemory;

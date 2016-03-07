@@ -51,4 +51,5 @@
 	<outputfile>scores.csv</outputfile>
 	<interceptname>INTERCEPT</interceptname>
 	<reference_date>01JAN2012</reference_date>
+	<upcase>True</upcase> <!-- wenn True: Lese alle Daten-Felder als "Upcase" ein -->
 </konfiguration>

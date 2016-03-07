@@ -76,6 +76,10 @@ public class Konfiguration {
 	@Element(defaultValue="01JAN2006")
 	public static String reference_date;
 	
+	/** The upcaser for all data fields. */
+	@Element(defaultValue="true")
+	public boolean upcase;
+	
 	/**
 	 * Gets the inputfiles.
 	 *
@@ -227,6 +231,10 @@ public class Konfiguration {
 	 */
 	public String getTmpPath() {
 		return outputpfad;
+	}
+	
+	public boolean upcase() {
+		return upcase;
 	}
 
 }

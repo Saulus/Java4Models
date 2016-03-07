@@ -70,6 +70,8 @@ public class InputFile {
 	private boolean hasLeaderNumfield = false; //returns true if there is a specific rowno from leaderdile
 	private String leaderNumfield;
 	
+	private boolean upcaseData=false;
+	
 	
 	/**
 	 * Instantiates a new input file.
@@ -79,12 +81,13 @@ public class InputFile {
 	 * @param filetype the filetype
 	 * @throws Exception the exception
 	 */
-	public InputFile (String datentyp, String path, String filetype, String[] idfields) throws Exception {
+	public InputFile (String datentyp, String path, String filetype, String[] idfields, boolean upcaseData) throws Exception {
 		//ToDo: Eigene Reader-Classe als Wrapper für z.B. flatpack, csvreader usw.
 		this.datentyp = datentyp;
 		this.filetype = filetype;
 		this.path = path;
 		this.idfields = new IDfield[idfields.length];
+		this.upcaseData=upcaseData;
 		for (int i=0;i<idfields.length;i++) this.idfields[i] = new IDfield(idfields[i]);
 		
 		//check encoding first
@@ -165,7 +168,10 @@ public class InputFile {
 			//add current row to rowcache
 			LinkedHashMap<String,String> nextrow = new LinkedHashMap<String,String>();
 			for (int i=0; i<colnames.length; i++) {
-				nextrow.put(colnames[i],flatpackDataset.getString(colnames[i]));
+				if (upcaseData)
+					nextrow.put(colnames[i],flatpackDataset.getString(colnames[i]).toUpperCase());
+				else 
+					nextrow.put(colnames[i],flatpackDataset.getString(colnames[i]));
 			}
 			rowcache.add(nextrow);
 			currentcachepointer++;

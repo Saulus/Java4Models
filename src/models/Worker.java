@@ -175,7 +175,7 @@ public class Worker {
 			try {
 				timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 				System.out.println(timeStamp + " Einlesen der Inputdatei "+ nextfile.getPath() + " gestartet.");
-				InputFile newfile = new InputFile(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld());
+				InputFile newfile = new InputFile(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld(), config.upcase());
 				newfile.setLeader(nextfile.isLeadingTable());
 				if (newfile.isLeader()) {
 					ourLeaderfile=newfile;
