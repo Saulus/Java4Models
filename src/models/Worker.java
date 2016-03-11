@@ -413,10 +413,10 @@ public class Worker {
 							} //end sparse profile
 							if (config.createProfilSvmlight()) {
 								//output: "1 column(=VariableNo.):value #PID"
-								worked = writeSvmlightProfileRow(profilsvmlightfile.get(model), config.getProfilfileSparse(model.getName(),false), patient, profValues, leaderrow);
+								worked = writeSvmlightProfileRow(profilsvmlightfile.get(model), config.getProfilfileSparse(model.getName(),false), patient, profValues, leaderrow,config.addPidToSvm());
 								//same for targets, w/o leaderrow
 								if (worked && model.hasTargets()) 
-									worked = writeSvmlightProfileRow(profilsvmlightfile_targets.get(model), config.getProfilfileSparse(model.getName(),true), patient, profValues_targets, null);
+									worked = writeSvmlightProfileRow(profilsvmlightfile_targets.get(model), config.getProfilfileSparse(model.getName(),true), patient, profValues_targets, null,config.addPidToSvm());
 							} //end svmlight
 						}
 					} //end rolling through models
@@ -637,7 +637,7 @@ public class Worker {
 	
 	
 	
-	private boolean writeSvmlightProfileRow(CSVWriter file, String filename, Patient patient, ArrayList<String> profValues, String[] leaderrow) {
+	private boolean writeSvmlightProfileRow(CSVWriter file, String filename, Patient patient, ArrayList<String> profValues, String[] leaderrow, boolean addPid) {
 		//output: "1 column(=VariableNo.):value #PID"
 		ArrayList<String> newline = new ArrayList<String>();
 		newline.add("1");
@@ -655,7 +655,7 @@ public class Worker {
 			if (!profValues.get(i).equals(Consts.navalue))
 				newline.add(Integer.toString(i+1+starterno) + ":" + profValues.get(i));
 		}
-		newline.add("# "+patient.getPid());
+		if (addPid) newline.add("# "+patient.getPid());
 		try {
 			file.writeNext(newline.toArray(new String[newline.size()]));
 		} catch (Exception e) {

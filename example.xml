@@ -47,6 +47,7 @@
 	<createProfilDense>True</createProfilDense>
 	<createProfilMatlab>True</createProfilMatlab>
 	<createProfilSvmlight>True</createProfilSvmlight>
+	<addPidToSvm>True</addPidToSvm><!-- adds "# PID" to each row in svm -->
 	<createScores>False</createScores>
 	<outputfile>scores.csv</outputfile>
 	<interceptname>INTERCEPT</interceptname>

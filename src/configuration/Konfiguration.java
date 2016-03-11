@@ -80,6 +80,10 @@ public class Konfiguration {
 	@Element(defaultValue="true")
 	public boolean upcase;
 	
+	/** The upcaser for all data fields. */
+	@Element(defaultValue="false")
+	public boolean addPidToSvm;
+	
 	/**
 	 * Gets the inputfiles.
 	 *
@@ -235,6 +239,10 @@ public class Konfiguration {
 	
 	public boolean upcase() {
 		return upcase;
+	}
+	
+	public boolean addPidToSvm() {
+		return addPidToSvm;
 	}
 
 }
