@@ -48,9 +48,11 @@ public class MatlabToSVMlight {
 		boolean ignore1 = false;
 		boolean sort = false;
 		boolean set1 = false;
+		boolean warn = false;
 		boolean addpid = false;
 		boolean sortColOnly = false;
 		String[] set1_xy = new String[0];
+		String[] warn_xy = new String[0];
 		String source;
 		String target;
 		if (args.length == 1) {
@@ -61,11 +63,13 @@ public class MatlabToSVMlight {
 			
 			if (args[0].equals("--help")) {
 				System.out.println("MatlabToSVMlight.");
+				System.out.println("Erwartet: ROW;COL;VAL -> csv mit header, \";\" als Separator");
 				System.out.println("-sort: Sortieren Quell-Datei (ins gleiche Verzeichnis, by ROW, COL -> müssen beide numerisch sein). Optional.");
 				System.out.println("-ignore1: Ignoriere 1. Spalte (wenn dort eine Zeilen-ID z.B. aus R gespeichert ist). Optional.");
-				System.out.println("-set1[x,y]: Setze alle Variablen AUßER x und y auf 1 (0 werden ignoriert). Optional.");
+				System.out.println("-set1[x,y]: Setze alle Variablen AUßER x und y (und weitere) auf 1 (0 werden ignoriert). Optional.");
 				System.out.println("-addpid: Füge Kommentar mit PID zum Ende der Zeile hinzu in der Form: # PIDa. Optional.");
 				System.out.println("-sortcolonly: Sortiert nur COL-Spalte (falls ROWs bereits sortiert). Optional.");
+				System.out.println("-warn[x,y]: Warnt, wenn aufeinanderfolgende ROWs in den COLs x,y (und weitere) gleiche Werte haben. Optional.");
 				System.exit(1);
 			}
 		}
@@ -98,6 +102,12 @@ public class MatlabToSVMlight {
 			if (args[i].equals("-sortcolonly")) {
 				sortColOnly=true;
 				source_argNo++;
+			}
+			if (args[i].substring(0, 5).equals("-warn")) {
+				warn=true;
+				source_argNo++;
+				if (args[i].length()>6)
+					warn_xy = args[i].substring(6,args[i].length()-1).split(",");
 			}
 		}
 		
@@ -144,7 +154,7 @@ public class MatlabToSVMlight {
 		timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		System.out.println(timeStamp + " Starte Transformation von " + source + " nach " + target);
 		try {
-			transform(source,target,ignore1,set1,set1_xy, addpid,sortColOnly);
+			transform(source,target,ignore1,set1,set1_xy, addpid,sortColOnly,warn,warn_xy);
 		} catch (Exception e) {
 			System.err.println("Fehler beim Schreiben oder Lesen von " + source + " oder " + target + ".");
 			e.printStackTrace();
@@ -154,7 +164,7 @@ public class MatlabToSVMlight {
 		System.out.println(timeStamp + " Transformation beendet von " + source + " nach " + target);
 	}
 	
-	private static void transform(String readfile, String writefile, boolean ignore1, boolean set1, String[] set1_cols, boolean addpid, boolean sortColOnly) throws Exception {
+	private static void transform(String readfile, String writefile, boolean ignore1, boolean set1, String[] set1_cols, boolean addpid, boolean sortColOnly, boolean warn, String[] warn_cols) throws Exception {
 		String timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		CSVReader reader = null;
 		CSVWriter writer = null;
@@ -176,10 +186,37 @@ public class MatlabToSVMlight {
 			col_z = 3;
 		}
 		boolean doset1;
+		boolean dowarn_foundcols;
+		boolean dowarn_foundvalues;
+		String[] warn_col_values = new String[warn_cols.length];
+		ArrayList<String> errorRows = new ArrayList<String>();
 		long rowid = 0;
 		while ((row = reader.readNext()) != null) {
 			rowid++;
 			if (currentid != null && !row[col_x].equals(currentid)) {
+				//warn
+				if (warn) {
+					dowarn_foundcols=false;
+					dowarn_foundvalues=true;
+					//per warn column
+					for (int x=0;x<warn_cols.length; x++) {
+						//find correct col
+						for (Column mycol : profValues) {
+							if (mycol.key.equals(warn_cols[x])) {
+								dowarn_foundcols=true;
+								//first: compare to earlier value
+								if (dowarn_foundvalues && !mycol.value.equals(warn_col_values[x])) dowarn_foundvalues=false; 
+								//last: set new value for later reference
+								warn_col_values[x] = mycol.value; 
+								break;
+							}
+						}
+					}
+					if (dowarn_foundcols && dowarn_foundvalues) {
+						System.err.println("Warnung: Gleiche Werte in Spalten in Row " + currentid);
+						errorRows.add(currentid);
+					}
+				}
 				writeSvmlighRow(writer,profValues,currentid, addpid,sortColOnly);
 				profValues = new ArrayList<Column>();
 			}
@@ -187,7 +224,7 @@ public class MatlabToSVMlight {
 			if (set1) {
 				doset1=true;
 				for (int x=0;x<set1_cols.length; x++) {
-					if (col.key.equals(set1_cols[x])) doset1=false;
+					if (col.key.equals(set1_cols[x])) { doset1=false; break; }
 				}
 				if (doset1 && !col.value.equals("0")) col.value="1";
 			}
@@ -201,6 +238,9 @@ public class MatlabToSVMlight {
 		writeSvmlighRow(writer,profValues,currentid, addpid, sortColOnly);
 		timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		System.out.println(timeStamp +" - "+ Long.toString(rowid) + " Rows verarbeitet (RowNo: "+currentid+").");
+		if (warn && errorRows.size()>0) {
+			for (String errorrow : errorRows) System.err.println("Error in row: " + errorrow);
+		}
 		reader.close();
 		writer.close();
 	}
