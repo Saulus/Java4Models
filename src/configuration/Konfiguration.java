@@ -24,13 +24,13 @@ public class Konfiguration {
 	private String profilfileDense = "profil_dense";
 	
 	/** The profilfile sparse. */
-	private String profilfileSparse = "profil_matlab";
+	private String profilfileSparse = "profil_mm";
 	
 	/** The profilfile sparse col. */
-	private String profilfileSparseCol = "profil_matlab_cols";
+	private String profilfileSparseCol = "profil_mm_cols";
 	
 	/** The profilfile sparse row. */
-	private String profilfileSparseRow = "profil_matlab_rows";
+	private String profilfileSparseRow = "profil_mm_rows";
 	
 	private String profilfileSvmlight = "profil_svmlight";
 	private String profilfileSvmlightHeadExt = "_head";
@@ -53,7 +53,7 @@ public class Konfiguration {
 	
 	/** The create profil sparse. */
 	@Element(defaultValue="false")
-	public boolean createProfilMatlab;
+	public boolean createProfilMatrixMarket;
 	
 	@Element(defaultValue="false")
 	public boolean createProfilSvmlight;
@@ -216,7 +216,7 @@ public class Konfiguration {
 	
 	
 	public boolean createProfilSparse() {
-		return createProfilMatlab;
+		return createProfilMatrixMarket;
 	}
 	
 	public boolean createProfilSvmlight() {

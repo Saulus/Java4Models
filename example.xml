@@ -45,7 +45,7 @@
 	<modellpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\Java4Models\Models</modellpfad>
 	<!-- optionale Parameter -->
 	<createProfilDense>True</createProfilDense>
-	<createProfilMatlab>True</createProfilMatlab>
+	<createProfilMatrixMarket>True</createProfilMatrixMarket>
 	<createProfilSvmlight>True</createProfilSvmlight>
 	<addPidToSvm>True</addPidToSvm><!-- adds "# PID" to each row in svm -->
 	<createScores>False</createScores>

@@ -24,7 +24,7 @@
 	<modellpfad>C:\temp\debug\Models</modellpfad>
 	<!-- optionale Parameter -->
 	<createProfilDense>True</createProfilDense>
-	<createProfilMatlab>True</createProfilMatlab>
+	<createProfilMatrixMarket>True</createProfilMatrixMarket>
 	<createProfilSvmlight>True</createProfilSvmlight>
 	<createScores>False</createScores>
 	<outputfile>scores.csv</outputfile>

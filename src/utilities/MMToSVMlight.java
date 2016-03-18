@@ -36,7 +36,7 @@ class ColComparator implements Comparator<Column> {
 	}
 }
 
-public class MatlabToSVMlight {
+public class MMToSVMlight {
 	
 	private static ColComparator colComparator = new ColComparator();
 
@@ -62,7 +62,8 @@ public class MatlabToSVMlight {
 			}
 			
 			if (args[0].equals("--help")) {
-				System.out.println("MatlabToSVMlight.");
+				System.out.println("MMToSVMlight.");
+				System.out.println("Vom Matrix Market Format to SVMLignt");
 				System.out.println("Erwartet: ROW;COL;VAL -> csv mit header, \";\" als Separator");
 				System.out.println("-sort: Sortieren Quell-Datei (ins gleiche Verzeichnis, by ROW, COL -> müssen beide numerisch sein). Optional.");
 				System.out.println("-ignore1: Ignoriere 1. Spalte (wenn dort eine Zeilen-ID z.B. aus R gespeichert ist). Optional.");
@@ -74,7 +75,7 @@ public class MatlabToSVMlight {
 			}
 		}
 		if (args.length < 2) {
-			System.err.println("Aufruf: java -jar MatlabToSVMlight.jar [-sort] [-ignore1] [-set1[x,y]] [-addpid] [-noindex] quelle ziel");
+			System.err.println("Aufruf: java -jar MMToSVMlight.jar [-sort] [-ignore1] [-set1[x,y]] [-addpid] [-noindex] quelle ziel");
 			System.exit(1);
 		}
 		int source_argNo = 0;
