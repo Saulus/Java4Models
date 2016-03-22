@@ -27,6 +27,23 @@ class Column {
 		this.key = key;
 		this.value=value;
 	}
+	
+	@Override
+    public boolean equals(Object obj) 
+    {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Column other = (Column) obj;
+        if (key_num != other.key_num)
+            return false;
+        if (!value.equals(other.value))
+            return false;
+        return true;
+    }
 }
 
 class ColComparator implements Comparator<Column> {
@@ -36,7 +53,7 @@ class ColComparator implements Comparator<Column> {
 	}
 }
 
-public class MMToSVMlight {
+public class MM2SVM {
 	
 	private static ColComparator colComparator = new ColComparator();
 
@@ -51,6 +68,7 @@ public class MMToSVMlight {
 		boolean warn = false;
 		boolean addpid = false;
 		boolean sortColOnly = false;
+		boolean skipSimilarRows = false;
 		String[] set1_xy = new String[0];
 		String[] warn_xy = new String[0];
 		String source;
@@ -62,7 +80,7 @@ public class MMToSVMlight {
 			}
 			
 			if (args[0].equals("--help")) {
-				System.out.println("MMToSVMlight.");
+				System.out.println("MM2SVM.");
 				System.out.println("Vom Matrix Market Format to SVMLignt");
 				System.out.println("Erwartet: ROW;COL;VAL -> csv mit header, \";\" als Separator");
 				System.out.println("-sort: Sortieren Quell-Datei (ins gleiche Verzeichnis, by ROW, COL -> müssen beide numerisch sein). Optional.");
@@ -71,11 +89,12 @@ public class MMToSVMlight {
 				System.out.println("-addpid: Füge Kommentar mit PID zum Ende der Zeile hinzu in der Form: # PIDa. Optional.");
 				System.out.println("-sortcolonly: Sortiert nur COL-Spalte (falls ROWs bereits sortiert). Optional.");
 				System.out.println("-warn[x,y]: Warnt, wenn aufeinanderfolgende ROWs in den COLs x,y (und weitere) gleiche Werte haben. Optional.");
+				System.out.println("-skipsimilarrows: Überspringt die ROWS, die gleich sind wie die vorherige ROW. Optional.");
 				System.exit(1);
 			}
 		}
 		if (args.length < 2) {
-			System.err.println("Aufruf: java -jar MMToSVMlight.jar [-sort] [-ignore1] [-set1[x,y]] [-addpid] [-noindex] quelle ziel");
+			System.err.println("Aufruf: java -jar MM2SVM.jar [-sort] [-ignore1] [-set1[x,y]] [-addpid] [-sortcolonly] [-warn[x,y]} quelle ziel");
 			System.exit(1);
 		}
 		int source_argNo = 0;
@@ -102,6 +121,10 @@ public class MMToSVMlight {
 			}
 			if (args[i].equals("-sortcolonly")) {
 				sortColOnly=true;
+				source_argNo++;
+			}
+			if (args[i].equals("-skipsimilarrows")) {
+				skipSimilarRows=true;
 				source_argNo++;
 			}
 			if (args[i].substring(0, 5).equals("-warn")) {
@@ -155,7 +178,7 @@ public class MMToSVMlight {
 		timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		System.out.println(timeStamp + " Starte Transformation von " + source + " nach " + target);
 		try {
-			transform(source,target,ignore1,set1,set1_xy, addpid,sortColOnly,warn,warn_xy);
+			transform(source,target,ignore1,set1,set1_xy, addpid,sortColOnly,warn,warn_xy,skipSimilarRows);
 		} catch (Exception e) {
 			System.err.println("Fehler beim Schreiben oder Lesen von " + source + " oder " + target + ".");
 			e.printStackTrace();
@@ -165,7 +188,7 @@ public class MMToSVMlight {
 		System.out.println(timeStamp + " Transformation beendet von " + source + " nach " + target);
 	}
 	
-	private static void transform(String readfile, String writefile, boolean ignore1, boolean set1, String[] set1_cols, boolean addpid, boolean sortColOnly, boolean warn, String[] warn_cols) throws Exception {
+	private static void transform(String readfile, String writefile, boolean ignore1, boolean set1, String[] set1_cols, boolean addpid, boolean sortColOnly, boolean warn, String[] warn_cols, boolean skipSimilarRows) throws Exception {
 		String timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		CSVReader reader = null;
 		CSVWriter writer = null;
@@ -177,6 +200,8 @@ public class MMToSVMlight {
 		String [] row;
 		String currentid= null;
 		ArrayList<Column> profValues = new ArrayList<Column>();
+		ArrayList<Column> lastprofValues = new ArrayList<Column>();
+		long skippedrows =0;
 		Column col;
 		int col_x = 0;
 		int col_y = 1;
@@ -187,14 +212,18 @@ public class MMToSVMlight {
 			col_z = 3;
 		}
 		boolean doset1;
-		boolean dowarn_foundcols;
-		boolean dowarn_foundvalues;
+		boolean dowarn_foundcols = false;
+		boolean dowarn_foundvalues = false;
 		String[] warn_col_values = new String[warn_cols.length];
 		ArrayList<String> errorRows = new ArrayList<String>();
 		long rowid = 0;
 		while ((row = reader.readNext()) != null) {
 			rowid++;
 			if (currentid != null && !row[col_x].equals(currentid)) {
+				//now: output
+				//Sort profValues by key (numerically!)
+				if (sortColOnly)
+					Collections.sort(profValues, colComparator);
 				//warn
 				if (warn) {
 					dowarn_foundcols=false;
@@ -218,7 +247,11 @@ public class MMToSVMlight {
 						errorRows.add(currentid);
 					}
 				}
-				writeSvmlighRow(writer,profValues,currentid, addpid,sortColOnly);
+				//skip if similar
+				if (!skipSimilarRows || !profValues.equals(lastprofValues))
+					writeSvmlighRow(writer,profValues,currentid, addpid);
+				else skippedrows++;
+				if (skipSimilarRows) lastprofValues=profValues;
 				profValues = new ArrayList<Column>();
 			}
 			col = new Column(row[col_y],row[col_z]);
@@ -236,24 +269,30 @@ public class MMToSVMlight {
 				System.out.println(timeStamp +" - "+ Long.toString(rowid) + " Rows verarbeitet (RowNo: "+currentid+").");
 			}
 		}
-		writeSvmlighRow(writer,profValues,currentid, addpid, sortColOnly);
+		//output last one		
+		//Sort profValues by key (numerically!)
+		if (sortColOnly)
+			Collections.sort(profValues, colComparator);
+		//skip if similar
+		if (!skipSimilarRows || !profValues.equals(lastprofValues))
+			writeSvmlighRow(writer,profValues,currentid, addpid);
+		else skippedrows++;
 		timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		System.out.println(timeStamp +" - "+ Long.toString(rowid) + " Rows verarbeitet (RowNo: "+currentid+").");
 		if (warn && errorRows.size()>0) {
-			for (String errorrow : errorRows) System.err.println("Error in row: " + errorrow);
+			System.err.println("Number of warnings: " + errorRows.size());
+			System.err.println("Number of skipped rows: " + skippedrows);
 		}
 		reader.close();
 		writer.close();
 	}
 	
 	
-	private static void writeSvmlighRow(CSVWriter file, ArrayList<Column> profValues, String rowInfo, boolean addpid, boolean sortColOnly) {
+	//returns row
+	private static void writeSvmlighRow(CSVWriter file, ArrayList<Column> profValues, String rowInfo, boolean addpid) {
 		//output: "1 column(=VariableNo.):value #PID"
 		ArrayList<String> newline = new ArrayList<String>();
 		newline.add("1");
-		//Sort profValues by key (numerically!)
-		if (sortColOnly)
-			Collections.sort(profValues, colComparator);
 		for (Column col : profValues) {
 			if (!col.key.equals(Consts.navalue))
 				newline.add(col.key + ":" + col.value);
