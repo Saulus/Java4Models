@@ -38,7 +38,7 @@ class Column {
         if (getClass() != obj.getClass())
             return false;
         Column other = (Column) obj;
-        if (key_num != other.key_num)
+        if (!key_num.equals(other.key_num))
             return false;
         if (!value.equals(other.value))
             return false;
@@ -94,7 +94,7 @@ public class MM2SVM {
 			}
 		}
 		if (args.length < 2) {
-			System.err.println("Aufruf: java -jar MM2SVM.jar [-sort] [-ignore1] [-set1[x,y]] [-addpid] [-sortcolonly] [-warn[x,y]} quelle ziel");
+			System.err.println("Aufruf: java -jar MM2SVM.jar [-sort] [-ignore1] [-set1[x,y]] [-addpid] [-sortcolonly] [-warn[x,y]] [-skipsimilarrows] quelle ziel");
 			System.exit(1);
 		}
 		int source_argNo = 0;
