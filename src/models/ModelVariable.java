@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.joda.time.LocalDate;
+import org.joda.time.Years;
 import org.joda.time.Days;
 
 import au.com.bytecode.opencsv.CSVReader;
@@ -28,6 +29,7 @@ class ModelVariableCalcPart {
 	
 	private boolean isConstant = false; //
 	private boolean isDate;
+	private boolean isAgeFromDate;
 	
 	
 	
@@ -42,6 +44,7 @@ class ModelVariableCalcPart {
 	private void parseType (String type) {
 		//isConstant = (type.equals(Consts.aggValue));
 		isDate= (type.equals(Consts.aggDate));
+		isAgeFromDate= (type.equals(Consts.aggAge));
 	}
 	
 	private void parseValue (String value) throws Exception {
@@ -88,6 +91,9 @@ class ModelVariableCalcPart {
 		if (isDate) {
 			mydate = Utils.parseDate(inputvalue);
 			newval = Days.daysBetween(myreferencedate, mydate).getDays();
+		} else if (isAgeFromDate) {
+			mydate = Utils.parseDate(inputvalue);
+			newval = Years.yearsBetween(myreferencedate, mydate).getYears();
 		} else 
 			try {
 				//test if value contains "," -> change to "."

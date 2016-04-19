@@ -69,6 +69,7 @@ public class MM2SVM {
 		boolean addpid = false;
 		boolean sortColOnly = false;
 		boolean skipSimilarRows = false;
+		boolean debug = false;
 		String[] set1_xy = new String[0];
 		String[] warn_xy = new String[0];
 		String source;
@@ -90,11 +91,12 @@ public class MM2SVM {
 				System.out.println("-sortcolonly: Sortiert nur COL-Spalte (falls ROWs bereits sortiert). Optional.");
 				System.out.println("-warn[x,y]: Warnt, wenn aufeinanderfolgende ROWs in den COLs x,y (und weitere) gleiche Werte haben. Optional.");
 				System.out.println("-skipsimilarrows: Überspringt die ROWS, die gleich sind wie die vorherige ROW. Optional.");
+				System.out.println("-debug: Debug mode. Optional.");
 				System.exit(1);
 			}
 		}
 		if (args.length < 2) {
-			System.err.println("Aufruf: java -jar MM2SVM.jar [-sort] [-ignore1] [-set1[x,y]] [-addpid] [-sortcolonly] [-warn[x,y]] [-skipsimilarrows] quelle ziel");
+			System.err.println("Aufruf: java -jar MM2SVM.jar [-sort] [-ignore1] [-set1[x,y]] [-addpid] [-sortcolonly] [-warn[x,y]] [-skipsimilarrows] [-debug] quelle ziel");
 			System.exit(1);
 		}
 		int source_argNo = 0;
@@ -125,6 +127,10 @@ public class MM2SVM {
 			}
 			if (args[i].equals("-skipsimilarrows")) {
 				skipSimilarRows=true;
+				source_argNo++;
+			}
+			if (args[i].equals("-debug")) {
+				debug=true;
 				source_argNo++;
 			}
 			if (args[i].substring(0, 5).equals("-warn")) {
@@ -178,7 +184,7 @@ public class MM2SVM {
 		timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		System.out.println(timeStamp + " Starte Transformation von " + source + " nach " + target);
 		try {
-			transform(source,target,ignore1,set1,set1_xy, addpid,sortColOnly,warn,warn_xy,skipSimilarRows);
+			transform(source,target,ignore1,set1,set1_xy, addpid,sortColOnly,warn,warn_xy,skipSimilarRows,debug);
 		} catch (Exception e) {
 			System.err.println("Fehler beim Schreiben oder Lesen von " + source + " oder " + target + ".");
 			e.printStackTrace();
@@ -188,7 +194,7 @@ public class MM2SVM {
 		System.out.println(timeStamp + " Transformation beendet von " + source + " nach " + target);
 	}
 	
-	private static void transform(String readfile, String writefile, boolean ignore1, boolean set1, String[] set1_cols, boolean addpid, boolean sortColOnly, boolean warn, String[] warn_cols, boolean skipSimilarRows) throws Exception {
+	private static void transform(String readfile, String writefile, boolean ignore1, boolean set1, String[] set1_cols, boolean addpid, boolean sortColOnly, boolean warn, String[] warn_cols, boolean skipSimilarRows, boolean debug) throws Exception {
 		String timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
 		CSVReader reader = null;
 		CSVWriter writer = null;
@@ -212,8 +218,8 @@ public class MM2SVM {
 			col_z = 3;
 		}
 		boolean doset1;
-		boolean dowarn_foundcols = false;
-		boolean dowarn_foundvalues = false;
+		boolean dowarn_foundcols;
+		boolean dowarn_foundvalues;
 		String[] warn_col_values = new String[warn_cols.length];
 		ArrayList<String> errorRows = new ArrayList<String>();
 		long rowid = 0;
@@ -243,7 +249,12 @@ public class MM2SVM {
 						}
 					}
 					if (dowarn_foundcols && dowarn_foundvalues) {
-						System.err.println("Warnung: Gleiche Werte in Spalten in Row " + currentid);
+						if (debug) {
+							System.err.println("Warnung: Gleiche Werte in Spalten in Row " + currentid);
+							for (int x=0;x<warn_cols.length; x++) {
+								System.out.println(warn_cols[x] + " : " + warn_col_values[x]);
+							}
+						}
 						errorRows.add(currentid);
 					}
 				}

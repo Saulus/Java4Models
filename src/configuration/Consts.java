@@ -6,7 +6,7 @@ Collected constants of general utility.
 **/
 public final class Consts {
 	
-	public static final String version = "2.8";
+	public static final String version = "2.9";
 	
 	/** The Constant satzartFlag. */
 	public static final String satzartFlag = "SATZART";
@@ -80,6 +80,7 @@ public final class Consts {
 	public static final String aggMaxDistance = "MAXDISTANCE";
 	
 	public static final String aggDate = "DATE";
+	public static final String aggAge = "AGE";
 	
 
 	public static final String referenceEsc = "\\$";
