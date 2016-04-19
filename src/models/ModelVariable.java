@@ -93,7 +93,7 @@ class ModelVariableCalcPart {
 			newval = Days.daysBetween(myreferencedate, mydate).getDays();
 		} else if (isAgeFromDate) {
 			mydate = Utils.parseDate(inputvalue);
-			newval = Years.yearsBetween(myreferencedate, mydate).getYears();
+			newval = Years.yearsBetween(mydate,myreferencedate).getYears();
 		} else 
 			try {
 				//test if value contains "," -> change to "."
