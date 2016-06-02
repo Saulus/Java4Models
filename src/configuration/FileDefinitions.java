@@ -86,7 +86,7 @@ public class FileDefinitions {
 	/**
 	 * Gets the definition.
 	 *
-	 * @param datentyp the datentyp
+	 * @param data_id the data_id
 	 * @return the definition
 	 */
 	public String getDefinition (String datentyp) {

@@ -3,9 +3,11 @@ package models;
 import java.io.File;
 import java.io.FileWriter;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import au.com.bytecode.opencsv.CSVWriter;
+import configuration.Filter;
 
 /**
  * Sorts using Sqlite.
@@ -28,14 +30,14 @@ public class Sorter extends InputFile {
 	/**
 	 * Instantiates a new sorter.
 	 *
-	 * @param datentyp the datentyp
+	 * @param data_id the data_id
 	 * @param path the path
 	 * @param filetype the filetype
 	 * @param tmppath the tmppath
 	 * @throws Exception the exception
 	 */
-	public Sorter(String datentyp, String path, String filetype, String[] idfields, String tmppath) throws Exception {
-		super(datentyp, path, filetype, idfields,false);
+	public Sorter(String datentyp, String path, String filetype, String[] idfields,  String separator, String tmppath, ArrayList<Filter> filters) throws Exception {
+		super(datentyp, path, filetype, idfields,separator,false,filters);
 		//use "in memory" if possible
 		long allocatedMemory = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
 		long presumableFreeMemory = Runtime.getRuntime().maxMemory() - allocatedMemory;
@@ -59,7 +61,7 @@ public class Sorter extends InputFile {
 	 * @return String newFile (incl. path) (=csv)
 	 * @throws Exception the exception
 	 */
-	public String sortFileByID(boolean addColumn, String sourcecol, String targetcol, HashMap<String,String> translator,boolean makeInt2Cols) throws Exception {
+	public String sortFileByID(boolean addColumn, String sourcecol, String targetcols[], HashMap<String,String[]> translator,boolean makeInt2Cols) throws Exception {
 		Statement stmt = sqldb.createStatement();
 		//1. create table with headers and one hash information
 		String createSQL = "create table sortdb (";
@@ -73,9 +75,11 @@ public class Sorter extends InputFile {
 			insertSQL += "?,";
 		}
 		if (addColumn) {
-			insertSQL += "?,?);";
+			for (int i=0;i<targetcols.length; i++) insertSQL += "?,";
+			insertSQL += "?);";
 			createSQL +=  "'" + headerline[colcount-1] + "' TEXT, ";
-			createSQL +=  "'"+targetcol + "' TEXT);";
+			for (int i=0;i<targetcols.length-1; i++) createSQL +=  "'"+targetcols[i] + "' TEXT, ";
+			createSQL +=  "'"+targetcols[targetcols.length-1] + "' TEXT);";
 		} else {
 			createSQL +=  "'" + headerline[colcount-1] + "' TEXT);";
 			insertSQL +=  "?);";
@@ -84,7 +88,7 @@ public class Sorter extends InputFile {
 		stmt.close();
 		//2. read and import csv data
 		PreparedStatement prep = sqldb.prepareStatement(insertSQL);
-		String targetcolval = null;
+		String[] targetcolval = null;
 		int max_buffer = 50000;
 		while (this.nextRow()) {
 			for (int i=1; i<=max_buffer;i++) {
@@ -97,7 +101,13 @@ public class Sorter extends InputFile {
 				        		targetcolval=translator.get(this.getValue(headerline[j]));
 				        	}
 				    }
-					if (addColumn) if (targetcolval != null) prep.setString(colcount+1,targetcolval); else prep.setString(colcount+1,"");
+					if (addColumn) {
+						for (int j=0;j<targetcols.length; j++) {
+							if (targetcolval != null && targetcolval.length>j && targetcolval[j]!=null)
+								prep.setString(colcount+j+1,targetcolval[j]);
+							else prep.setString(colcount+j+1,"");
+						}
+					}
 				    prep.addBatch();
 				    if(i<max_buffer) this.nextRow();
 				} else {
@@ -138,8 +148,8 @@ public class Sorter extends InputFile {
 		return this.sortFileByID(false, null, null, null, makeInt2Cols);
 	}
 	
-	public String sortFileByID(boolean addColumn, String sourcecol, String targetcol, HashMap<String,String> translator) throws Exception {
-		return this.sortFileByID(addColumn,sourcecol,targetcol,translator,false);
+	public String sortFileByID(boolean addColumn, String sourcecol, String[] targetcols, HashMap<String,String[]> translator) throws Exception {
+		return this.sortFileByID(addColumn,sourcecol,targetcols,translator,false);
 	}
 
 }

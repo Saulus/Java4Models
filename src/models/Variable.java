@@ -35,6 +35,8 @@ class Allrows {
  *  
  */
 public class Variable {
+	//private final static Logger LOGGER = Logger.getLogger(Variable.class.getName());
+	
 	private HashMap<ModelVariable,Allrows> rows = new  HashMap<ModelVariable,Allrows>();
 	private boolean include = false; //if true: only include patients that have this
 	private boolean exclude = false; //if true: exclude all patients that have this

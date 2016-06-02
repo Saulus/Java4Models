@@ -8,6 +8,7 @@ import java.io.IOException;
 import org.mozilla.universalchardet.UniversalDetector;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Logger;
 
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
@@ -23,6 +24,8 @@ import au.com.bytecode.opencsv.CSVWriter;
  *
  */
 public final class Utils {
+	private final static Logger LOGGER = Logger.getLogger(Utils.class.getName());
+	
 	private final static DateTimeParser[] parsers = { 
 	        //DateTimeFormat.forPattern( "ddMMMyyy" ).withLocale(Locale.GERMAN).getParser(),
 	        DateTimeFormat.forPattern( "ddMMMyyy" ).getParser(),

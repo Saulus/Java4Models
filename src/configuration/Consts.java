@@ -6,14 +6,16 @@ Collected constants of general utility.
 **/
 public final class Consts {
 	
-	public static final String version = "2.9";
+	public static final String version = "3.0a";
 	
 	/** The Constant satzartFlag. */
 	public static final String satzartFlag = "SATZART";
 	
 	/** The Constant csvFlag. */
 	public static final String csvFlag = "CSV";
+	public static final String csvfieldseparator = ";";
 	
+	public static final String ddiFlag = "DDI";
 	/** The Constant logRegFlag. */
 	public static final String logRegFlag = "LOGREG";
 
@@ -109,7 +111,7 @@ public final class Consts {
 	public static final String comment_indicator = "#";
 	
 	/** 
-	 * looking for (datei) in Model config-filters
+	 * looking for (datafile) in Model config-filters
 	 */
 	public static final String filterfilelocation="\\filter";
 	

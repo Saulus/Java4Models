@@ -1,18 +1,20 @@
 package configuration;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.joda.time.LocalDate;
 import org.xmappr.Element;
 import org.xmappr.RootElement;
 
 
 /**
- * The Class Konfiguration.
+ * The Class Configuration.
  * Elements from konfiguration.xml are loaded into here, into variables defined acc. to xml tag.
  * Class for Tags konfiguration
  */
 @RootElement
-public class Konfiguration {
+public class Configuration {
 	
 	/** The model coeff ext. */
 	private String modelCoeffExt = ".coeff";
@@ -35,17 +37,26 @@ public class Konfiguration {
 	private String profilfileSvmlight = "profil_svmlight";
 	private String profilfileSvmlightHeadExt = "_head";
 	
-	/** The input. */
+	/** The inputfiles. */
 	@Element
-	public Input input;
+	public Inputfiles inputfiles;
 	
-	/** The outputpfad. */
-	@Element(defaultValue="C:\\")
-	public String outputpfad;
 	
-	/** The modellpfad. */
-	@Element(defaultValue="C:\\")
-	public String modellpfad;
+	@Element
+	public Inputfilter inputfilter;
+	
+	
+	@Element
+	public DDIConfiguration ddiconfiguration;
+	
+	
+	/** The outputpath. */
+	@Element
+	public String outputpath;
+	
+	/** The modelpath. */
+	@Element
+	public String modelpath;
 	
 	/** The create profil dense. */
 	@Element(defaultValue="false")
@@ -80,6 +91,9 @@ public class Konfiguration {
 	@Element(defaultValue="true")
 	public boolean upcase;
 	
+	@Element
+	public String logfile;
+	
 	/** The upcaser for all data fields. */
 	@Element(defaultValue="false")
 	public boolean addPidToSvm;
@@ -89,8 +103,8 @@ public class Konfiguration {
 	 *
 	 * @return the inputfiles
 	 */
-	public List<Datei> getInputfiles() {
-		return input.datei;
+	public List<Datafile> getInputfiles() {
+		return inputfiles.datafile;
 	}
 	
 	/**
@@ -100,7 +114,7 @@ public class Konfiguration {
 	 */
 	public String getOutputfile() {
 		if (outputfile==null) outputfile = "scores.csv";
-		return outputpfad + "\\" + outputfile;
+		return outputpath + "\\" + outputfile;
 	}
 	
 	/**
@@ -109,7 +123,7 @@ public class Konfiguration {
 	 * @return the modelpath
 	 */
 	public String getModelpath() {
-		return modellpfad;
+		return modelpath;
 	}
 	
 	/**
@@ -139,9 +153,9 @@ public class Konfiguration {
 	 */
 	public String getProfilfileDense(String model, boolean targets) {
 		if (targets)
-			return outputpfad + "\\" + model + profilfileDense + "_targets.csv";
+			return outputpath + "\\" + model + profilfileDense + "_targets.csv";
 		else 
-			return outputpfad + "\\" + model + profilfileDense + ".csv";
+			return outputpath + "\\" + model + profilfileDense + ".csv";
 	}
 	
 	/**
@@ -152,9 +166,9 @@ public class Konfiguration {
 	 */
 	public String getProfilfileDenseTmp(String model, boolean targets) {
 		if (targets)
-			return outputpfad + "\\" + model + profilfileDense + "_targets.tmp";
+			return outputpath + "\\" + model + profilfileDense + "_targets.tmp";
 		else 
-			return outputpfad + "\\" + model + profilfileDense + ".tmp";
+			return outputpath + "\\" + model + profilfileDense + ".tmp";
 	}
 	
 	/**
@@ -165,9 +179,9 @@ public class Konfiguration {
 	 */
 	public String getProfilfileSparse(String model, boolean targets) {
 		if (targets)
-			return outputpfad + "\\" + model + profilfileSparse + "_targets.csv";
+			return outputpath + "\\" + model + profilfileSparse + "_targets.csv";
 		else 
-			return outputpfad + "\\" + model + profilfileSparse + ".csv";
+			return outputpath + "\\" + model + profilfileSparse + ".csv";
 	}
 	
 	/**
@@ -178,9 +192,9 @@ public class Konfiguration {
 	 */
 	public String getProfilfileSparseCOLs(String model, boolean targets) {
 		if (targets)
-			return outputpfad + "\\" + model + profilfileSparseCol + "_targets.csv";
+			return outputpath + "\\" + model + profilfileSparseCol + "_targets.csv";
 		else 
-			return outputpfad + "\\" + model + profilfileSparseCol + ".csv";
+			return outputpath + "\\" + model + profilfileSparseCol + ".csv";
 	}
 	
 	/**
@@ -190,23 +204,23 @@ public class Konfiguration {
 	 * @return the profilfile sparse ro ws
 	 */
 	public String getProfilfileSparseROWs(String model) {
-		return outputpfad + "\\" + model + profilfileSparseRow + ".csv";
+		return outputpath + "\\" + model + profilfileSparseRow + ".csv";
 	}
 	
 	
 	public String getProfilfileSvmlight(String model, boolean targets) {
 		if (targets)
-			return outputpfad + "\\" + model + profilfileSvmlight + "_targets.csv";
+			return outputpath + "\\" + model + profilfileSvmlight + "_targets.csv";
 		else 
-			return outputpfad + "\\" + model + profilfileSvmlight + ".csv";
+			return outputpath + "\\" + model + profilfileSvmlight + ".csv";
 	}
 	
 	
 	public String getProfilfileSvmlightHeader(String model, boolean targets) {
 		if (targets)
-			return outputpfad + "\\" + model + profilfileSvmlight + "_targets"+profilfileSvmlightHeadExt+".csv";
+			return outputpath + "\\" + model + profilfileSvmlight + "_targets"+profilfileSvmlightHeadExt+".csv";
 		else 
-			return outputpfad + "\\" + model + profilfileSvmlight + profilfileSvmlightHeadExt+".csv";
+			return outputpath + "\\" + model + profilfileSvmlight + profilfileSvmlightHeadExt+".csv";
 	}
 	
 	
@@ -234,7 +248,11 @@ public class Konfiguration {
 	 * @return the tmp path
 	 */
 	public String getTmpPath() {
-		return outputpfad;
+		return this.getOutputPath();
+	}
+	
+	public String getOutputPath() {
+		return outputpath;
 	}
 	
 	public boolean upcase() {
@@ -243,6 +261,22 @@ public class Konfiguration {
 	
 	public boolean addPidToSvm() {
 		return addPidToSvm;
+	}
+	
+	public ArrayList<Filter> getFilters4File (String data_id) {
+		if (inputfilter==null) return null;
+		return inputfilter.getFilters4File(data_id);
+	}
+	
+	public static LocalDate getReferenceDate() {
+		if (Configuration.reference_date == null) 
+			return Utils.parseDate(Consts.reference_date);
+		else return Utils.parseDate(Configuration.reference_date);
+	}
+	
+	
+	public String getLogfile() {
+		return logfile;
 	}
 
 }

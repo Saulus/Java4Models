@@ -3,9 +3,11 @@ package models;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import configuration.Consts;
-import configuration.Konfiguration;
+import configuration.Configuration;
 import au.com.bytecode.opencsv.CSVReader;
 
 
@@ -31,7 +33,7 @@ class ModelFile {
 	 * @param otherfieldfilter the otherfieldfilter String from Model.config
 	 * @param variable the variablefrom Model.config
 	 */
-	public void addVariable (ModelVariableReadIn readvar, Model mymodel,Konfiguration config) throws ModelConfigException {
+	public void addVariable (ModelVariableReadIn readvar, Model mymodel,Configuration config) throws ModelConfigException {
 		if (!readvar.getVariableCol().equals("") && !readvar.getColumns()[0].isEmpty()) {
 			ModelVariable v = new ModelVariable(readvar, mymodel,config);
 			filevars.add(v);
@@ -79,6 +81,8 @@ class ModelFile {
  */
 public class Model {
 	
+	private final static Logger LOGGER = Logger.getLogger(Model.class.getName());
+	
 	/** The coeffs. */
 	private HashMap<String,Double> coeffs = new HashMap<String,Double>();
 	
@@ -92,7 +96,7 @@ public class Model {
 	private String type = Consts.logRegFlag;
 	
 	/** The i have coeffs. */
-	private boolean iHaveCoeffs = true;
+	private boolean iHaveCoeffs = false;
 	
 	/** The i have inclusion criteria. */
 	private boolean iHaveInclusion = false;
@@ -114,14 +118,9 @@ public class Model {
 	 * @param coefffile the coefffile
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public Model (String name, List<InputFile> inputfiles, Konfiguration config) throws Exception {
+	public Model (String name, List<InputFile> inputfiles, Configuration config) throws Exception {
 		this.name = name;
 		String configfile = config.getModelpath() + "\\" + name+config.getModelConfigExt();
-		//Create one modelfile object per inputfile
-		for (InputFile myinputfile : inputfiles) {
-			ModelFile mymodelfile = new ModelFile();
-			this.modelfiles.put(myinputfile,mymodelfile);
-		}
 		//read fields-data and add per modelfile, if present in corresponding inputfile
 		HashMap<String,String> fields_data = new HashMap<String,String>(); //(header -> value)
 		CSVReader reader = new CSVReader(new FileReader(configfile), ';', '"');
@@ -149,6 +148,9 @@ public class Model {
 				//find inputfile(s) for this line / fields_data
 				for (InputFile myinputfile : inputfiles) {
 					if (myinputfile.isDatentyp(fields_data.get(Consts.modInputfileCol).toUpperCase())) {
+						//relevant inputfile is found -> create ModelFile if not present
+						if (!this.modelfiles.containsKey(myinputfile)) this.modelfiles.put(myinputfile,new ModelFile());
+						//add vars
 						newvar = new ModelVariableReadIn(fields_data,columnnumber,myinputfile);
 						this.modelfiles.get(myinputfile).addVariable(newvar,this,config);
 					}
@@ -166,13 +168,14 @@ public class Model {
 			    for (String[] nextline1 : myEntries) {
 			    	this.coeffs.put(nextline1[0].toUpperCase(), Double.parseDouble(nextline1[1].replace(",", ".")));
 			    }
+			    this.iHaveCoeffs = true;
 			} catch (IOException e) {
-				System.out.println("Fehler beim Einlesen der Koeffizienten für Modell "+ name + ". Es werden nur Profile für das Modell gebildet.");
+				LOGGER.log(Level.WARNING,"Fehler beim Einlesen der Koeffizienten für Modell "+ name + ". Es werden nur Profile für das Modell gebildet.");
 				this.iHaveCoeffs = false;
 			}
 		}
 		//set Interceptname
-		if (Konfiguration.interceptname != null) this.interceptname=Konfiguration.interceptname;
+		if (Configuration.interceptname != null) this.interceptname=Configuration.interceptname;
 	}
 	
 	
@@ -193,6 +196,10 @@ public class Model {
 	public String getType () {
 		return this.type;
 	}
+	
+	public boolean inputfileIsRelevant (InputFile inputfile) {
+		return modelfiles.containsKey(inputfile);
+	}
 
 	
 	/**
@@ -204,7 +211,9 @@ public class Model {
 	 * @return the variables
 	 */
 	public HashMap<String,Variable> updateVariables(InputFile inputfile, HashMap<String,Variable> existingVars ) {
-		return modelfiles.get(inputfile).updateVariables(inputfile,existingVars);
+		if (inputfileIsRelevant(inputfile))
+			return modelfiles.get(inputfile).updateVariables(inputfile,existingVars);
+		else return existingVars;
 	}
 	
 	

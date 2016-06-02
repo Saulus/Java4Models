@@ -2,13 +2,17 @@ package models;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 
 import configuration.Consts;
 import configuration.FileDefinitions;
+import configuration.Filter;
 import configuration.Utils;
 import au.com.bytecode.opencsv.CSVReader;
 import net.sf.flatpack.DataError;
@@ -20,15 +24,16 @@ import net.sf.flatpack.brparse.BuffReaderParseFactory;
 
 /**
  * The Class InputFile.
- * Represents one inputfile as defined in konfiguration.xml (tag datei)
+ * Represents one inputfile as defined in konfiguration.xml (tag datafile)
  * uses flatpack for fixed length, i.e. Satzart-Files
  * uses CSVReader for csv files
  * 
  * returns value by column name
  */
 public class InputFile {
+	protected final static Logger LOGGER = Logger.getLogger(InputFile.class.getName());
 	
-	/** The datentyp, e.g. STAMM */
+	/** The data_id, e.g. STAMM */
 	private String datentyp; 
 	
 	/** The filetype, e.g. CSV */
@@ -46,22 +51,22 @@ public class InputFile {
 	private DataSet flatpackDataset;
 	
 	/** colnames **/
-	private String[] colnames;
+	protected String[] colnames;
 	
 	/** cached rows if needed */
-	private ArrayList<LinkedHashMap<String,String>> rowcache = new ArrayList<LinkedHashMap<String,String>>();
+	protected ArrayList<LinkedHashMap<String,String>> rowcache = new ArrayList<LinkedHashMap<String,String>>();
 	
 	/** points to last element in case that is to be used **/
-	private int currentcachepointer=0;
+	protected int currentcachepointer=0;
 	private String currentCachedID = "";
 	
-	private boolean inWarpMode = false;
+	protected boolean inWarpMode = false;
 	
 	/** do I still have a row? */
-	private boolean hasRow = false; 
+	protected boolean hasRow = false; 
 	
 	private IDfield[] idfields;
-	private String currentID = "";
+	protected String currentID = "";
 	
 	private boolean isLeader = false; //leadingtable: diese Tabelle wird um Features erweitert, dh. alle Zeilen bleiben erhalten
 	
@@ -72,16 +77,18 @@ public class InputFile {
 	
 	private boolean upcaseData=false;
 	
+	private HashMap<String,ArrayList<ColumnFilter>> colfilters = new HashMap<String,ArrayList<ColumnFilter>>();
+	
 	
 	/**
-	 * Instantiates a new input file.
+	 * Instantiates a new inputfiles file.
 	 *
-	 * @param datentyp the datentyp
+	 * @param data_id the data_id
 	 * @param path the path
 	 * @param filetype the filetype
 	 * @throws Exception the exception
 	 */
-	public InputFile (String datentyp, String path, String filetype, String[] idfields, boolean upcaseData) throws Exception {
+	public InputFile (String datentyp, String path, String filetype, String[] idfields, String separator, boolean upcaseData, ArrayList<Filter> filters) throws Exception {
 		//ToDo: Eigene Reader-Classe als Wrapper für z.B. flatpack, csvreader usw.
 		this.datentyp = datentyp;
 		this.filetype = filetype;
@@ -90,47 +97,62 @@ public class InputFile {
 		this.upcaseData=upcaseData;
 		for (int i=0;i<idfields.length;i++) this.idfields[i] = new IDfield(idfields[i]);
 		
-		//check encoding first
-		String encoding = Utils.checkEncoding(path);
-		if (encoding==null) encoding="UTF-8";
 		
-		//new InputStreamReader(new FileInputStream(myFile), encoding)
+		//open datafile, but not for ddi
 		
-		//new FileReader(path)
-		if (filetype.equals(Consts.satzartFlag)) {
-				FileDefinitions filedef = new FileDefinitions();
-				String myDef = filedef.getDefinition(datentyp);
-				//old: new FileReader(path));
-				fixparse = (BuffReaderFixedParser) BuffReaderParseFactory.getInstance().newFixedLengthParser(new StringReader(myDef), new InputStreamReader(new FileInputStream(path), encoding));
-				fixparse.setIgnoreExtraColumns(true); //ignores extra characters in lines that are too long; lines that are too short are ignored (i.e. first line)
-				//fixparse.setStoreRawDataToDataSet(true); //for Testing only
-				flatpackDataset = fixparse.parse();
-				colnames=flatpackDataset.getColumns();
-		} else {
-				//Issue: Flatpack will not give back CSV column name correctly, when BuffReaderDelimParser is used (getValue works fine)
-				//Workaround: Open csv beforehand and read first line
-				CSVReader reader = new CSVReader(new InputStreamReader(new FileInputStream(path), encoding), ';', '"');
-				String [] firstLine;
-				if ((firstLine = reader.readNext()) != null) {
-					colnames = firstLine;  
-				}
-				reader.close();
-				//make Uppercase
-				for(int i=0; i<colnames.length; i++) {
-					colnames[i]=colnames[i].toUpperCase();
-				}
-				csvparse = (BuffReaderDelimParser) BuffReaderParseFactory.getInstance().newDelimitedParser(new InputStreamReader(new FileInputStream(path), encoding),';','"');
-				//csvparse.setStoreRawDataToDataSet(true);//for Testing only
-				flatpackDataset = csvparse.parse();
+		if (!filetype.equals(Consts.ddiFlag)) {
+			//check encoding first
+			String encoding = Utils.checkEncoding(path);
+			if (encoding==null) encoding="UTF-8";
+			
+			//new InputStreamReader(new FileInputStream(myFile), encoding)
+			
+			//new FileReader(path)
+			if (filetype.equals(Consts.satzartFlag)) {
+					FileDefinitions filedef = new FileDefinitions();
+					String myDef = filedef.getDefinition(datentyp);
+					//old: new FileReader(path));
+					fixparse = (BuffReaderFixedParser) BuffReaderParseFactory.getInstance().newFixedLengthParser(new StringReader(myDef), new InputStreamReader(new FileInputStream(path), encoding));
+					fixparse.setIgnoreExtraColumns(true); //ignores extra characters in lines that are too long; lines that are too short are ignored (i.e. first line)
+					//fixparse.setStoreRawDataToDataSet(true); //for Testing only
+					flatpackDataset = fixparse.parse();
+					colnames=flatpackDataset.getColumns();
+			} else {
+					char separatorChar = separator.charAt(0);
+					//Issue: Flatpack will not give back CSV column name correctly, when BuffReaderDelimParser is used (getValue works fine)
+					//Workaround: Open csv beforehand and read first line
+					CSVReader reader = new CSVReader(new InputStreamReader(new FileInputStream(path), encoding), separatorChar, '"');
+					String [] firstLine;
+					if ((firstLine = reader.readNext()) != null) {
+						colnames = firstLine;  
+					}
+					reader.close();
+					//make Uppercase
+					for(int i=0; i<colnames.length; i++) {
+						colnames[i]=colnames[i].toUpperCase();
+					}
+					csvparse = (BuffReaderDelimParser) BuffReaderParseFactory.getInstance().newDelimitedParser(new InputStreamReader(new FileInputStream(path), encoding),separatorChar,'"');
+					//csvparse.setStoreRawDataToDataSet(true);//for Testing only
+					flatpackDataset = csvparse.parse();
+			}
+			
+			if (flatpackDataset.getErrors() != null && !flatpackDataset.getErrors().isEmpty()) {
+					LOGGER.log(Level.SEVERE,"Fehler gefunden beim Einlesen von " + path);
+		            for (int i = 0; i < flatpackDataset.getErrors().size(); i++) {
+		                final DataError de = (DataError) flatpackDataset.getErrors().get(i);
+		                LOGGER.log(Level.SEVERE,"Fehler: " + de.getErrorDesc() + " Zeile: " + de.getLineNo());
+		            }
+		    }
 		}
-		
-		if (flatpackDataset.getErrors() != null && !flatpackDataset.getErrors().isEmpty()) {
-	            System.out.println("Fehler gefunden beim Einlesen von " + path);
-	            for (int i = 0; i < flatpackDataset.getErrors().size(); i++) {
-	                final DataError de = (DataError) flatpackDataset.getErrors().get(i);
-	                System.out.println("Fehler: " + de.getErrorDesc() + " Zeile: " + de.getLineNo());
-	            }
-	    }
+		if (filters!=null) {
+			ColumnFilter newcolfilter;
+			for (Filter nextfilter : filters) {
+				newcolfilter = new ColumnFilter(nextfilter.getField(),nextfilter.getInclusion(),nextfilter.getExclusion());
+				if (!colfilters.containsKey(newcolfilter.getColumn())) 
+					colfilters.put(newcolfilter.getColumn(), new ArrayList<ColumnFilter>());
+				colfilters.get(newcolfilter.getColumn()).add(newcolfilter);
+			}
+		}
 	}
 	
 	/**
@@ -162,19 +184,33 @@ public class InputFile {
 			} else hasRow=true;
 		}
 		if (!this.inWarpMode) {
-			hasRow = flatpackDataset.next();
-			if (!hasRow) return false;
-			if (!allowWarpBack) this.clearcache();
-			//add current row to rowcache
-			LinkedHashMap<String,String> nextrow = new LinkedHashMap<String,String>();
-			for (int i=0; i<colnames.length; i++) {
-				if (upcaseData)
-					nextrow.put(colnames[i],flatpackDataset.getString(colnames[i]).toUpperCase());
-				else 
-					nextrow.put(colnames[i],flatpackDataset.getString(colnames[i]));
+			if (!allowWarpBack) this.clearcache(false);
+			//add current row to rowcache, only if not filtered out
+			boolean isallowed=false;
+			LinkedHashMap<String,String> nextrow = null;
+			while (!isallowed && (hasRow = flatpackDataset.next())) {
+				nextrow = new LinkedHashMap<String,String>();
+				for (int i=0; i<colnames.length; i++) {
+					if (upcaseData)
+						nextrow.put(colnames[i],flatpackDataset.getString(colnames[i]).toUpperCase());
+					else 
+						nextrow.put(colnames[i],flatpackDataset.getString(colnames[i]));
+					
+					//test filters
+					if (colfilters.containsKey(colnames[i])) {
+						for (ColumnFilter nextfilter : colfilters.get(colnames[i])) {
+							isallowed=nextfilter.isAllowed(nextfilter.getValueSubstring(nextrow.get(colnames[i])));
+							if (!isallowed) break;
+						}
+					} else isallowed=true;
+					if (!isallowed) break; 
+				}
 			}
-			rowcache.add(nextrow);
-			currentcachepointer++;
+			if (!hasRow) return false; //break herer as file ends
+			if (isallowed) { 
+				rowcache.add(nextrow);
+				currentcachepointer++;
+			}
 		}
 		if (checkID) {
 			String newID = "";
@@ -194,12 +230,7 @@ public class InputFile {
 				// b) newID == currentID && newID <> currentCachedID 
 				// -> i.e. flush all but last entries
 				if (!currentCachedID.isEmpty() && !newID.equals(currentCachedID) && !currentID.equals(currentCachedID)) {
-					LinkedHashMap<String,String> last = rowcache.get(rowcache.size()-1);
-					LinkedHashMap<String,String> lastbutone = rowcache.get(rowcache.size()-2);
-					this.clearcache();
-					rowcache.add(lastbutone);
-					rowcache.add(last);
-					currentcachepointer=2;
+					this.clearcache(true);
 				}
 			}
 			currentCachedID=currentID;
@@ -242,7 +273,9 @@ public class InputFile {
 	}
 	
 	public String getValueLastCached (String field) {
-		return rowcache.get(currentcachepointer-2).get(field);
+		int cachepointer = currentcachepointer-2;
+		if (!this.hasRow || cachepointer<0) cachepointer=currentcachepointer-1;
+		return rowcache.get(cachepointer).get(field);
 	}
 	
 	public String getID() {
@@ -260,19 +293,19 @@ public class InputFile {
 	}
 	
 	/**
-	 * Checks if is datentyp.
+	 * Checks if is data_id.
 	 *
-	 * @param datentyp the datentyp
-	 * @return true, if is datentyp
+	 * @param data_id the data_id
+	 * @return true, if is data_id
 	 */
 	public boolean isDatentyp (String datentyp) {
 		return this.datentyp.equals(datentyp);
 	}
 	
 	/**
-	 * Gets the datentyp.
+	 * Gets the data_id.
 	 *
-	 * @return the datentyp
+	 * @return the data_id
 	 */
 	public String getDatentyp () {
 		return this.datentyp;
@@ -364,9 +397,22 @@ public class InputFile {
 	}
 	
 	
-	public void clearcache () {
-		rowcache.clear();
-		currentcachepointer=0;
+	/*
+	 * Clears rowcache; keeps last two entries if required
+	 */
+	public void clearcache (boolean keeplast) {
+		
+		if (keeplast) {
+			ArrayList<LinkedHashMap<String,String>> last = new ArrayList<LinkedHashMap<String,String>>();
+			if (rowcache.size() >1) last.add(rowcache.get(rowcache.size()-2));
+			if (rowcache.size() >0) last.add(rowcache.get(rowcache.size()-1));
+			rowcache.clear();
+			rowcache.addAll(last);
+			currentcachepointer=last.size();
+		} else {
+			rowcache.clear();
+			currentcachepointer=0;	
+		}
 	}
 
 	/**
@@ -377,7 +423,7 @@ public class InputFile {
 	public void close () throws Exception {
 		if (filetype.equals(Consts.satzartFlag)) {
 			fixparse.close();
-		} else {
+		} else if (filetype.equals(Consts.csvFlag)) {
 			csvparse.close();
 		}
 	}

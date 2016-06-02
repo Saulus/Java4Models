@@ -1,19 +1,15 @@
 package models;
 
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import org.joda.time.LocalDate;
 import org.joda.time.Years;
 import org.joda.time.Days;
 
-import au.com.bytecode.opencsv.CSVReader;
-
 import configuration.Consts;
-import configuration.Konfiguration;
+import configuration.Configuration;
 import configuration.Utils;
 
 
@@ -34,9 +30,7 @@ class ModelVariableCalcPart {
 	
 	
 	public ModelVariableCalcPart (String type, String value) throws Exception {
-			if (Konfiguration.reference_date == null) 
-				myreferencedate=Utils.parseDate(Consts.reference_date);
-			else myreferencedate=Utils.parseDate(Konfiguration.reference_date);
+			myreferencedate=Configuration.getReferenceDate();
 			parseType(type);
 			parseValue(value);
 	}
@@ -84,7 +78,7 @@ class ModelVariableCalcPart {
 	}
 	
 	
-	//used for column input -> parse
+	//used for column inputfiles -> parse
 	public double getValue(String inputvalue) {
 		double newval;
 		//parse inputvalue & calc
@@ -103,7 +97,7 @@ class ModelVariableCalcPart {
 		return newval;
 	}
 	
-	//used for input from other variable
+	//used for inputfiles from other variable
 	public double getValue(double inputvalue) {
 		if (isConstant) return value;
 		else return inputvalue;
@@ -205,82 +199,6 @@ class ModelVariableCalc {
 	
 }
 
-class ModelVariableCols {
-	private String column; 
-	private int pos_min = 0;
-	private int pos_max = 10000; //dummy value
-	private String filterstart = "";
-	private HashSet<String> filtervalues = null; //if read in from file
-	private String filterend = "";
-	
-	public ModelVariableCols (String col, String filter, Konfiguration config) throws Exception {
-		parseCol(col);
-		parseFilter(filter,config);
-	}
-	
-	private void parseCol (String col) throws Exception {
-		if (!col.equals("")) {
-			String[] tokens = col.split(Consts.bracketEsc);
-			
-			this.column = tokens[0];
-			//Parse Stringposition
-			if (tokens.length>1) {
-				if (tokens[1].contains("-")) {
-					String [] positions = tokens[1].split("-");
-					if (positions[0].equals("")) pos_min=0; //allow "-4"
-					else pos_min = Integer.parseInt(positions[0])-1; //In Java Strings start from 0, but substring end counts +1
-					if (positions[1].equals("")) pos_max=15000; //allow "4-"
-					else pos_max = Integer.parseInt(positions[1]); //In Java Strings start from 0, but substring end counts +1
-				} else {
-					pos_min = Integer.parseInt(tokens[1])-1;
-					pos_max = pos_min+1;
-				}
-			}
-		}
-	}
-	
-	private void parseFilter (String filter, Konfiguration config) throws Exception {
-		if (!filter.equals("")) {
-			//1: test whether File as in (File)
-			if (filter.startsWith("(")) {
-				String[] parts = filter.split(Consts.bracketEsc);
-				CSVReader reader = new CSVReader(new FileReader(config.getModelpath() + Consts.filterfilelocation  + "\\" + parts[1]), ';', '"');
-				List<String[]> myEntries = reader.readAll();
-				reader.close();
-				filtervalues = new HashSet<String>();
-				for (String[] nextline : myEntries) {
-					filtervalues.add(nextline[0]);
-				}
-			} else {
-				String[] tokens = filter.split("-");
-				filterstart=tokens[0];
-				if (tokens.length>1) filterend=tokens[1]; else filterend = filterstart;
-			}
-		}
-	}
-	
-	public String getColumn() {
-		return column;
-	}
-	
-	public int getMinPos () {
-		return pos_min;
-	}
-	
-	public int getMaxPos () {
-		return pos_max;
-	}
-	
-	public boolean isAllowed(String value) {
-		if (filtervalues == null) //i.e. no list from file
-			return ((filterstart.equals("") ||  value.compareTo(this.filterstart)>=0) // value >= firstvalue 
-					&& (filterend.equals("") ||  value.compareTo(this.filterend)<=0)); //value <= filterend
-		else //list from file
-			return filtervalues.contains(value);
-	}
-}
-
-
 
 class ModelVariableAgg {
 	private boolean isSum;
@@ -368,7 +286,7 @@ class ModelVariableAgg {
 
 /**
  * The Class ModelField.
- * Represents one field in an input file, e.g. ICD_CODE
+ * Represents one field in an inputfiles file, e.g. ICD_CODE
  * Is valid for one model
  * 
  * Holds a list of filters for the field
@@ -379,9 +297,11 @@ class ModelVariableAgg {
  *  
  */
 public class ModelVariable {
+	
+	//private final static Logger LOGGER = Logger.getLogger(ModelVariable.class.getName());
 	private String[] namePrefixes;
 	private int[] nameColumnNumbers;
-	private ModelVariableCols[] cols;
+	private ColumnFilter[] cols;
 	private ModelVariableCalc calc;
 	private ModelVariableAgg agg;
 	private double filterstart = -1;
@@ -391,7 +311,7 @@ public class ModelVariable {
 	private boolean target; //if target: print separately, do not include in coeff-calculation
 	private boolean hideme; //if true: do not print var
 	
-	public ModelVariable (ModelVariableReadIn readvar, Model mymodel, Konfiguration config) throws ModelConfigException{
+	public ModelVariable (ModelVariableReadIn readvar, Model mymodel, Configuration config) throws ModelConfigException{
 		String[] tokens;
 		//parse variable name
 		try {
@@ -432,10 +352,10 @@ public class ModelVariable {
 		//parse columns + their filters
 		int number = 0;
 		try {
-			cols = new ModelVariableCols[readvar.getColumns().length]; 
+			cols = new ColumnFilter[readvar.getColumns().length]; 
 			for (int i=0; i<readvar.getColumns().length; i++) {
 				number=i+1;
-				cols[i] = new ModelVariableCols(readvar.getColumns()[i],readvar.getFilters()[i],config);	
+				cols[i] = new ColumnFilter(readvar.getColumns()[i],readvar.getFilters()[i],null);	
 			}
 		} catch (Exception e) {
 			throw new ModelConfigException("Fehler bei Variable "+  readvar.getVariableCol() + ": " + Consts.modColumnCol + number + " bzw. " + Consts.modColfilterCol + number + " nicht lesbar",e); 
@@ -461,21 +381,12 @@ public class ModelVariable {
 	 */
 	public String[] getColumnValues (InputFile inputrow) {
 		String[] myCols = new String[cols.length];
-		int mymax;
 		String myval;
 		for (int i=0; i<myCols.length;i++) {
 			//column definition in config file might be empty
 			if (cols[i].getColumn()!= null ) {
-				//get value from inputrow
-				myval = inputrow.getValue(cols[i].getColumn());
-				//if value is empty -> return null as well
-				if (myval.equals("")) return null;
-				//if value is shorter than filter -> return null
-				if (cols[i].getMinPos()>=myval.length()) return null;
-				//substring (max length)
-				mymax=Math.min(cols[i].getMaxPos(), myval.length());
-				myval =myval.substring(cols[i].getMinPos(), mymax);
-				//if value is not allowed due to filter -> return null
+				//get value from inputrow, and substring it
+				myval = cols[i].getValueSubstring(inputrow.getValue(cols[i].getColumn()));
 				if (!cols[i].isAllowed(myval)) return null; 
 				myCols[i]=myval;
 			}

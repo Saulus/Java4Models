@@ -127,6 +127,7 @@ class PatientModel {
  * One patient is processed at a time (inputfiles are sorted)
  */
 public class Patient {
+	//private final static Logger LOGGER = Logger.getLogger(Patient.class.getName());
 	
 	/** The models. */
 	private HashMap<Model,PatientModel> models = new HashMap<Model,PatientModel>();
@@ -161,7 +162,7 @@ public class Patient {
 	 */
 	public void processRow (Model model, InputFile inputfile) throws Exception {
 		//Patient does not have that model yet -> create
-		if (models.get(model) == null) {
+		if (!models.containsKey(model)) {
 			PatientModel mypatientmodel = new PatientModel(model);
 			this.models.put(model,mypatientmodel);
 		}
@@ -209,6 +210,7 @@ public class Patient {
 	}
 	
 	public boolean areYouIncluded (Model model) {
+		if (!models.containsKey(model)) return false;
 		return models.get(model).amIincluded();
 	}
 	

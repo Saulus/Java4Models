@@ -3,31 +3,31 @@ package configuration;
 import org.xmappr.Element;
 
 /**
- * The Class Datei.
+ * The Class Datafile.
  * Elements from konfiguration.xml are loaded into here, into variables defined acc. to xml tag.
- * Class for Tags konfiguration->input->datei
+ * Class for Tags konfiguration->inputfiles->datafile
  */
-public class Datei {
+public class Datafile {
 	
-	/** The datentyp. */
+	/** The data_id. */
 	@Element
-	public String datentyp; 
+	public String data_id; 
 	
-	/** The pfad. */
+	/** The path. */
 	@Element
-	public String pfad;
+	public String path;
 	
-	/** The dateityp. */
-	@Element(defaultValue="csv")
-	public String dateityp;
+	/** The type. */
+	@Element
+	public String type;
 	
-	/** The istsortiert. */
+	/** The is_sorted. */
 	@Element(defaultValue="false")
-	public boolean istsortiert;
+	public boolean is_sorted;
 	
 	/** The id field. */
 	@Element(defaultValue="PID")
-	public String idfeld;
+	public String idfield;
 	
 	@Element(defaultValue="false")
 	public boolean leadingtable;
@@ -39,7 +39,12 @@ public class Datei {
 	public String leadingtable_numfield;
 	
 	@Element
-	public String zusatzinfo;
+	public String addinfo;
+	
+	@Element
+	public String separator;
+	
+	
 	
 	/**
 	 * Checks if is sorted.
@@ -47,7 +52,7 @@ public class Datei {
 	 * @return true, if is sorted
 	 */
 	public boolean isSorted() {
-		return istsortiert;
+		return is_sorted;
 	}
 	
 	/**
@@ -56,16 +61,16 @@ public class Datei {
 	 * @param b the new checks if is sorted
 	 */
 	public void setIsSorted(boolean b) {
-		istsortiert=b;
+		is_sorted=b;
 	}
 	
 	/**
-	 * Gets the datentyp.
+	 * Gets the data_id.
 	 *
-	 * @return the datentyp
+	 * @return the data_id
 	 */
 	public String getDatentyp() {
-		return datentyp.toUpperCase();
+		return data_id.toUpperCase();
 	}
 	
 	/**
@@ -74,7 +79,7 @@ public class Datei {
 	 * @return the path
 	 */
 	public String getPath() {
-		return pfad;
+		return path;
 	}
 	
 	/**
@@ -83,7 +88,7 @@ public class Datei {
 	 * @param p the new path
 	 */
 	public void setPath(String p) {
-		pfad = p;
+		path = p;
 	}
 
 	/**
@@ -92,7 +97,7 @@ public class Datei {
 	 * @return the filetype
 	 */
 	public String getFiletype() {
-		return dateityp.toUpperCase();
+		return type.toUpperCase();
 	}
 	
 	/**
@@ -101,21 +106,21 @@ public class Datei {
 	 * @param f the new filetype
 	 */
 	public void setFiletype(String f) {
-		dateityp = f;
+		type = f;
 	}
 	
 	public String[] getIdfeld() {
-		if (idfeld==null) idfeld = "PID";
-		String[] tokens = idfeld.split(Consts.idfieldseparator);
+		if (idfield==null) idfield = "PID";
+		String[] tokens = idfield.split(Consts.idfieldseparator);
 		return tokens;
 	}
 	
 	public boolean hasZusatzinfo() {
-		return (zusatzinfo != null && !zusatzinfo.equals(""));
+		return (addinfo != null && !addinfo.equals(""));
 	}
 	
 	public String getZusatzinfo() {
-		if (zusatzinfo != null) return zusatzinfo;
+		if (addinfo != null) return addinfo;
 		return "";
 	}
 	
@@ -143,6 +148,12 @@ public class Datei {
 	public String getNumfield() {
 		return leadingtable_numfield;
 	}
+	
+	public String getSeparator(){
+		if (separator == null) return Consts.csvfieldseparator;
+		return separator;
+	}
+	
 	
 
 }

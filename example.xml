@@ -1,48 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<konfiguration>
-	<input>
-		<datei>
-			<datentyp>stamm2009_g1</datentyp> 
-			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\stamm_v.csv</pfad>
-			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
-			<istsortiert>False</istsortiert>
-			<idfeld>PID,Bezugsjahr+value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->
+<configuration>
+	<inputfiles>
+		<datafile>
+			<data_id>stamm2009_g1</data_id> 
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\stamm_v.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<is_sorted>False</is_sorted>
+			<idfield>PID,Bezugsjahr+value(1)</idfield> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->
 			<leadingtable>True</leadingtable><!-- optional; diese Tabelle wird um Features erweitert, dh. alle Zeile bleiben erhalten -->			
 			<leadingtable_columns>A,B,C</leadingtable_columns><!-- optional; Columns der Leadingtable, die behalten werden; wenn leer; keine; wenn nicht vorhanden: alle -->
 			<leadingtable_numfield>D</leadingtable_numfield><!-- optional; Spalte der Leadingtable, die die rowno (für Matlab Sparse Matrix) enthält -->
-		</datei>
-		<datei>
-			<datentyp>stamm2010_g1</datentyp> 
-			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\stamm_v.csv</pfad>
-			<dateityp>csv</dateityp> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
-			<istsortiert>False</istsortiert>
-			<idfeld>PID,Bezugsjahr+value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
-		</datei>
-		<datei>
-			<datentyp>Arzneimittel</datentyp>
-			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\am_evo_v.csv</pfad>
-			<dateityp>csv</dateityp> <!-- Satzart / csv -->
-			<istsortiert>False</istsortiert>
-		</datei>
-		<datei>
-			<datentyp>kh_diagnose2010_g1</datentyp>
-			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\kh_diagnose_v.csv</pfad>
-			<dateityp>csv</dateityp> <!-- Satzart / csv -->
-			<istsortiert>False</istsortiert>
-			<idfeld>PID,Bezugsjahr+value(1)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
-			<zusatzinfo>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->
-		</datei>
-		<datei>
-			<datentyp>Ambulant</datentyp>
-			<pfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\arzt_diagnose_v.csv</pfad>
-			<dateityp>csv</dateityp> <!-- Satzart / csv -->
-			<istsortiert>False</istsortiert>
-			<idfeld>PID,Bezugsjahr+value(8)</idfeld> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->
-			<zusatzinfo>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</zusatzinfo> <!-- optional; Pfad zu csv-Datei mit 2 Spalten (Quelle,Ziel); Zielspalte wird beim Sortieren! hinzugefügt -->
-		</datei>
-	</input>
-	<outputpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall</outputpfad>
-	<modellpfad>C:\Users\HellwigP\Documents\4 Technology\00 Development\Java4Models\Models</modellpfad>
+			<separator>;</separator> <!-- optional: separator for csv; standardmäßig ";" -->
+		</datafile>
+		<datafile>
+			<data_id>stamm2010_g1</data_id> 
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\stamm_v.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->  <!-- Erlaubt für Satzart: Stamm (=SA100), Arzneimittel (=SA400), Stationaer (=SA500), Ambulant(=SA600) -->
+			<is_sorted>False</is_sorted>
+			<idfield>PID,Bezugsjahr+value(1)</idfield> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+		</datafile>
+		<datafile>
+			<data_id>Arzneimittel</data_id>
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\am_evo_v.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>False</is_sorted>
+			<idfield>PID,Bezugsjahr+value(1)</idfield> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->
+		</datafile>
+		<datafile>
+			<data_id>kh_diagnose2010_g1</data_id>
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\kh_diagnose_v.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>False</is_sorted>
+			<idfield>PID,Bezugsjahr+value(1)</idfield> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->			
+			<addinfo>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</addinfo> <!-- optional; path zu csv-Datei mit 2+ Spalten (Quelle,Ziele); Zielspalten werden beim Sortieren! hinzugefügt -->
+		</datafile>
+		<datafile>
+			<data_id>Ambulant</data_id>
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\arzt_diagnose_v.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>False</is_sorted>
+			<idfield>PID,Bezugsjahr+value(8)</idfield> <!-- optional; Bsp: PID,Bezugsjahr-value(1); default:PID -->
+			<addinfo>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</addinfo> <!-- optional; path zu csv-Datei mit 2+ Spalten (Quelle,Ziele); Zielspalten werden beim Sortieren! hinzugefügt -->
+		</datafile>
+	</inputfiles>
+	<inputfilter>
+		<filter>
+			<data_id>Arzneimittel</data_id>
+			<field>Quarter_PY</field> <!-- Substrings in Klammern, z.B. ICD(1-3) -->
+			<inclusion>2,4</inclusion><!-- Beispiele: Liste mit Kommata; Oder Bindestrich: F32-F33  F32- (i.e. lexographischer String-Vergleich), oder (Filepath); empty: all-->
+			<exclusion></exclusion>
+		</filter>
+		<filter>
+			<data_id>Arzneimittel</data_id>
+			<field>Quarter_PY</field>
+			<inclusion></inclusion>
+			<exclusion>2</exclusion>
+		</filter>
+	</inputfilter>
+	<outputpath>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall</outputpath>
+	<modelpath>C:\Users\HellwigP\Documents\4 Technology\00 Development\Java4Models\Models</modelpath>
 	<!-- optionale Parameter -->
 	<createProfilDense>True</createProfilDense>
 	<createProfilMatrixMarket>True</createProfilMatrixMarket>
@@ -53,4 +69,5 @@
 	<interceptname>INTERCEPT</interceptname>
 	<reference_date>01JAN2012</reference_date>
 	<upcase>True</upcase> <!-- wenn True: Lese alle Daten-Felder als "Upcase" ein -->
-</konfiguration>
+	<logfile>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\debug.log</logfile>
+</configuration>

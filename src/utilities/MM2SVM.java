@@ -84,7 +84,7 @@ public class MM2SVM {
 				System.out.println("MM2SVM.");
 				System.out.println("Vom Matrix Market Format to SVMLignt");
 				System.out.println("Erwartet: ROW;COL;VAL -> csv mit header, \";\" als Separator");
-				System.out.println("-sort: Sortieren Quell-Datei (ins gleiche Verzeichnis, by ROW, COL -> müssen beide numerisch sein). Optional.");
+				System.out.println("-sort: Sortieren Quell-Datafile (ins gleiche Verzeichnis, by ROW, COL -> müssen beide numerisch sein). Optional.");
 				System.out.println("-ignore1: Ignoriere 1. Spalte (wenn dort eine Zeilen-ID z.B. aus R gespeichert ist). Optional.");
 				System.out.println("-set1[x,y]: Setze alle Variablen AUßER x und y (und weitere) auf 1 (0 werden ignoriert). Optional.");
 				System.out.println("-addpid: Füge Kommentar mit PID zum Ende der Zeile hinzu in der Form: # PIDa. Optional.");
@@ -171,7 +171,8 @@ public class MM2SVM {
 				}
 				reader.close();
 				
-				Sorter sortfile = new Sorter("matlab",source,Consts.csvFlag,idfield,path);
+				Sorter sortfile = new Sorter("matlab",source,Consts.csvFlag,idfield,Consts.csvfieldseparator,path,null);
+				
 				source = sortfile.sortFileByID(true);
 			} catch (Exception e) {
 				System.err.println("Fehler beim Sortieren von " + source + " im Ordner " + path);

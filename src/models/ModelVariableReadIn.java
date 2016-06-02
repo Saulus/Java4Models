@@ -12,6 +12,8 @@ import configuration.Consts;
  *  
  */
 public class ModelVariableReadIn {
+	//private final static Logger LOGGER = Logger.getLogger(ModelVariableReadIn.class.getName());
+	
 	private HashMap<String,String> myrow;
 	private String[] columns;
 	private String[] filters;

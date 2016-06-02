@@ -3,18 +3,20 @@ package models;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import configuration.Consts;
-import configuration.Datei;
-import configuration.Konfiguration;
+import configuration.Datafile;
+import configuration.Filter;
+import configuration.Configuration;
 import configuration.Utils;
+import ddi.DDIworker;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -37,6 +39,7 @@ import au.com.bytecode.opencsv.CSVWriter;
  *  Close files, delete temps
  */
 public class Worker {
+	private final static Logger LOGGER = Logger.getLogger(Worker.class.getName());
 	
 	/** The models. */
 	private ArrayList<Model> models = new ArrayList<Model>();
@@ -45,7 +48,7 @@ public class Worker {
 	private ArrayList<InputFile> inputfiles = new ArrayList<InputFile>();
 	
 	/** The config. */
-	private Konfiguration config;
+	private Configuration config;
 	
 	private InputFile ourLeaderfile = null;
 	
@@ -97,7 +100,7 @@ public class Worker {
 					try {
 						if (infile != ourLeaderfile) infile.warpToCorrectID(newpatient.getPid());
 					} catch (Exception e) {
-						System.out.println(e.getMessage());
+						LOGGER.log(Level.WARNING,e.getMessage());
 					}
 				}
 			}
@@ -114,7 +117,7 @@ public class Worker {
 			try {
 				infile.nextRow(true,ourLeaderfile != null);
 			} catch (Exception e) {
-				System.out.println(e.getMessage());
+				LOGGER.log(Level.WARNING,"",e);
 			}
 		}
 	}
@@ -124,7 +127,7 @@ public class Worker {
 	 *
 	 * @param config the config
 	 */
-	public Worker (Konfiguration config) {
+	public Worker (Configuration config) {
 		this.config=config;
 	}
 	
@@ -134,18 +137,19 @@ public class Worker {
 	 * @return true, if successful
 	 */
 	public boolean init () {
-		String timeStamp;
 		//1. Create & Open Inputfiles
 		boolean worked = false; 
-		for (Datei nextfile : config.getInputfiles()) {
+		ArrayList<Filter> filefilters; 
+		for (Datafile nextfile : config.getInputfiles()) {
+			filefilters = config.getFilters4File(nextfile.getDatentyp());
 			//Sort if isSorted=false
 			if (!nextfile.isSorted()) {
 				try {
-					Sorter sortfile = new Sorter(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld(),config.getTmpPath());
-					timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
-					System.out.println(timeStamp + " Sortieren gestartet von " + nextfile.getPath());
+					Sorter sortfile = new Sorter(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld(),nextfile.getSeparator(),config.getTmpPath(),filefilters);
+					filefilters=null;
+					LOGGER.log(Level.INFO,"Sortieren gestartet von " + nextfile.getPath());
 					String newpath;
-					//add new column from zusatzinfo?
+					//add new columns from addinfo?
 					if (nextfile.hasZusatzinfo()) {
 						CSVReader reader = new CSVReader(new FileReader(nextfile.getZusatzinfo()), ';', '"');
 						List<String[]> myEntries = reader.readAll();
@@ -154,47 +158,55 @@ public class Worker {
 						String[] headerline = myEntries.get(0); myEntries.remove(0);
 						for (int j=0; j<headerline.length; j++) { headerline[j] = headerline[j].toUpperCase(); }
 						//create HashMap for easy translation
-						HashMap<String,String> translator = new HashMap<String,String>(); 
+						HashMap<String,String[]> translator = new HashMap<String,String[]>(); 
 						for (String[] nextline : myEntries) {
-							translator.put(nextline[0], nextline[1]);
+							translator.put(nextline[0], Arrays.copyOfRange(nextline, 1, nextline.length));
 						}
-						newpath = sortfile.sortFileByID(true,headerline[0],headerline[1],translator);
+						newpath = sortfile.sortFileByID(true,headerline[0],Arrays.copyOfRange(headerline, 1, headerline.length),translator);
 					} else newpath = sortfile.sortFileByID();
-					timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
-					System.out.println(timeStamp + " Sortieren beendet von " + nextfile.getPath());
+					LOGGER.log(Level.INFO,"Sortieren beendet von " + nextfile.getPath());
 					nextfile.setPath(newpath);
 					nextfile.setFiletype(Consts.csvFlag);
 					nextfile.setIsSorted(true);
 					worked = true; //if one files is ok, then start
 				} catch (Exception e) {
-					System.out.println("Fehler beim Sortieren von " + nextfile.getPath());
-					e.printStackTrace();
+					LOGGER.log(Level.SEVERE,"Fehler beim Sortieren von " + nextfile.getPath() , e);
 					System.exit(1);
 				}
 			}
 			try {
-				timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
-				System.out.println(timeStamp + " Einlesen der Inputdatei "+ nextfile.getPath() + " gestartet.");
-				InputFile newfile = new InputFile(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld(), config.upcase());
+				LOGGER.log(Level.INFO,"Einlesen der Inputdatei "+ nextfile.getPath() + " gestartet.");
+				InputFile newfile = new InputFile(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld(), nextfile.getSeparator(),config.upcase(),filefilters);
 				newfile.setLeader(nextfile.isLeadingTable());
 				if (newfile.isLeader()) {
-					ourLeaderfile=newfile;
-					if (nextfile.hasSpecificColumns()) ourLeaderfile.setLeaderColnames(nextfile.getSpecificColumns());
-					if (nextfile.hasNumfield()) ourLeaderfile.setLeaderNumfield(nextfile.getNumfield());
+					if (this.ourLeaderfile != null) LOGGER.log(Level.WARNING,"Zwei leaderfiles sind nicht möglich! Das File " + nextfile.getPath() + " wird nicht als Leader genutzt." );
+					else {
+						ourLeaderfile=newfile;
+						if (nextfile.hasSpecificColumns()) ourLeaderfile.setLeaderColnames(nextfile.getSpecificColumns());
+						if (nextfile.hasNumfield()) ourLeaderfile.setLeaderNumfield(nextfile.getNumfield());
+					}
 				}
 				inputfiles.add(newfile);
 				worked = true; //if one files is ok, then start
 			} catch (Exception e) {
-				System.out.println("Fehler gefunden beim Einlesen von " + nextfile.getPath());
-				e.printStackTrace();
+				LOGGER.log(Level.SEVERE,"Fehler gefunden beim Einlesen von " + nextfile.getPath(), e);
+				//e.printStackTrace();
 			}
+		}
+		//1b. Init DDI
+		if (worked && config.ddiconfiguration!=null) {
+			DDIworker ddiworker = new DDIworker();
+			worked = ddiworker.init(config.ddiconfiguration, inputfiles,config.upcase());
+			if (!worked) return worked;
+			if (this.ourLeaderfile != null) LOGGER.log(Level.WARNING,"Zwei leaderfiles sind nicht möglich! Das File " + ourLeaderfile.getPath() + " wird nicht als Leader genutzt." );
+			ourLeaderfile=ddiworker.getDDIInputFile();
 		}
 		//2. Create and Import Models
 		List<String> processedModels = new ArrayList<String>();  
 		File folder = new File(config.getModelpath());
 		File[] listOfFiles = folder.listFiles();
 		if (listOfFiles == null) {
-			System.out.println("Keine Modellkonfiguration in " + config.getModelpath() + " gefunden");
+			LOGGER.log(Level.WARNING,"Keine Modellkonfiguration in " + config.getModelpath() + " gefunden");
 			worked = false;
 		} else {
 			Model newmodel;
@@ -208,13 +220,14 @@ public class Worker {
 			    			knownVariables.put(newmodel,  new ArrayList<String>()); //init
 			    			knownVariables_targets.put(newmodel,  new ArrayList<String>()); //init
 			    			processedModels.add(modelname);
-			    			timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
-			    			System.out.println(timeStamp + " Modell "+ modelname + " konfiguriert.");
+			    			LOGGER.log(Level.INFO,"Modell "+ modelname + " konfiguriert.");
 			    			worked = true; //if one files is ok, then start
 			    		} catch (Exception e) {
-							System.err.println("Fehler gefunden bei Konfiguration des Modells " + modelname + ". Das Modell wird nicht verwendet.");
-							System.err.println("Ort: "+ e.getMessage());
-							System.err.println("Ursache: "+ e.getCause());
+			    			String message = "Fehler gefunden bei Configuration des Modells " + modelname + ". Das Modell wird nicht verwendet.";
+							message = message + " ...Ursache: "+ e.getMessage();
+							if (e.getCause()!=null)
+								message = message + " ...Ursache Detail: "+ e.getCause();
+							LOGGER.log(Level.WARNING,message);
 							//e.printStackTrace();
 						}
 			    	}
@@ -233,8 +246,7 @@ public class Worker {
 				outputfile.writeNext(newline.toArray(new String[newline.size()]));
 				worked = true;
 			} catch (Exception e) {
-				System.err.println("Die Outputdatei " + config.getOutputfile() + " konnte nicht erstellt werden.");
-				e.printStackTrace();
+				LOGGER.log(Level.SEVERE,"Die Outputdatei " + config.getOutputfile() + " konnte nicht erstellt werden.", e);
 				worked = false;
 			}
 			//create and open output ProfilDense file (if needed)
@@ -245,8 +257,7 @@ public class Worker {
 						if (model.hasTargets()) profildensefile_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileDenseTmp(model.getName(),true)), ';', CSVWriter.NO_QUOTE_CHARACTER));
 						//no header here
 					} catch (Exception e) {
-						System.err.println("Die Outputdatei " + config.getProfilfileDense(model.getName(),false) + " konnte nicht erstellt werden.");
-						e.printStackTrace();
+						LOGGER.log(Level.SEVERE,"Die Outputdatei " + config.getProfilfileDense(model.getName(),false) + " konnte nicht erstellt werden.", e);
 						worked = false;
 					}
 				}
@@ -266,8 +277,7 @@ public class Worker {
 						String[] rowline = {"ROW_NO",Consts.idfieldheader};
 						profilsparsefileRows.get(model).writeNext(rowline);
 					} catch (Exception e) {
-						System.err.println("Die Outputdatei " + config.getProfilfileSparse(model.getName(),false) + " konnte nicht erstellt werden.");
-						e.printStackTrace();
+						LOGGER.log(Level.SEVERE,"Die Outputdatei " + config.getProfilfileSparse(model.getName(),false) + " konnte nicht erstellt werden.", e);
 						worked = false;
 					}
 				}
@@ -286,8 +296,7 @@ public class Worker {
 							profilsvmlightfile_targets.get(model).writeNext(newline3);
 						}
 					} catch (Exception e) {
-						System.err.println("Die Outputdatei " + config.getProfilfileSvmlight(model.getName(),false) + " konnte nicht erstellt werden.");
-						e.printStackTrace();
+						LOGGER.log(Level.SEVERE,"Die Outputdatei " + config.getProfilfileSvmlight(model.getName(),false) + " konnte nicht erstellt werden.", e);
 						worked = false;
 					}
 				}
@@ -299,7 +308,7 @@ public class Worker {
 	private void workThroughInfile (InputFile infile, Patient patient) throws Exception {
 		//loop though models and process row for the patient
 		for (Model model : models) {
-			patient.processRow(model, infile);
+			if (model.inputfileIsRelevant(infile) || infile.isLeader()) patient.processRow(model, infile);
 		}
 		infile.nextRow(true,ourLeaderfile != null);
 	}
@@ -310,8 +319,7 @@ public class Worker {
 	 * @return true, if successful
 	 */
 	public boolean process() { 
-		String timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
-		System.out.println(timeStamp + " Starte Profilbildung und Modellanwendung...");
+		LOGGER.log(Level.INFO,"Starte Profilbildung und Modellanwendung...");
 		boolean worked = true;
 		//add No. for rows and pids
 		long pNo =0;
@@ -322,14 +330,14 @@ public class Worker {
 		for (Patient patient = findNextPatient(); patient != null; patient = findNextPatient()) {
 			pNo++; //new patient, matrix starts from 1
 			rowNo++;
-		    //for each input file... 
+		    //for each inputfiles file... 
 			for (InputFile infile : inputfiles) {
 				//it its the leaderfile: process only once
 				if (infile == ourLeaderfile) {
 					try {
 						workThroughInfile(infile,patient);
 					} catch (Exception e) {
-						System.err.println(e.getMessage());
+						LOGGER.log(Level.SEVERE,e.getMessage());
 						worked=false;
 						break;
 					}
@@ -339,7 +347,7 @@ public class Worker {
 						try {
 							workThroughInfile(infile,patient);
 						} catch (Exception e) {
-							System.err.println(e.getMessage());
+							LOGGER.log(Level.SEVERE,e.getMessage());
 							worked=false;
 							break;
 						}
@@ -360,8 +368,7 @@ public class Worker {
 					try {
 						outputfile.writeNext(newline.toArray(new String[newline.size()]));
 					} catch (Exception e) {
-						System.err.println("In die Outputdatei " + config.getOutputfile() + " konnte nicht geschrieben werden.");
-						e.printStackTrace();
+						LOGGER.log(Level.SEVERE,"In die Outputdatei " + config.getOutputfile() + " konnte nicht geschrieben werden."+" ...Ursache:" + e.getMessage());
 						worked = false;
 					}
 				}
@@ -371,7 +378,7 @@ public class Worker {
 					String[] leaderrow = null;
 					if (this.ourLeaderfile!=null && this.ourLeaderfile.hasLeaderCols()) {
 						leaderrow = new String[this.ourLeaderfile.getLeaderColnames().length];
-						//get Value nor from current but from last cached row 
+						//get Value not from current but from last cached row 
 						for (int i=0;i<leaderrow.length;i++) leaderrow[i]=this.ourLeaderfile.getValueLastCached(this.ourLeaderfile.getLeaderColnames()[i]);
 					}
 					boolean isincluded = false;
@@ -427,23 +434,20 @@ public class Worker {
 							try {
 								profilsparsefileRows.get(model).writeNext(pidrow);
 							} catch (Exception e) {
-								System.out.println("In die Outputdatei " + config.getProfilfileSparseROWs(model.getName()) + " konnte nicht geschrieben werden.");
-								e.printStackTrace();
+								LOGGER.log(Level.SEVERE,"In die Outputdatei " + config.getProfilfileSparseROWs(model.getName()) + " konnte nicht geschrieben werden.", e);
 								worked = false;
 							}
 						}
 					} else rowNo = rowNo-1; //if patient not included: reset no;
 				} //end if profile needs creation
 				if (pNo % 50000 == 0) {
-					timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
-					System.out.println(timeStamp +" - "+ Long.toString(pNo) + " Patienten verarbeitet.");
+					LOGGER.log(Level.INFO,Long.toString(pNo) + " Patienten verarbeitet.");
 				}
 			} //end worked test
 			else break;
 		} // end for loop per patient
 		if (worked) {
-			timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
-			System.out.println(timeStamp +" - "+ Long.toString(pNo) + " Patienten verarbeitet.");
+			LOGGER.log(Level.INFO,Long.toString(pNo) + " Patienten verarbeitet.");
 		}
 		return worked;
 	}
@@ -461,7 +465,7 @@ public class Worker {
 		try {
 			if (config.createScores()) {
 				outputfile.close();
-				System.out.println("Outputdatei " + config.getOutputfile() + " wurde erfolgreich geschrieben.");
+				LOGGER.log(Level.INFO,"Outputdatei " + config.getOutputfile() + " wurde erfolgreich geschrieben.");
 			}
 			for (InputFile infile : inputfiles) {
 				infile.close();
@@ -483,12 +487,12 @@ public class Worker {
 				if (config.createProfilSparse()) { 
 					//close files
 					profilsparsefile.get(model).close();
-					System.out.println("Outputdatei " + config.getProfilfileSparse(model.getName(),false) + " wurde erfolgreich geschrieben.");
+					LOGGER.log(Level.INFO,"Outputdatei " + config.getProfilfileSparse(model.getName(),false) + " wurde erfolgreich geschrieben.");
 					profilsparsefileRows.get(model).close();
 					if (model.hasTargets()) {
 				    	//close file
 						profilsparsefile_targets.get(model).close();
-					    System.out.println("Outputdatei " + config.getProfilfileSparse(model.getName(),true) + " wurde erfolgreich geschrieben.");
+						LOGGER.log(Level.INFO,"Outputdatei " + config.getProfilfileSparse(model.getName(),true) + " wurde erfolgreich geschrieben.");
 				    }
 					//add header by creating new file, and write all rows from tmpfile to new file
 					worked = writeMatlabHeader(config.getProfilfileSparseCOLs(model.getName(),false),knownVariables.get(model),leaderheader);
@@ -504,7 +508,7 @@ public class Worker {
 					if (model.hasTargets()) {
 				    	//close file
 						profilsvmlightfile_targets.get(model).close();
-					    System.out.println("Outputdatei " + config.getProfilfileSvmlight(model.getName(),true) + " wurde erfolgreich geschrieben.");
+						LOGGER.log(Level.INFO,"Outputdatei " + config.getProfilfileSvmlight(model.getName(),true) + " wurde erfolgreich geschrieben.");
 				    }
 					//write header
 					worked = writeSvmlightHeader(config.getProfilfileSvmlightHeader(model.getName(),false),knownVariables.get(model),leaderheader);
@@ -516,8 +520,7 @@ public class Worker {
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("Fehler beim Schließen der Dateien.");
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE,"Fehler beim Schließen der Dateien.", e);
 			worked = false;
 		}
 		return worked;
@@ -536,8 +539,7 @@ public class Worker {
 			//else write rest
 			else file.writeNext(newline.toArray(new String[newline.size()]));
 		} catch (Exception e) {
-			System.err.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE,"In die Outputdatei " + filename + " konnte nicht geschrieben werden.", e);
 			return false;
 		}
 		return true;
@@ -553,11 +555,10 @@ public class Worker {
 		try {
 			Utils.addHeaderToCsv(filename_old,header, filename_new);
 		} catch (Exception e) {
-			System.err.println("In die Outputdatei " + filename_new + " konnte nicht geschrieben werden.");
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE,"In die Outputdatei " + filename_new + " konnte nicht geschrieben werden.", e);
 			return false;
 		}
-	    System.out.println("Outputdatei " + filename_new + " wurde erfolgreich geschrieben.");
+		LOGGER.log(Level.INFO,"Outputdatei " + filename_new + " wurde erfolgreich geschrieben.");
 	    return true;
 	}
 
@@ -576,8 +577,7 @@ public class Worker {
 					try {
 						file.writeNext(sparseline);
 					} catch (Exception e) {
-						System.out.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
-						e.printStackTrace();
+						LOGGER.log(Level.SEVERE,"In die Outputdatei " + filename + " konnte nicht geschrieben werden.", e);
 						return false;
 					}
 					sparseline = new String[3];
@@ -595,8 +595,7 @@ public class Worker {
 					try {
 						file.writeNext(sparseline);
 					} catch (Exception e) {
-						System.out.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
-						e.printStackTrace();
+						LOGGER.log(Level.SEVERE,"In die Outputdatei " + filename + " konnte nicht geschrieben werden.", e);
 						return false;
 					}	
 					sparseline = new String[3];
@@ -627,11 +626,10 @@ public class Worker {
 			}
 			file.close();
 		} catch (Exception e) {
-			System.err.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE,"In die Outputdatei " + filename + " konnte nicht geschrieben werden.", e);
 			return false;
 		}
-	    System.out.println("Outputdatei " + filename + " wurde erfolgreich geschrieben.");
+		LOGGER.log(Level.INFO,"Outputdatei " + filename + " wurde erfolgreich geschrieben.");
 	    return true;
 	}
 	
@@ -659,8 +657,7 @@ public class Worker {
 		try {
 			file.writeNext(newline.toArray(new String[newline.size()]));
 		} catch (Exception e) {
-			System.err.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE,"In die Outputdatei " + filename + " konnte nicht geschrieben werden."+"...Ursache: "+ e.getMessage());
 			return false;
 		}
 		return true;
@@ -686,12 +683,15 @@ public class Worker {
 			}
 			file.close();
 		} catch (Exception e) {
-			System.err.println("In die Outputdatei " + filename + " konnte nicht geschrieben werden.");
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE,"In die Outputdatei " + filename + " konnte nicht geschrieben werden."+"...Ursache: "+ e.getMessage());
 			return false;
 		}
-	    System.out.println("Outputdatei " + filename + " wurde erfolgreich geschrieben.");
+		LOGGER.log(Level.INFO,"Outputdatei " + filename + " wurde erfolgreich geschrieben.");
 	    return true;
+	}
+	
+	public void setLeaderfile (InputFile inputfile) {
+		this.ourLeaderfile=inputfile;
 	}
 	
 	
