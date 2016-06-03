@@ -9,10 +9,12 @@ import java.util.logging.Logger;
 import au.com.bytecode.opencsv.CSVWriter;
 import configuration.DDIConfiguration;
 import models.InputFile;
+import models.Model;
 
 public class DDIworker {
 	private final static Logger LOGGER = Logger.getLogger(DDIworker.class.getName());
 	
+	DDIConfiguration ddiconfig;
 	private DDIMatrix ddimatrix;
 	private DDIInputFile ddifile=null;
 	private boolean createStats = false;
@@ -33,7 +35,7 @@ public class DDIworker {
 	 * - before Models are created  
 	 */
 	public boolean init(DDIConfiguration ddiconfig,ArrayList<InputFile> inputfiles,boolean upcase) {
-		//String timeStamp;
+		this.ddiconfig=ddiconfig;
 		boolean worked = true;
 		//1. Open Inputfiles, create matrix, remove inputfile from list
 		ddimatrix = new DDIMatrix(ddiconfig.getDrugreachStandard());
@@ -179,6 +181,7 @@ public class DDIworker {
 			this.createStats=true;
 			ddifile.mustCreateStatistic(stats);
 		}
+		if (worked && ddiconfig.samplePatientsWithout) ddifile.mustSamplePatients();
 		return worked;
 		
 	}
@@ -187,32 +190,41 @@ public class DDIworker {
 		return ddifile;
 	}
 	
+	
+	public boolean process(Model model,String patient_id, ArrayList<String> targets) { 
+		if (this.createStats) {
+			for (String target_id: targets) {
+				stats.addTarget(model,patient_id, ddifile.getValueLastCached(ddiconfig.getMeta_interactionfield()), ddifile.getValueLastCached(ddiconfig.getInteractionfield()),target_id);
+			}
+		}
+		return true;
+	}
+	
 	/*
 	 * writes 2 statistics files (ddi_stats_meta + ddi_stats_interactions)
 	 * 
 	 * columns: id, num_interactions, num_substances, num_patients, num_all_patients, percent_patients, num_occurences, num_all_occurences, percent_occurences, num_target_XXX, percent_target_XXX, num_targetAll_XXX
 	 */
-	public boolean finish(String path) { 
+	public boolean finish(Model model,String path) { 
 		boolean worked = true;
-		String[] header = new String[9+(this.stats.getNumberTargetKeys()*3)];
+		String[] header = new String[9+(this.stats.getNumberTargetKeys(model)*3)];
 		header[0]="id";
 		header[1]="num_interactions";
 		header[2]="num_substances";
 		header[3]="num_patients";
 		header[4]="num_all_patients";
-		header[5]="percent_patients";
-		header[6]="num_occurences";
+		header[5]="num_occurences";
 		
-		int i=9;
-		for (String target : this.stats.getTargetNames() ) {
-			header[i]="num_target_"+target;
-			header[i+1]="percent_target_"+target;
-			header[i+2]="num_targetAll_"+target;
+		int i=6;
+		for (String target : this.stats.getTargetNames(model) ) {
+			header[i]="Target_"+target+"_patients";
+			header[i+1]="Target_"+target+"_allpatients";
+			header[i+2]="Target_"+target+"_occurences";
 			i+=3;
 		}
 		if (this.createStats) {
-			String filename_int = path+ "\\ddi_stats_interactions.csv"; CSVWriter stat_file_int = null;
-			String filename_met = path+ "\\ddi_stats_metas.csv"; CSVWriter stat_file_met = null;
+			String filename_int = path+ "\\"+model.getName()+"_stats_interactions.csv"; CSVWriter stat_file_int = null;
+			String filename_met = path+ "\\"+model.getName()+"_stats_metas.csv"; CSVWriter stat_file_met = null;
 			try {
 				stat_file_int = new CSVWriter(new FileWriter(filename_int), ';', CSVWriter.NO_QUOTE_CHARACTER);
 				//write header
@@ -232,11 +244,11 @@ public class DDIworker {
 			if (!worked) return worked;
 			//write all metas
 			for (String id : this.stats.getMetaIds()) {
-				stat_file_met.writeNext(newRow(header,id,true));
+				stat_file_met.writeNext(newRow(model,header,id,true));
 			}
 			//write stats per interaction
 			for (String id : this.stats.getInteractionIds()) {
-				stat_file_int.writeNext(newRow(header,id,false));
+				stat_file_int.writeNext(newRow(model,header,id,false));
 			}
 			//close
 			try {
@@ -251,22 +263,22 @@ public class DDIworker {
 	}
 
 	
-	private String[] newRow (String[] header, String id, boolean ismeta) {
+	private String[] newRow (Model model,String[] header, String id, boolean ismeta) {
 		String[] row= new String[header.length];
 		row[0]=id;
 		row[1]=Integer.toString(stats.getNumInteractions(id, ismeta)); 
 		row[2]=Integer.toString(stats.getNumSubs(id, ismeta));
 		row[3]=Integer.toString(stats.getNumPatients(id, ismeta));
 		row[4]=Integer.toString(stats.getNumPatientsAll());
-		row[5]=Double.toString(Math.round(stats.getNumPatients(id, ismeta)/stats.getNumPatientsAll()*100/100)*100);
-		row[6]=Integer.toString(stats.getNumOccurences(id, ismeta));
-		row[7]=Integer.toString(stats.getNumOccurencesAll());
-		row[8]=Double.toString(Math.round(stats.getNumOccurences(id, ismeta)/stats.getNumOccurencesAll()*100/100));
-		int i=9;
-		for (String target : this.stats.getTargetNames() ) {
-			row[i]=Integer.toString(stats.getNumTargets(id, ismeta, target));
-			row[i+1]=Double.toString(Math.round(stats.getNumTargets(id, ismeta, target)/stats.getNumOccurences(id, ismeta)*100/100));
-			row[i+2]=Integer.toString(stats.getNumTargetsAll(target));
+		//row[5]=Double.toString(Math.round(stats.getNumPatients(id, ismeta)/stats.getNumPatientsAll()*100/100)*100);
+		row[5]=Integer.toString(stats.getNumOccurences(id, ismeta));
+		//row[7]=Integer.toString(stats.getNumOccurencesAll());
+		//row[8]=Double.toString(Math.round(stats.getNumOccurences(id, ismeta)/stats.getNumOccurencesAll()*100/100));
+		int i=6;
+		for (String target : this.stats.getTargetNames(model) ) {
+			row[i]=Integer.toString(stats.getNumTargetsPatients(model,id, ismeta, target));
+			row[i+1]=Integer.toString(stats.getNumTargetsAllPatients(model,target));
+			row[i+2]=Integer.toString(stats.getNumTargetsOcc(model,id, ismeta, target));
 			i+=3;
 		}
 		return row;

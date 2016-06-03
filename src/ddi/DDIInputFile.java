@@ -1,15 +1,16 @@
 package ddi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 
-import au.com.bytecode.opencsv.CSVWriter;
 import configuration.Configuration;
 import configuration.Consts;
 import configuration.DDIConfiguration;
+import configuration.Utils;
 import models.InputFile;
 import models.Patient;
 
@@ -24,6 +25,10 @@ public class DDIInputFile extends InputFile {
 	
 	private boolean mustCreateStatistic=false;
 	private DDIStats stats;
+	
+	private boolean mustSamplePatients=false;
+	private HashMap<Integer,Integer> dates_indexes = new HashMap<Integer,Integer>(); //Day -> Number
+	private HashMap<Integer,Integer> dates_sampled = new HashMap<Integer,Integer>(); //Day -> Number
 	
 	
 	public DDIInputFile (DDIConfiguration ddiconfig, InputFile drugdata_file,DDIMatrix ddimatrix, boolean upcaseData) throws Exception {
@@ -57,6 +62,10 @@ public class DDIInputFile extends InputFile {
 		this.stats=stats;
 	}
 	
+	public void mustSamplePatients() {
+		this.mustSamplePatients=true;
+	}
+	
 	
 	/*
 	 * Create new Set of rows with DDI -> start if rowcache has been used (or is empty), and search until rowcache is filled again
@@ -84,6 +93,13 @@ public class DDIInputFile extends InputFile {
 			//warp back input file
 			drugdata_file.warpToCorrectID(patient.getPid());
 			ArrayList<Index> indexes = ddimatrix.getLiveInteractionIndexes();
+			boolean hasInteractions = false;
+			if (indexes.size()>0) {
+				hasInteractions=true;
+			} else {
+				indexes = sampleIndexes();
+			}
+
 			// add indexes to cache
 			LinkedHashMap<String,String> newrow;
 			for (Index index : indexes) {
@@ -95,7 +111,13 @@ public class DDIInputFile extends InputFile {
 				newrow.put(colnames[4], index.getEndDate().toString()); //Integer.toString(Days.daysBetween(myreferencedate, index.getEndDate()).getDays()));
 				if (colnames.length>5) newrow.put(colnames[5], index.getDose()); 
 				rowcache.add(newrow);
-				//add statistics for patients with interactions
+				//add to days from which will be sampled
+				if (mustSamplePatients && hasInteractions) {
+					int day=Days.daysBetween(myreferencedate, index.getStartDate()).getDays();
+					if (! dates_indexes.containsKey(day)) dates_indexes.put(day,1);
+					else dates_indexes.put(day,dates_indexes.get(day)+1);
+				}
+				//add statistics for patients
 				if (mustCreateStatistic) {
 					stats.addOccurence(index.getMeta(), index.getInteraction(),patient.getPid());
 				}
@@ -104,6 +126,52 @@ public class DDIInputFile extends InputFile {
 		}
 		return super.nextRow(false,allowWarpBack);
 	}
-
+	
+	/*
+	 * samples one index date for patients that occur in drug datafile, but do not have any indexes
+	 */
+	private ArrayList<Index> sampleIndexes() {
+		ArrayList<Index> indexes = new ArrayList<Index> ();
+		LocalDate start=null;
+		boolean canBeSampled = false;
+		/* take the next available day by
+		 * - first finding current max quotient from used / available counts
+		 * - then using the first day where the quota is not reached
+		 */
+		double quota=0; //init very small value
+		for (Integer day : dates_indexes.keySet()) {
+			if (dates_sampled.containsKey(day))
+				quota = Math.max(quota, dates_sampled.get(day)/dates_indexes.get(day));
+			else dates_sampled.put(day,0);
+		}
+		for (Integer day : dates_indexes.keySet()) {
+			if ((dates_sampled.get(day)/dates_indexes.get(day))<quota) {
+				canBeSampled=true;
+				start=myreferencedate.plusDays(day);
+				dates_sampled.put(day,dates_sampled.get(day)+1);
+				break;
+			}
+		}
+		//if all days are filled equally: select just first 
+		if (!canBeSampled && dates_indexes.size()>0) {
+			canBeSampled=true;
+			int day = dates_indexes.keySet().iterator().next();
+			start=myreferencedate.plusDays(day);
+			dates_sampled.put(day,dates_sampled.get(day)+1);
+		}
+		// if no index days yet: take first drug date
+		if (!canBeSampled) {
+			start=Utils.parseDate(drugdata_file.getValue(input_col_date));
+			int day=Days.daysBetween(myreferencedate, start).getDays();
+			if (dates_sampled.containsKey(day))
+				dates_sampled.put(day,dates_sampled.get(day)+1);
+			else dates_sampled.put(day,1);
+		}
+		LocalDate end = start.plusDays(ddimatrix.getDrugreach_standard());
+		Index index= new Index(start,end,"","");
+		index.setDose("");
+		indexes.add(index);
+		return indexes;
+	}
 
 }

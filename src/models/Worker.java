@@ -59,20 +59,20 @@ public class Worker {
 	
 	/** The profildensefiles */
 	private HashMap<Model,CSVWriter> profildensefile = new HashMap<Model,CSVWriter>();
-	private HashMap<Model,CSVWriter> profildensefile_targets = new HashMap<Model,CSVWriter>();
+	//private HashMap<Model,CSVWriter> profildensefile_targets = new HashMap<Model,CSVWriter>();
 	
 	/** Matlab format */
 	private HashMap<Model,CSVWriter> profilsparsefile = new HashMap<Model,CSVWriter>();
 	private HashMap<Model,CSVWriter> profilsparsefileRows = new HashMap<Model,CSVWriter>();
-	private HashMap<Model,CSVWriter> profilsparsefile_targets = new HashMap<Model,CSVWriter>();
+	//private HashMap<Model,CSVWriter> profilsparsefile_targets = new HashMap<Model,CSVWriter>();
 	
 	/** Svmlight format */
 	private HashMap<Model,CSVWriter> profilsvmlightfile = new HashMap<Model,CSVWriter>();
-	private HashMap<Model,CSVWriter> profilsvmlightfile_targets = new HashMap<Model,CSVWriter>();
+	//private HashMap<Model,CSVWriter> profilsvmlightfile_targets = new HashMap<Model,CSVWriter>();
 	
 	/** The known variables. */
 	private HashMap<Model,ArrayList<String>> knownVariables = new HashMap<Model,ArrayList<String>>();//holds known variables per Model    
-	private HashMap<Model,ArrayList<String>> knownVariables_targets = new HashMap<Model,ArrayList<String>>();//holds known variables per Model (targets only)
+	//private HashMap<Model,ArrayList<String>> knownVariables_targets = new HashMap<Model,ArrayList<String>>();//holds known variables per Model (targets only)
 	
 	/**
 	 * Find next patient. Uses either the first available ID from all files (sorted by ID),
@@ -220,7 +220,7 @@ public class Worker {
 			    			newmodel = new Model(modelname, inputfiles, config);
 			    			models.add(newmodel);
 			    			knownVariables.put(newmodel,  new ArrayList<String>()); //init
-			    			knownVariables_targets.put(newmodel,  new ArrayList<String>()); //init
+			    			//knownVariables_targets.put(newmodel,  new ArrayList<String>()); //init
 			    			processedModels.add(modelname);
 			    			LOGGER.log(Level.INFO,"Modell "+ modelname + " konfiguriert.");
 			    			worked = true; //if one files is ok, then start
@@ -256,7 +256,7 @@ public class Worker {
 				for (Model model : models) {
 					try {
 						profildensefile.put(model, new CSVWriter(new FileWriter(config.getProfilfileDenseTmp(model.getName(),false)), ';', CSVWriter.NO_QUOTE_CHARACTER));
-						if (model.hasTargets()) profildensefile_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileDenseTmp(model.getName(),true)), ';', CSVWriter.NO_QUOTE_CHARACTER));
+						//if (model.hasTargets()) profildensefile_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileDenseTmp(model.getName(),true)), ';', CSVWriter.NO_QUOTE_CHARACTER));
 						//no header here
 					} catch (Exception e) {
 						LOGGER.log(Level.SEVERE,"Die Outputdatei " + config.getProfilfileDense(model.getName(),false) + " konnte nicht erstellt werden.", e);
@@ -269,11 +269,11 @@ public class Worker {
 				for (Model model : models) {
 					try {
 						profilsparsefile.put(model, new CSVWriter(new FileWriter(config.getProfilfileSparse(model.getName(),false)), ';', CSVWriter.NO_QUOTE_CHARACTER));
-						if (model.hasTargets()) profilsparsefile_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileSparse(model.getName(),true)), ';', CSVWriter.NO_QUOTE_CHARACTER));
+						//if (model.hasTargets()) profilsparsefile_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileSparse(model.getName(),true)), ';', CSVWriter.NO_QUOTE_CHARACTER));
 						String[] newline = {"ROW","COL","VAL"};
 						//write header
 						profilsparsefile.get(model).writeNext(newline);
-						if (model.hasTargets()) profilsparsefile_targets.get(model).writeNext(newline);
+						//if (model.hasTargets()) profilsparsefile_targets.get(model).writeNext(newline);
 						//write header
 						profilsparsefileRows.put(model, new CSVWriter(new FileWriter(config.getProfilfileSparseROWs(model.getName())), ';', CSVWriter.NO_QUOTE_CHARACTER));
 						String[] rowline = {"ROW_NO",Consts.idfieldheader};
@@ -292,11 +292,11 @@ public class Worker {
 						String[] newline1 = {"#Profile features in svmlight format, see http://svmlight.joachims.org (targets always 1, pids in #info part)"};
 						profilsvmlightfile.get(model).writeNext(newline1);
 						
-						if (model.hasTargets()) {
+						/*if (model.hasTargets()) {
 							profilsvmlightfile_targets.put(model, new CSVWriter(new FileWriter(config.getProfilfileSvmlight(model.getName(),true)), ' ', CSVWriter.NO_QUOTE_CHARACTER));
 							String[] newline3 = {"#Profile targets in svmlight format, see http://svmlight.joachims.org (targets always 1, pids in #info part)"};
 							profilsvmlightfile_targets.get(model).writeNext(newline3);
-						}
+						}*/
 					} catch (Exception e) {
 						LOGGER.log(Level.SEVERE,"Die Outputdatei " + config.getProfilfileSvmlight(model.getName(),false) + " konnte nicht erstellt werden.", e);
 						worked = false;
@@ -364,7 +364,7 @@ public class Worker {
 					newline.add(patient.getPid());
 					for (Model model : models) {
 						if (model.hasCoeffs() && patient.areYouIncluded(model)) 
-								newline.add(String.valueOf(patient.getCoeffSum(model)));
+								newline.add(Double.toString(patient.getCoeffSum(model)));
 						else newline.add(Consts.navalue); //write navalue if model has no coefficients or patient is not included
 					}
 					try {
@@ -388,10 +388,11 @@ public class Worker {
 						if (patient.areYouIncluded(model)) {
 							isincluded = true;
 							//update knownVariables
-							ArrayList<String> knownVars = patient.addToKnownVariables(model,knownVariables.get(model),false);
+							ArrayList<String> knownVars = patient.addToKnownVariables(model,knownVariables.get(model));
 							knownVariables.put(model,knownVars);
 							//get ProfileValues
 							ArrayList<String> profValues = patient.getProfvalues(model,knownVars);
+							/*
 							//same for targets 
 							ArrayList<String> profValues_targets = null;
 							if (model.hasTargets()) {
@@ -401,12 +402,14 @@ public class Worker {
 								//get ProfileValues
 								profValues_targets = patient.getProfvalues(model,knownVars_targets);
 							}
+							*/
 							if (config.createProfilDense()) {
 								//output PID+Profilvalues
 								worked = writeDenseProfileRow(profildensefile.get(model), config.getProfilfileDense(model.getName(),false), patient, profValues, leaderrow);
-								//same for targets, w/o leaderrow
+								/*//same for targets, w/o leaderrow
 								if (worked && model.hasTargets()) 
 									worked = writeDenseProfileRow(profildensefile_targets.get(model), config.getProfilfileDense(model.getName(),true), patient, profValues_targets, null);								
+								*/
 							} //end dense profile
 							if (config.createProfilSparse()) {
 								String myrowno;
@@ -416,17 +419,23 @@ public class Worker {
 								else 
 									myrowno = Long.toString(rowNo);
 								worked = writeMatlabProfileRow(profilsparsefile.get(model), config.getProfilfileSparse(model.getName(),false), patient, profValues, leaderrow, myrowno);
-								//same for targets, w/o leaderrow
+								/*//same for targets, w/o leaderrow
 								if (worked && model.hasTargets()) 
 									worked = writeMatlabProfileRow(profilsparsefile_targets.get(model), config.getProfilfileSparse(model.getName(),true), patient, profValues_targets, null,myrowno);
+								*/
 							} //end sparse profile
 							if (config.createProfilSvmlight()) {
 								//output: "1 column(=VariableNo.):value #PID"
 								worked = writeSvmlightProfileRow(profilsvmlightfile.get(model), config.getProfilfileSparse(model.getName(),false), patient, profValues, leaderrow,config.addPidToSvm());
 								//same for targets, w/o leaderrow
-								if (worked && model.hasTargets()) 
+								/*if (worked && model.hasTargets()) 
 									worked = writeSvmlightProfileRow(profilsvmlightfile_targets.get(model), config.getProfilfileSparse(model.getName(),true), patient, profValues_targets, null,config.addPidToSvm());
+								*/
 							} //end svmlight
+							//ddi worker process
+							if (ddiworker!=null) {
+								worked = ddiworker.process(model,patient.getPid(),patient.getAllTargetVariables(model));
+							}
 						}
 					} //end rolling through models
 					//for sparse: write PID in row-translation.file
@@ -478,56 +487,56 @@ public class Worker {
 					profildensefile.get(model).close();
 					//add header by creating new file, and write all rows from tmpfile to new file
 					worked = writeDenseHeader(config.getProfilfileDenseTmp(model.getName(),false),config.getProfilfileDense(model.getName(),false),knownVariables.get(model),leaderheader);
-				    //same for targets
+				    /*//same for targets
 				    if (worked && model.hasTargets()) {
 					  	//close file
 				    	profildensefile_targets.get(model).close();
 						//add header by creating new file, and write all rows from tmpfile to new file
 				    	worked = writeDenseHeader(config.getProfilfileDenseTmp(model.getName(),true),config.getProfilfileDense(model.getName(),true),knownVariables_targets.get(model),null);
-				    }
+				    }*/
 				}
 				if (config.createProfilSparse()) { 
 					//close files
 					profilsparsefile.get(model).close();
 					LOGGER.log(Level.INFO,"Outputdatei " + config.getProfilfileSparse(model.getName(),false) + " wurde erfolgreich geschrieben.");
 					profilsparsefileRows.get(model).close();
-					if (model.hasTargets()) {
+					/*if (model.hasTargets()) {
 				    	//close file
 						profilsparsefile_targets.get(model).close();
 						LOGGER.log(Level.INFO,"Outputdatei " + config.getProfilfileSparse(model.getName(),true) + " wurde erfolgreich geschrieben.");
-				    }
+				    }*/
 					//add header by creating new file, and write all rows from tmpfile to new file
 					worked = writeMatlabHeader(config.getProfilfileSparseCOLs(model.getName(),false),knownVariables.get(model),leaderheader);
 				    //same for targets
-				    if (worked && model.hasTargets()) {
+				    /*if (worked && model.hasTargets()) {
 				    	//add header by creating new file, and write all rows from tmpfile to new file
 					  	worked = writeMatlabHeader(config.getProfilfileSparseCOLs(model.getName(),true),knownVariables_targets.get(model),null);
-				    }
+				    }*/
 				}
 				if (config.createProfilSvmlight()) { 
 					//close file
 					profilsvmlightfile.get(model).close();
-					if (model.hasTargets()) {
+					/*if (model.hasTargets()) {
 				    	//close file
 						profilsvmlightfile_targets.get(model).close();
 						LOGGER.log(Level.INFO,"Outputdatei " + config.getProfilfileSvmlight(model.getName(),true) + " wurde erfolgreich geschrieben.");
-				    }
+				    }*/
 					//write header
 					worked = writeSvmlightHeader(config.getProfilfileSvmlightHeader(model.getName(),false),knownVariables.get(model),leaderheader);
-				    //same for targets
+				    /*//same for targets
 				    if (worked && model.hasTargets()) {
 						//add header by creating new file, and write all rows from tmpfile to new file
 				    	worked = writeSvmlightHeader(config.getProfilfileSvmlightHeader(model.getName(),true),knownVariables_targets.get(model),null);
-				    }
+				    }*/
+				}
+				if (ddiworker!=null) {
+					worked = ddiworker.finish(model,config.getOutputPath());
+					if (worked) LOGGER.log(Level.INFO,"DDI Statistiken geschrieben für Model " + model.getName());
 				}
 			}
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE,"Fehler beim Schließen der Dateien.", e);
 			worked = false;
-		}
-		if (ddiworker!=null) {
-			worked = ddiworker.finish(config.getOutputPath());
-			if (worked) LOGGER.log(Level.INFO,"DDI Statistiken geschrieben");
 		}
 		return worked;
 	}

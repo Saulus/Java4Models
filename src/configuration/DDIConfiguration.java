@@ -16,6 +16,9 @@ public class DDIConfiguration {
 	@Element(defaultValue="false")
 	public boolean createStatistics;
 	
+	@Element(defaultValue="false")
+	public boolean samplePatientsWithout;
+	
 	
 	@Element
 	public Datafile_references datafile_references;

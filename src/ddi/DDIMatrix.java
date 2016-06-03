@@ -309,14 +309,19 @@ public class DDIMatrix {
 	
 	
 	public void addDrugInformation(String drug_id, String reach, String dose) {
-		//parse reach
-		int reachint = Integer.parseInt(reach);
-		if (reachint<=0) reachint=drugreach_standard;
+		//parse reach ... from Double to int
+		int reachint;
+		if (reach.isEmpty()) reachint=drugreach_standard;
+		else {
+			Double reachdouble = Double.parseDouble(reach);
+			reachint = reachdouble.intValue();
+			if (reachint<=0) reachint=drugreach_standard;
+		}
 		if (!drugs.containsKey(drug_id)) {
-			//parse reach
 			Drug drug = new Drug (drug_id,drugreach_standard);
 			this.drugs.put(drug_id, drug);
 		}
+		if (dose==null) dose="";
 		this.drugs.get(drug_id).setInformation(reachint,dose);
 	}
 	
@@ -439,6 +444,10 @@ public class DDIMatrix {
 	
 	public int getNumSubstances4Interaction (String id) {
 		return this.interactions.get(id).getNumSubstances();
+	}
+	
+	public int getDrugreach_standard() {
+		return drugreach_standard;
 	}
 	
 	

@@ -80,7 +80,7 @@ class PatientModel {
 	
 	/**
 	 * adds Variables from that model to the list of knownVars
-	 * @param knownVars, isTarget (find target vars?)
+	 * @param knownVars, isTarget (i target vars?)
 	 * @return
 	 */
 	public ArrayList<String> addToKnownVariables (ArrayList<String> knownVars, boolean isTarget) {
@@ -91,6 +91,26 @@ class PatientModel {
 			}
 		}
 		return newKnownVars;
+	}
+	
+	public ArrayList<String> addToKnownVariables (ArrayList<String> knownVars) {
+		ArrayList<String> newKnownVars = knownVars;
+		for (String var : variables.keySet()) {
+			if (!knownVars.contains(var) && !variables.get(var).hideme() && variables.get(var).isAllowed()) { //Variable ist bisher nicht bekannt Und ist gültig -> add
+				newKnownVars.add(var);	
+			}
+		}
+		return newKnownVars;
+	}
+	
+	public ArrayList<String> getAllTargetVariables () {
+		ArrayList<String> newVars = new ArrayList<String>();
+		for (String var : variables.keySet()) {
+			if (!variables.get(var).hideme() && variables.get(var).isAllowed() && variables.get(var).isTarget()) { //Variable ist bisher nicht bekannt Und ist gültig -> add
+				newVars.add(var);	
+			}
+		}
+		return newVars;
 	}
 	
 	/**
@@ -216,6 +236,14 @@ public class Patient {
 	
 	public ArrayList<String> addToKnownVariables (Model m, ArrayList<String> knownVars, boolean isTarget) {
 		return models.get(m).addToKnownVariables(knownVars,isTarget);
+	}
+	
+	public ArrayList<String> addToKnownVariables (Model m, ArrayList<String> knownVars) {
+		return models.get(m).addToKnownVariables(knownVars);
+	}
+	
+	public  ArrayList<String> getAllTargetVariables (Model m) {
+		return models.get(m).getAllTargetVariables();
 	}
 	
 }

@@ -2,42 +2,60 @@
 <configuration>
 	<inputfiles>
 		<datafile>
-			<data_id>Arzneimittel2012</data_id>
-			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\am_evo_v.csv</path>
+			<data_id>stamm</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Stamm.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>False</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>Arzneimittel</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_AM_EVO.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>False</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>arzt_diagnose</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Arzt_Diagnose.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>False</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>kh_diagnose</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_KH_Diagnose.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
 			<is_sorted>False</is_sorted>
 		</datafile>
 		<datafile>
 			<data_id>pzn_informationen</data_id>
-			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Dosing\pac_ddd.csv</path>
+			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\pac_ddd.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
 			<is_sorted>True</is_sorted>
 			<separator>|</separator>
 		</datafile>
 		<datafile>
 			<data_id>pzn_wirkstoff</data_id>
-			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Dosing\pzn_wirkstoffe_2015_11.csv</path>
+			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\Dosing\pzn_wirkstoffe_2015_05.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
 			<is_sorted>True</is_sorted>
 			<separator>|</separator>
 		</datafile>
 		<datafile>
 			<data_id>wirkstoffe_interaktionen</data_id>
-			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Dosing\wirkstoffe_interaktionen_2015_11.csv</path>
+			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\Dosing\wirkstoffe_interaktionen_2015_05.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
 			<is_sorted>True</is_sorted>
 			<separator>|</separator>
 		</datafile>
 		<datafile>
 			<data_id>interaktionen</data_id>
-			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Dosing\interaktionen_2015_11.csv</path>
+			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\Dosing\interaktionen_2015_05.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
 			<is_sorted>True</is_sorted>
 			<separator>|</separator>
 		</datafile>
 		<datafile>
 			<data_id>meta_interaktionen</data_id>
-			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Dosing\meta_interaktionen.csv</path>
+			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\meta_interaktionen.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
 			<is_sorted>True</is_sorted>
 			<separator>;</separator>
@@ -57,12 +75,13 @@
 			<exclusion>1</exclusion>
 		</filter>
 	</inputfilter>
-	<ddiconfiguration><!-- optional; if configured, creates additional inputfile with PID (idfield from drugdatafile), <meta_interactionfield>, <interactionfield>,startdate, enddate, <dosefield> -->
+	<ddiconfiguration><!-- optional; if configured, creates additional leader-inputfile with PID (idfield from drugdatafile), <meta_interactionfield>, <interactionfield>,startdate, enddate, <dosefield> -->
 		<data_id>ddi</data_id> <!-- Output-File-ID for Model building -->
 		<keep_fields>PID,INTERAKTION_ID,META_ID,STARTDATE,ENDDATE,PACKUNGSGROESSE</keep_fields><!-- Optional, fieldnames: which ddi fields to keep in output matrix; if not configured, keeps all -->
+		<samplePatientsWithout>True</samplePatientsWithout>
 		<createStatistics>True</createStatistics>
 		<datafile_references>
-			<patient2drug>Arzneimittel2012</patient2drug>
+			<patient2drug>Arzneimittel</patient2drug>
 			<druginfo>pzn_informationen</druginfo><!-- additional information per drug, i.e. reach information, dose -->
 			<drug2substance>pzn_wirkstoff</drug2substance>
 			<substance2interaction>wirkstoffe_interaktionen</substance2interaction>

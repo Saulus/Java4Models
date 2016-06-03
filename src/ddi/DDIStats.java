@@ -3,8 +3,29 @@
  */
 package ddi;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
+
+import models.Model;
+
+class TargetStat {
+	public int num=0;
+	public String lastid="";
+	
+	public TargetStat (int num, String id) {
+		this.num=num;
+		this.lastid=id;
+	}
+	
+	public void addNum(String newid) {
+		if (!lastid.equals(newid)) {
+			lastid=newid;
+			num ++;
+		}
+	}
+	
+}
 
 class InteractionStat {
 	public String id;
@@ -12,7 +33,8 @@ class InteractionStat {
 	public int num_substances=0;
 	public int num_patients=0;
 	public int num_occurence=0;
-	public HashMap<String,Integer> targets = new HashMap<String,Integer> ();
+	public HashMap<Model,HashMap<String,Integer>> targets_occ = new HashMap<Model,HashMap<String,Integer>> ();
+	public HashMap<Model,HashMap<String,TargetStat>> targets_patients = new HashMap<Model,HashMap<String,TargetStat>> ();
 	private String lastPatientId="";
 	
 	public InteractionStat(String id) {
@@ -25,28 +47,42 @@ class InteractionStat {
 	}
 
 	
-	private void addPatient() {
-		this.num_patients++;
-	}
 	
 	public void addOccurence(String patient_id) {
 		this.num_occurence++;
 		if (!patient_id.equals(lastPatientId)) {
 			lastPatientId=patient_id;
-			this.addPatient();
+			this.num_patients++;
 		}
 	}
 	
-	public void addTarget(String id) {
-		if (!targets.containsKey(id)) {
-			this.targets.put(id, 1);
+	public void addTarget(Model model, String patient_id, String target_id) {
+		//count occurence
+		if (!targets_occ.containsKey(model)) {
+			targets_occ.put(model, new HashMap<String,Integer>());
+		}
+		if (!targets_occ.get(model).containsKey(target_id)) {
+			this.targets_occ.get(model).put(target_id, 1);
 		} else 
-			this.targets.put(id, this.targets.get(id)+1);
+			this.targets_occ.get(model).put(target_id,targets_occ.get(model).get(target_id)+1);
+		//count patients
+		if (!targets_patients.containsKey(model)) {
+			targets_patients.put(model, new HashMap<String,TargetStat>());
+		}
+		if (!targets_patients.get(model).containsKey(target_id)) {
+			this.targets_patients.get(model).put(target_id, new TargetStat(1, patient_id));
+		} else targets_patients.get(model).get(target_id).addNum(patient_id);
+			
 	}
 	
-	public int getTargetNum(String id) {
-		if (!targets.containsKey(id)) return 0;
-		return this.targets.get(id);
+	public int getNumTargetsPatients (Model model, String target_id) {
+		if (!targets_patients.containsKey(model) || !targets_patients.get(model).containsKey(target_id)) return 0;
+		return targets_patients.get(model).get(target_id).num;
+	}
+	
+	public int getNumTargetsOcc (Model model, String target_id) {
+		if (!targets_occ.containsKey(model) || !targets_occ.get(model).containsKey(target_id)) return 0;
+		return targets_occ.get(model).get(target_id);
 	}
 }
 
@@ -59,7 +95,7 @@ class InteractionStat {
 public class DDIStats {
 	private int num_patients=0;
 	private int num_occurences=0;
-	public HashMap<String,Integer> targets_all = new HashMap<String,Integer> ();
+	public HashMap<Model,HashMap<String,TargetStat>> targets_allpatients = new HashMap<Model,HashMap<String,TargetStat>> ();
 	private String lastPatientId="";
 	
 	HashMap<String,InteractionStat> metas = new HashMap<String,InteractionStat> ();
@@ -91,40 +127,41 @@ public class DDIStats {
 	 * and also maintains patient stats (by last patient index)
 	 */
 	public void addOccurence(String meta_id, String interaction_id, String patient_id) {
-		if (!metas.containsKey(meta_id)) {
-			InteractionStat m = new InteractionStat (meta_id);
-			this.metas.put(meta_id, m);
+		if (meta_id!= null && interaction_id!=null && !meta_id.isEmpty() && !interaction_id.isEmpty()) {
+			if (!metas.containsKey(meta_id)) {
+				InteractionStat m = new InteractionStat (meta_id);
+				this.metas.put(meta_id, m);
+			}
+			this.metas.get(meta_id).addOccurence(patient_id);
+			if (!interactions.containsKey(interaction_id)) {
+				InteractionStat m = new InteractionStat (interaction_id);
+				this.interactions.put(interaction_id, m);
+			}
+			this.interactions.get(interaction_id).addOccurence(patient_id);
+			this.num_occurences++;
 		}
-		this.metas.get(meta_id).addOccurence(patient_id);
-		if (!interactions.containsKey(interaction_id)) {
-			InteractionStat m = new InteractionStat (interaction_id);
-			this.interactions.put(interaction_id, m);
-		}
-		this.interactions.get(interaction_id).addOccurence(patient_id);
-		this.num_occurences++;
 		if (!patient_id.equals(lastPatientId)) {
 			lastPatientId=patient_id;
 			this.num_patients++;
 		}
 	}
 	
-	public void addPatientNoInteractions () {
-		this.num_patients++;
-	}
 	
-	public void addTarget(String meta_id, String interaction_id, String target_id) {
-		this.addTargetAll(target_id);
+	public void addTarget(Model model, String patient_id, String meta_id, String interaction_id, String target_id) {
+		this.addTargetAll(model,patient_id, target_id);
 		if (meta_id!= null && interaction_id!=null && !meta_id.isEmpty() && !interaction_id.isEmpty()) {
-			this.metas.get(meta_id).addTarget(target_id);
-			this.interactions.get(interaction_id).addTarget(target_id);
+			this.metas.get(meta_id).addTarget(model,patient_id,target_id);
+			this.interactions.get(interaction_id).addTarget(model,patient_id,target_id);
 		}
 	}
 	
-	private void addTargetAll(String id) {
-		if (!targets_all.containsKey(id)) {
-			this.targets_all.put(id, 1);
-		} else 
-			this.targets_all.put(id, this.targets_all.get(id)+1);
+	private void addTargetAll(Model model, String patient_id, String target_id) {
+		if (!targets_allpatients.containsKey(model)) {
+			targets_allpatients.put(model, new HashMap<String,TargetStat>());
+		}
+		if (!targets_allpatients.get(model).containsKey(target_id)) {
+			this.targets_allpatients.get(model).put(target_id, new TargetStat(1, patient_id));
+		} else targets_allpatients.get(model).get(target_id).addNum(patient_id);
 	}
 	
 	
@@ -137,12 +174,14 @@ public class DDIStats {
 	}
 	
 	
-	public int getNumberTargetKeys() {
-		return this.targets_all.size();
+	public int getNumberTargetKeys(Model model) {
+		if (!targets_allpatients.containsKey(model)) return 0;
+		return this.targets_allpatients.get(model).size();
 	}
 	
-	public Set<String> getTargetNames() {
-		return this.targets_all.keySet();
+	public Set<String> getTargetNames(Model model) {
+		if (!targets_allpatients.containsKey(model)) return Collections.<String>emptySet();;
+		return this.targets_allpatients.get(model).keySet();
 	}
 	
 	
@@ -175,13 +214,19 @@ public class DDIStats {
 		return this.num_occurences;
 	}
 	
-	public int getNumTargets (String id, boolean ismeta, String target) {
-		if (ismeta) return metas.get(id).getTargetNum(target);
-		else return interactions.get(id).getTargetNum(target);
+	public int getNumTargetsPatients (Model model,String id, boolean ismeta, String target) {
+		if (ismeta) return metas.get(id).getNumTargetsPatients(model,target);
+		else return interactions.get(id).getNumTargetsPatients(model,target);
 	}
 	
-	public int getNumTargetsAll (String target) {
-		return targets_all.get(target);
+	public int getNumTargetsOcc (Model model,String id, boolean ismeta, String target) {
+		if (ismeta) return metas.get(id).getNumTargetsOcc(model,target);
+		else return interactions.get(id).getNumTargetsOcc(model,target);
+	}
+	
+	public int getNumTargetsAllPatients (Model model,String target) {
+		if (!targets_allpatients.containsKey(model)) return 0;
+		return targets_allpatients.get(model).get(target).num;
 	}
 	
 }
