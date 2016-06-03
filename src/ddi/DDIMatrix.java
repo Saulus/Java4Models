@@ -73,7 +73,7 @@ class Substance {
 		Iterator<Interaction> iterator = interactions.iterator();
 		while (iterator.hasNext()) {
 			Interaction in = iterator.next();
-			if (!in.isVerified()) iterator.remove();
+			if (!in.isVerified() || !in.hasMeta()) iterator.remove();
 		}
 	}
 }
@@ -216,6 +216,10 @@ class Interaction {
 	
 	public boolean isVerified() {
 		return this.isVerified;
+	}
+	
+	public boolean hasMeta() {
+		return this.meta!=null;
 	}
 	
 	public String getID() {
@@ -396,12 +400,17 @@ public class DDIMatrix {
 	}
 	
 	
+	/*
+	 * clears all interactions that
+	 * - have not bee verified (i.e. are in interactions-file)
+	 * - have no meta-interaction (i.e. not on toplist)
+	 */
 	public void clearAllUnverifiedInteractions() {
 		//remove from all lists (first from here)
 		Iterator<HashMap.Entry<String, Interaction>> iterator = interactions.entrySet().iterator();
 		while (iterator.hasNext()) {
 			HashMap.Entry<String, Interaction> entry = iterator.next();
-			if (!entry.getValue().isVerified()) iterator.remove();
+			if (!entry.getValue().isVerified() || !entry.getValue().hasMeta()) iterator.remove();
 		}
 		//second from substances
 		for (Substance sub : substances.values()) {

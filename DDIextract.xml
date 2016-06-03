@@ -3,27 +3,27 @@
 	<inputfiles>
 		<datafile>
 			<data_id>stamm</data_id>
-			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Stamm.csv</path>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Stamm.csv.sorted.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
-			<is_sorted>False</is_sorted>
+			<is_sorted>True</is_sorted>
 		</datafile>
 		<datafile>
 			<data_id>Arzneimittel</data_id>
-			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_AM_EVO.csv</path>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_AM_EVO.csv.sorted.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
-			<is_sorted>False</is_sorted>
+			<is_sorted>True</is_sorted>
 		</datafile>
 		<datafile>
 			<data_id>arzt_diagnose</data_id>
-			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Arzt_Diagnose.csv</path>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Arzt_Diagnose.csv.sorted.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
-			<is_sorted>False</is_sorted>
+			<is_sorted>True</is_sorted>
 		</datafile>
 		<datafile>
 			<data_id>kh_diagnose</data_id>
-			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_KH_Diagnose.csv</path>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_KH_Diagnose.csv.sorted.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
-			<is_sorted>False</is_sorted>
+			<is_sorted>True</is_sorted>
 		</datafile>
 		<datafile>
 			<data_id>pzn_informationen</data_id>
