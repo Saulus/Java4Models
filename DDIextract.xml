@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+	<inputfiles>
+		<datafile>
+			<data_id>Arzneimittel2012</data_id>
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\am_evo_v.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>False</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>pzn_informationen</data_id>
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Dosing\pac_ddd.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+			<separator>|</separator>
+		</datafile>
+		<datafile>
+			<data_id>pzn_wirkstoff</data_id>
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Dosing\pzn_wirkstoffe_2015_11.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+			<separator>|</separator>
+		</datafile>
+		<datafile>
+			<data_id>wirkstoffe_interaktionen</data_id>
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Dosing\wirkstoffe_interaktionen_2015_11.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+			<separator>|</separator>
+		</datafile>
+		<datafile>
+			<data_id>interaktionen</data_id>
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Dosing\interaktionen_2015_11.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+			<separator>|</separator>
+		</datafile>
+		<datafile>
+			<data_id>meta_interaktionen</data_id>
+			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Dosing\meta_interaktionen.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+			<separator>;</separator>
+		</datafile>
+	</inputfiles>
+	<inputfilter>
+		<filter>
+			<data_id>interaktionen</data_id>
+			<field>Schweregrad_Id</field> <!-- Substrings in Klammern, z.B. ICD(1-3) -->
+			<inclusion>3,4,5</inclusion><!-- Beispiele: Liste mit Kommata; Oder Bindestrich: F32-F33  F32- (i.e. lexographischer String-Vergleich), oder (Filepath); empty: all-->
+			<exclusion></exclusion>
+		</filter>
+		<filter>
+			<data_id>interaktionen</data_id>
+			<field>Potentiell</field>
+			<inclusion></inclusion>
+			<exclusion>1</exclusion>
+		</filter>
+	</inputfilter>
+	<ddiconfiguration><!-- optional; if configured, creates additional inputfile with PID (idfield from drugdatafile), <meta_interactionfield>, <interactionfield>,startdate, enddate, <dosefield> -->
+		<data_id>ddi</data_id> <!-- Output-File-ID for Model building -->
+		<keep_fields>PID,INTERAKTION_ID,META_ID,STARTDATE,ENDDATE,PACKUNGSGROESSE</keep_fields><!-- Optional, fieldnames: which ddi fields to keep in output matrix; if not configured, keeps all -->
+		<createStatistics>True</createStatistics>
+		<datafile_references>
+			<patient2drug>Arzneimittel2012</patient2drug>
+			<druginfo>pzn_informationen</druginfo><!-- additional information per drug, i.e. reach information, dose -->
+			<drug2substance>pzn_wirkstoff</drug2substance>
+			<substance2interaction>wirkstoffe_interaktionen</substance2interaction>
+			<interactioninfo>interaktionen</interactioninfo>
+			<interaction2meta>meta_interaktionen</interaction2meta>
+		</datafile_references>
+		<fieldnames> <!-- must be same in all referenced datafiles -->
+			<start>startdate</start> <!-- Output-Field name for Model definition -->
+			<end>enddate</end> <!-- Output-Field name for Model definition -->
+			<drug>PZN</drug>
+			<date>Abgabedatum</date>
+			<drugreach>Reichweite</drugreach><!-- required, must be in days -->
+			<drugreach_standard>28</drugreach_standard> <!-- if reach not available, in days  -->
+			<dose>Packungsgroesse</dose> <!-- optional, will also be added to Output-File (as maximum from all input drugs) -->
+			<substance>WIRKSTOFF_ID</substance>
+			<interaction>INTERAKTION_ID</interaction>
+			<meta_interaction>META_ID</meta_interaction>
+		</fieldnames>
+	</ddiconfiguration>
+	<outputpath>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\DDI</outputpath>
+	<modelpath>C:\Users\HellwigP\Documents\4 Technology\00 Development\Java4Models\Models</modelpath>
+	<!-- optionale Parameter -->
+	<createProfilDense>True</createProfilDense>
+	<createProfilMatrixMarket>True</createProfilMatrixMarket>
+	<createProfilSvmlight>True</createProfilSvmlight>
+	<addPidToSvm>True</addPidToSvm><!-- adds "# PID" to each row in svm -->
+	<createScores>False</createScores>
+	<outputfile>scores.csv</outputfile>
+	<interceptname>INTERCEPT</interceptname>
+	<reference_date>01JAN2012</reference_date>
+	<upcase>True</upcase> <!-- wenn True: Lese alle Daten-Felder als "Upcase" ein -->
+	<logfile>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\debug.log</logfile>
+</configuration>

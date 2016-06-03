@@ -1,0 +1,4 @@
+Variable;VarBerechnung;VarAggregation;VarFilter;Einschluss;Ausschluss;Target;hideme;Datei;Spalte1;Filter1;Spalte2;Filter2;Spalte3;Filter3;Spalte4;Filter4;Spalte5;Filter5
+knr$1;;;;;;;;arzt_diagnose2009_g1;KNR;1-366;Diagnosesicherheit;G;;;;;;
+ATC_$1;;;;;;;;Arzneimittel;ATC_Code(1-4);D07C,A02B,C07A;;;;;;;;
+

@@ -55,6 +55,8 @@ public class Worker {
 	/** The outputfile. */
 	private CSVWriter outputfile; 
 	
+	DDIworker ddiworker = null;
+	
 	/** The profildensefiles */
 	private HashMap<Model,CSVWriter> profildensefile = new HashMap<Model,CSVWriter>();
 	private HashMap<Model,CSVWriter> profildensefile_targets = new HashMap<Model,CSVWriter>();
@@ -195,7 +197,7 @@ public class Worker {
 		}
 		//1b. Init DDI
 		if (worked && config.ddiconfiguration!=null) {
-			DDIworker ddiworker = new DDIworker();
+			ddiworker = new DDIworker();
 			worked = ddiworker.init(config.ddiconfiguration, inputfiles,config.upcase());
 			if (!worked) return worked;
 			if (this.ourLeaderfile != null) LOGGER.log(Level.WARNING,"Zwei leaderfiles sind nicht möglich! Das File " + ourLeaderfile.getPath() + " wird nicht als Leader genutzt." );
@@ -522,6 +524,10 @@ public class Worker {
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE,"Fehler beim Schließen der Dateien.", e);
 			worked = false;
+		}
+		if (ddiworker!=null) {
+			worked = ddiworker.finish(config.getOutputPath());
+			if (worked) LOGGER.log(Level.INFO,"DDI Statistiken geschrieben");
 		}
 		return worked;
 	}
