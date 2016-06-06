@@ -382,10 +382,14 @@ public class DDIMatrix {
 			//double-check for verified interaction (verification and remove happens during read-in of base-matrix, however better safe than sorry)
 			if (in.isVerified()) indexes.addAll(in.getIndexes());
 		}
-		//now adjust overlapping end dates (cut index end)
+		//now adjust overlapping end dates (cut index end if later start day, leave both if same start day)
 		Collections.sort(indexes,new IndexComp());
 		for (int i=1; i<indexes.size(); i++) {
-			if (indexes.get(i).getStartDate().compareTo(indexes.get(i-1).getEndDate()) < 0) indexes.get(i-1).setEnd(indexes.get(i).getStartDate().minusDays(1));
+			//same start day
+			if (indexes.get(i).getStartDate().compareTo(indexes.get(i-1).getStartDate()) == 0) { // do nothing
+			}
+			//later start
+			else if (indexes.get(i).getStartDate().compareTo(indexes.get(i-1).getEndDate()) < 0) indexes.get(i-1).setEnd(indexes.get(i).getStartDate().minusDays(1));
 		}
 		
 		return indexes;
