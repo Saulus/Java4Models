@@ -28,7 +28,7 @@ public class DDIInputFile extends InputFile {
 	
 	private boolean mustSamplePatients=false;
 	private HashMap<Integer,Integer> dates_indexes = new HashMap<Integer,Integer>(); //Day -> Number
-	private HashMap<Integer,Integer> dates_sampled = new HashMap<Integer,Integer>(); //Day -> Number
+	private HashMap<Integer,Double> dates_sampled = new HashMap<Integer,Double>(); //Day -> Number (double for precision in division)
 	
 	
 	public DDIInputFile (DDIConfiguration ddiconfig, InputFile drugdata_file,DDIMatrix ddimatrix, boolean upcaseData) throws Exception {
@@ -94,6 +94,7 @@ public class DDIInputFile extends InputFile {
 			drugdata_file.warpToCorrectID(patient.getPid());
 			ArrayList<Index> indexes = ddimatrix.getLiveInteractionIndexes();
 			boolean hasInteractions = false;
+			//sample indexes if has no interactions
 			if (indexes.size()>0) {
 				hasInteractions=true;
 			} else {
@@ -138,14 +139,14 @@ public class DDIInputFile extends InputFile {
 		 * - first finding current max quotient from used / available counts
 		 * - then using the first day where the quota is not reached
 		 */
-		double quota=0; //init very small value
+		double quota=0.000001; //init very small value
 		for (Integer day : dates_indexes.keySet()) {
 			if (dates_sampled.containsKey(day))
 				quota = Math.max(quota, dates_sampled.get(day)/dates_indexes.get(day));
-			else dates_sampled.put(day,0);
+			else dates_sampled.put(day,0.);
 		}
 		for (Integer day : dates_indexes.keySet()) {
-			if ((dates_sampled.get(day)/dates_indexes.get(day))<quota) {
+			if (((double)dates_sampled.get(day)/dates_indexes.get(day))<quota) {
 				canBeSampled=true;
 				start=myreferencedate.plusDays(day);
 				dates_sampled.put(day,dates_sampled.get(day)+1);
@@ -165,7 +166,7 @@ public class DDIInputFile extends InputFile {
 			int day=Days.daysBetween(myreferencedate, start).getDays();
 			if (dates_sampled.containsKey(day))
 				dates_sampled.put(day,dates_sampled.get(day)+1);
-			else dates_sampled.put(day,1);
+			else dates_sampled.put(day,1.);
 		}
 		LocalDate end = start.plusDays(ddimatrix.getDrugreach_standard());
 		Index index= new Index(start,end,"","");
