@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import au.com.bytecode.opencsv.CSVWriter;
+import configuration.Consts;
 import configuration.Filter;
 
 /**
@@ -25,6 +26,8 @@ public class Sorter extends InputFile {
 	
 	/** The dbfile. */
 	private String dbfile;
+	
+	private char separator = Consts.idfieldseparator.charAt(0);
 	
 	
 	/**
@@ -52,6 +55,7 @@ public class Sorter extends InputFile {
 		}
 		Class.forName("org.sqlite.JDBC");
 		sqldb = DriverManager.getConnection("jdbc:sqlite:"+dbfile);
+		this.separator=separator.charAt(0);
 	}
 
 	/**
@@ -124,7 +128,7 @@ public class Sorter extends InputFile {
 			stmt.executeUpdate("create index sort_id on sortdb ("+ this.getIDFields() +");");
 			stmt.close();   
 		//3. dump db sorted
-		CSVWriter outputfile = new CSVWriter(new FileWriter(this.getPath()+sortedfileext), ';', CSVWriter.NO_QUOTE_CHARACTER);
+		CSVWriter outputfile = new CSVWriter(new FileWriter(this.getPath()+sortedfileext), this.separator, CSVWriter.NO_QUOTE_CHARACTER);
 		stmt = sqldb.createStatement();
 	    ResultSet orderedTable = stmt.executeQuery( "SELECT * FROM sortdb order by "+ this.getIDFields() + ";" );
 	    outputfile.writeAll(orderedTable, true);
