@@ -49,6 +49,22 @@ class Drug {
 		return dose;
 	}
 	
+	public void removeSubstance (Substance subs) {
+		substances.remove(subs);
+	}
+	
+	public void clearAllSubstancesWithoutInteractions () {
+		Iterator<Substance> iterator = substances.iterator();
+		while (iterator.hasNext()) {
+			Substance sub = iterator.next();
+			if (!sub.hasInteraction()) iterator.remove();
+		}
+	}
+	
+	public boolean hasSubstance() {
+		return substances.size()>0;
+	}
+	
 }
 
 
@@ -69,12 +85,21 @@ class Substance {
 		}
 	}
 	
+	/*
 	public void clearUnverifiedInteractions () {
 		Iterator<Interaction> iterator = interactions.iterator();
 		while (iterator.hasNext()) {
 			Interaction in = iterator.next();
 			if (!in.isVerified() || !in.hasMeta()) iterator.remove();
 		}
+	}*/
+	
+	public void removeInteraction (Interaction i) {
+		interactions.remove(i);
+	}
+	
+	public boolean hasInteraction () {
+		return interactions.size()>0;
 	}
 }
 
@@ -264,6 +289,15 @@ class MetaInteraction {
 		}
 		return subs.size();
 	}
+	
+	public void removeInteraction (Interaction i) {
+		interactions.remove(i);
+	}
+	
+	public boolean hasInteraction () {
+		return interactions.size()>0;
+	}
+	
 }
 
 
@@ -408,18 +442,45 @@ public class DDIMatrix {
 	 * clears all interactions that
 	 * - have not bee verified (i.e. are in interactions-file)
 	 * - have no meta-interaction (i.e. not on toplist)
+	 * 
+	 * clear also meta-interactions that have no interaction left
 	 */
 	public void clearAllUnverifiedInteractions() {
-		//remove from all lists (first from here)
+		//remove from all lists
 		Iterator<HashMap.Entry<String, Interaction>> iterator = interactions.entrySet().iterator();
 		while (iterator.hasNext()) {
 			HashMap.Entry<String, Interaction> entry = iterator.next();
-			if (!entry.getValue().isVerified() || !entry.getValue().hasMeta()) iterator.remove();
+			if (!entry.getValue().isVerified() || !entry.getValue().hasMeta()) {
+				//first remove from meta
+				if (entry.getValue().hasMeta())	entry.getValue().getMeta().removeInteraction(entry.getValue());
+				//second from substances
+				for (Substance sub : entry.getValue().getSubsMust()) {
+					sub.removeInteraction(entry.getValue());
+				}
+				//third from here
+				iterator.remove();
+			}
 		}
-		//second from substances
-		for (Substance sub : substances.values()) {
-			sub.clearUnverifiedInteractions();
+		//now clear all metas without interactions
+		Iterator<HashMap.Entry<String, MetaInteraction>> iterator2 = metas.entrySet().iterator();
+		while (iterator2.hasNext()) {
+			HashMap.Entry<String, MetaInteraction> entry = iterator2.next();
+			if (!entry.getValue().hasInteraction()) iterator2.remove();
 		}
+		//now clear all substances without interactions from here
+		Iterator<HashMap.Entry<String, Substance>> iterator3 = substances.entrySet().iterator();
+		while (iterator3.hasNext()) {
+			HashMap.Entry<String, Substance> entry = iterator3.next();
+			if (!entry.getValue().hasInteraction()) iterator3.remove();
+		}
+		//and from drugs, plus clear drugs
+		Iterator<HashMap.Entry<String, Drug>> iterator4 = drugs.entrySet().iterator();
+		while (iterator4.hasNext()) {
+			HashMap.Entry<String, Drug> entry = iterator4.next();
+			entry.getValue().clearAllSubstancesWithoutInteractions();
+			if (!entry.getValue().hasSubstance()) iterator4.remove();
+		}
+		
 	}
 	
 	public int getNumberDrugs() {

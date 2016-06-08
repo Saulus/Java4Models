@@ -34,21 +34,21 @@
 		</datafile>
 		<datafile>
 			<data_id>pzn_wirkstoff</data_id>
-			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\Dosing\pzn_wirkstoffe_2015_05.csv</path>
+			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\Dosing\pzn_wirkstoffe_2016_05.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
 			<is_sorted>True</is_sorted>
 			<separator>|</separator>
 		</datafile>
 		<datafile>
 			<data_id>wirkstoffe_interaktionen</data_id>
-			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\Dosing\wirkstoffe_interaktionen_2015_05.csv</path>
+			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\Dosing\wirkstoffe_interaktionen_2016_05.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
 			<is_sorted>True</is_sorted>
 			<separator>|</separator>
 		</datafile>
 		<datafile>
 			<data_id>interaktionen</data_id>
-			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\Dosing\interaktionen_2015_05.csv</path>
+			<path>C:\Users\hellwigp\Documents\5 Research\59 Projekte\DDI\Source_Data\Dosing\interaktionen_2016_05.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
 			<is_sorted>True</is_sorted>
 			<separator>|</separator>
@@ -68,12 +68,12 @@
 			<inclusion>3,4,5</inclusion><!-- Beispiele: Liste mit Kommata; Oder Bindestrich: F32-F33  F32- (i.e. lexographischer String-Vergleich), oder (Filepath); empty: all-->
 			<exclusion></exclusion>
 		</filter>
-		<filter>
+		<!--<filter>
 			<data_id>interaktionen</data_id>
 			<field>Potentiell</field>
 			<inclusion></inclusion>
 			<exclusion>1</exclusion>
-		</filter>
+		</filter>-->
 	</inputfilter>
 	<ddiconfiguration><!-- optional; if configured, creates additional leader-inputfile with PID (idfield from drugdatafile), <meta_interactionfield>, <interactionfield>,startdate, enddate, <dosefield> -->
 		<data_id>ddi</data_id> <!-- Output-File-ID for Model building -->
