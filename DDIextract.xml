@@ -94,7 +94,9 @@
 			<drug>PZN</drug>
 			<date>Abgabedatum</date>
 			<drugreach>Reichweite</drugreach><!-- required, must be in days -->
-			<drugreach_standard>28</drugreach_standard> <!-- if reach not available, in days  -->
+			<drugreach_min>1</drugreach_min><!-- minimum allowed, smaller values will be changed to standard -->
+			<drugreach_max>100</drugreach_max><!-- maximum allowed, bigger values will be changed to standard -->
+			<drugreach_standard>28</drugreach_standard> <!-- if reach not available or incorrect, in days  -->
 			<dose>Packungsgroesse</dose> <!-- optional, will also be added to Output-File (as maximum from all input drugs) -->
 			<substance>WIRKSTOFF_ID</substance>
 			<interaction>INTERAKTION_ID</interaction>

@@ -323,12 +323,18 @@ public class DDIMatrix {
 	HashMap<String,MetaInteraction> metas = new HashMap<String,MetaInteraction> ();
 	
 	private int drugreach_standard;
+	private int drugreach_min;
+	private int drugreach_max;
 	
 	
 	
-	public  DDIMatrix(String drugreach_standard) {
+	public  DDIMatrix(String drugreach_standard, String drugreach_min, String drugreach_max) {
 		int reach = Integer.parseInt(drugreach_standard);
+		int min = Integer.parseInt(drugreach_min);
+		int max = Integer.parseInt(drugreach_max);
 		this.drugreach_standard=reach;
+		this.drugreach_min=min;
+		this.drugreach_max=max;
 	}
 	
 	//init
@@ -353,7 +359,7 @@ public class DDIMatrix {
 		else {
 			Double reachdouble = Double.parseDouble(reach);
 			reachint = reachdouble.intValue();
-			if (reachint<=0) reachint=drugreach_standard;
+			if (reachint<=0 || reachint<drugreach_min || reachint>drugreach_max) reachint=drugreach_standard;
 		}
 		if (!drugs.containsKey(drug_id)) {
 			Drug drug = new Drug (drug_id,drugreach_standard);

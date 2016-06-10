@@ -38,7 +38,7 @@ public class DDIworker {
 		this.ddiconfig=ddiconfig;
 		boolean worked = true;
 		//1. Open Inputfiles, create matrix, remove inputfile from list
-		ddimatrix = new DDIMatrix(ddiconfig.getDrugreachStandard());
+		ddimatrix = new DDIMatrix(ddiconfig.getDrugreachStandard(),ddiconfig.getDrugreachMin(),ddiconfig.getDrugreachMax());
 		
 		ListIterator<InputFile> itFile = inputfiles.listIterator();
 		InputFile infile;

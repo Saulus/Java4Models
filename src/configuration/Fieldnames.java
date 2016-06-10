@@ -17,6 +17,10 @@ public class Fieldnames {
 	@Element
 	public String drugreach;
 	@Element
+	public String drugreach_min;
+	@Element
+	public String drugreach_max;
+	@Element
 	public String drugreach_standard;
 	@Element
 	public String substance;

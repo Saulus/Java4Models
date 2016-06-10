@@ -67,8 +67,16 @@ public class DDIConfiguration {
 		return fieldnames.drugreach.toUpperCase();
 	}
 	
+	public String getDrugreachMin() {
+		return fieldnames.drugreach_min;
+	}
+	
+	public String getDrugreachMax() {
+		return fieldnames.drugreach_max;
+	}
+	
 	public String getDrugreachStandard() {
-		return fieldnames.drugreach_standard.toUpperCase();
+		return fieldnames.drugreach_standard;
 	}
 	
 	public String getSubstancefield() {
