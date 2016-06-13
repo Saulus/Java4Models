@@ -92,7 +92,7 @@ public final class Consts {
 	public static final String bracketEsc = "[\\(\\)]";
 	
 	public static final String wahr = "TRUE";
-	public static final String idfieldseparator = ",";
+	public static final String fieldcombineseparator = ","; //also idfields
 	public static final String idfieldheader = "ID";
 	
 	

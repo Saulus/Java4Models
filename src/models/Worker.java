@@ -55,7 +55,8 @@ public class Worker {
 	/** The outputfile. */
 	private CSVWriter outputfile; 
 	
-	DDIworker ddiworker = null;
+	private boolean ddimode = false;
+	private DDIworker ddiworker = null;
 	
 	/** The profildensefiles */
 	private HashMap<Model,CSVWriter> profildensefile = new HashMap<Model,CSVWriter>();
@@ -198,10 +199,11 @@ public class Worker {
 		//1b. Init DDI
 		if (worked && config.ddiconfiguration!=null) {
 			ddiworker = new DDIworker();
-			worked = ddiworker.init(config.ddiconfiguration, inputfiles,config.upcase());
+			worked = ddiworker.init(config.ddiconfiguration, inputfiles,config.getOutputPath(),config.upcase());
 			if (!worked) return worked;
 			if (this.ourLeaderfile != null) LOGGER.log(Level.WARNING,"Zwei leaderfiles sind nicht möglich! Das File " + ourLeaderfile.getPath() + " wird nicht als Leader genutzt." );
 			ourLeaderfile=ddiworker.getDDIInputFile();
+			ddimode=true;
 		}
 		//2. Create and Import Models
 		List<String> processedModels = new ArrayList<String>();  
@@ -334,7 +336,8 @@ public class Worker {
 			rowNo++;
 		    //for each inputfiles file... 
 			for (InputFile infile : inputfiles) {
-				//it its the leaderfile: process only once
+				//if its the leaderfile: process only once
+				//OBSOLETE: but for ddimode: loop traditional (just different decision when to stop, based on dates in DDIInputFile) 
 				if (infile == ourLeaderfile) {
 					try {
 						workThroughInfile(infile,patient);
@@ -345,7 +348,7 @@ public class Worker {
 					}
 				} else {
 					//if no leaderfile: ..loop...that still has a valid Row and the correct Patient  
-					while ((infile.hasRow()) && patient.isPatient(infile.getID())) {
+					while ((infile.hasRow()) && infile.isPatient(patient.getPid())) {
 						try {
 							workThroughInfile(infile,patient);
 						} catch (Exception e) {
@@ -376,7 +379,7 @@ public class Worker {
 				}
 				//2. Profiles
 				if (config.createProfilDense() || config.createProfilSparse() || config.createProfilSvmlight()) {
-					//if leaderfile: get all leaderfile_columns
+					//if leaderfile: get all leaderfile_columns (OBSOLETE: not for ddimode -> their another optiopns exists)
 					String[] leaderrow = null;
 					if (this.ourLeaderfile!=null && this.ourLeaderfile.hasLeaderCols()) {
 						leaderrow = new String[this.ourLeaderfile.getLeaderColnames().length];
@@ -433,8 +436,8 @@ public class Worker {
 								*/
 							} //end svmlight
 							//ddi worker process
-							if (ddiworker!=null) {
-								worked = ddiworker.process(model,patient.getPid(),patient.getAllTargetVariables(model));
+							if (ddimode) {
+								worked = ddiworker.processModel(model,patient.getPid(),patient.getAllTargetVariables(model));
 							}
 						}
 					} //end rolling through models
@@ -450,6 +453,10 @@ public class Worker {
 							}
 						}
 					} else rowNo = rowNo-1; //if patient not included: reset no;
+					//call ddiworker for patient
+					if (ddiworker!=null) {
+						worked = ddiworker.processPatient();
+					}
 				} //end if profile needs creation
 				if (pNo % 50000 == 0) {
 					LOGGER.log(Level.INFO,Long.toString(pNo) + " Patienten verarbeitet.");
@@ -529,7 +536,7 @@ public class Worker {
 				    	worked = writeSvmlightHeader(config.getProfilfileSvmlightHeader(model.getName(),true),knownVariables_targets.get(model),null);
 				    }*/
 				}
-				if (ddiworker!=null) {
+				if (ddimode) {
 					worked = ddiworker.finish(model,config.getOutputPath());
 					if (worked) LOGGER.log(Level.INFO,"DDI Statistiken geschrieben für Model " + model.getName());
 				}

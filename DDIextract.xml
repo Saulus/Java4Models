@@ -75,9 +75,14 @@
 			<exclusion>1</exclusion>
 		</filter>-->
 	</inputfilter>
-	<ddiconfiguration><!-- optional; if configured, creates additional leader-inputfile with PID (idfield from drugdatafile), <meta_interactionfield>, <interactionfield>,startdate, enddate, <dosefield> -->
+	<ddiconfiguration>
+		<!-- optional; if configured, creates additional leader-inputfile with PID (idfield from drugdatafile), <meta_interactionfield>, <interactionfield>,startdate, enddate, <dosefield> -->
+		<!-- example: PID,INTERAKTION_ID,META_ID,STARTDATE,ENDDATE,PACKUNGSGROESSE -->
+		<!-- in final profile: interactions with same startdate will be combined in one row -->
+		<!-- these fields can be used in models -->
 		<data_id>ddi</data_id> <!-- Output-File-ID for Model building -->
-		<keep_fields>PID,INTERAKTION_ID,META_ID,STARTDATE,ENDDATE,PACKUNGSGROESSE</keep_fields><!-- Optional, fieldnames: which ddi fields to keep in output matrix; if not configured, keeps all -->
+		<writeRowData>ddirows.csv</writeRowData> <!-- optional; if set, writes information per profile row  (i.e. pid, startdate, enddate, interactions = might be multiple)  -->
+		<keep_fields></keep_fields><!-- Optional, fieldnames: which ddi fields to keep in output matrix; if not configured, keeps all, e.g.: PID,INTERAKTION_ID,META_ID,STARTDATE,ENDDATE,PACKUNGSGROESSE -->
 		<samplePatientsWithout>True</samplePatientsWithout>
 		<createStatistics>True</createStatistics>
 		<datafile_references>

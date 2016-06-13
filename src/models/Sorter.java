@@ -27,7 +27,7 @@ public class Sorter extends InputFile {
 	/** The dbfile. */
 	private String dbfile;
 	
-	private char separator = Consts.idfieldseparator.charAt(0);
+	private char separator = Consts.fieldcombineseparator.charAt(0);
 	
 	
 	/**

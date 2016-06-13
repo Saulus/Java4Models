@@ -80,8 +80,8 @@ public class ColumnFilter {
 				}
 			} else {
 				//now: comma-separated or range?
-				if (filter.contains(Consts.idfieldseparator)) {
-					String[] tokens = filter.split(",");
+				if (filter.contains(Consts.fieldcombineseparator)) {
+					String[] tokens = filter.split(Consts.fieldcombineseparator);
 					filtercrit.values = new HashSet<String>();
 					for (String token : tokens) {
 						filtercrit.values.add(token);

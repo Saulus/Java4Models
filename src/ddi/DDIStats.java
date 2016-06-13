@@ -146,7 +146,7 @@ public class DDIStats {
 		}
 	}
 	
-	
+
 	public void addTarget(Model model, String patient_id, String meta_id, String interaction_id, String target_id) {
 		this.addTargetAll(model,patient_id, target_id);
 		if (meta_id!= null && interaction_id!=null && !meta_id.isEmpty() && !interaction_id.isEmpty()) {

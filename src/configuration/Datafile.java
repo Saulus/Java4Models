@@ -111,7 +111,7 @@ public class Datafile {
 	
 	public String[] getIdfeld() {
 		if (idfield==null) idfield = "PID";
-		String[] tokens = idfield.toUpperCase().split(Consts.idfieldseparator);
+		String[] tokens = idfield.toUpperCase().split(Consts.fieldcombineseparator);
 		return tokens;
 	}
 	
@@ -136,7 +136,7 @@ public class Datafile {
 	public String[] getSpecificColumns() {
 		String[] tokens = null;
 		if (leadingtable_columns==null) return tokens;
-		tokens = leadingtable_columns.split(Consts.idfieldseparator);
+		tokens = leadingtable_columns.split(Consts.fieldcombineseparator);
 		return tokens;
 	}
 	

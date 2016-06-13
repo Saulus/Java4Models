@@ -365,7 +365,7 @@ public class InputFile {
 	public void setLeaderColnames (String[] cols) {
 		this.leaderColnames = null; //reset leadercolnames
 		this.hasLeaderCols=false;
-		if (cols.length > 0 && !cols[0].equals("")) {
+		if (cols!= null && cols.length > 0 && !cols[0].equals("")) {
 			ArrayList<String> addcols= new ArrayList<String>();
 			for(int i=0; i<cols.length; i++) {
 				cols[i]=cols[i].toUpperCase();
@@ -426,6 +426,10 @@ public class InputFile {
 		} else if (filetype.equals(Consts.csvFlag)) {
 			csvparse.close();
 		}
+	}
+	
+	public boolean isPatient (String id) {
+		return this.getID().equals(id);
 	}
 	
 }

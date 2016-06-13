@@ -10,8 +10,11 @@ public class DDIConfiguration {
 	@Element
 	public String data_id;
 	
-	@Element
-	public String keep_fields;
+	@Element(defaultValue="false")
+	public String writeRowData;
+	
+	//@Element
+	//public String writeDebugData;
 	
 	@Element(defaultValue="false")
 	public boolean createStatistics;
@@ -92,9 +95,25 @@ public class DDIConfiguration {
 		return fieldnames.interaction.toUpperCase();
 	}
 	
+	/*
+	 * arbitrary field for combining multiple interactions
+	 */
+	public String getInteractionfieldCombined() {
+		return fieldnames.interaction.toUpperCase() + "s";
+	}
+	
+	
 	public String getMeta_interactionfield() {
 		return fieldnames.meta_interaction.toUpperCase();
 	}
+	
+	/*
+	 * arbitrary field for combining multiple interactions
+	 */
+	public String getMeta_interactionfieldCombined() {
+		return fieldnames.meta_interaction.toUpperCase() + "s";
+	}
+	
 	
 	public String getStartfield() {
 		return fieldnames.start.toUpperCase();
@@ -104,9 +123,11 @@ public class DDIConfiguration {
 		return fieldnames.end.toUpperCase();
 	}
 	
-	public String[] getKeepFields() {
-		if (keep_fields==null) return null;
-		String[] tokens = keep_fields.toUpperCase().split(Consts.idfieldseparator);
-		return tokens;
+	public String getRowDataFile() {
+		return this.writeRowData;
 	} 
+	
+	/*public String getDebugDataFile() {
+		return this.writeDebugData;
+	} */
 }

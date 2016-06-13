@@ -20,6 +20,10 @@ public class DDIworker {
 	private boolean createStats = false;
 	private DDIStats stats;
 	
+	private boolean writeRowData = false;
+	private CSVWriter rowfile;
+	private String rowfilename;
+	
 	
 	public DDIworker () {
 		
@@ -34,7 +38,7 @@ public class DDIworker {
 	 * - after InputFiles are created (and sorted, if needed)
 	 * - before Models are created  
 	 */
-	public boolean init(DDIConfiguration ddiconfig,ArrayList<InputFile> inputfiles,boolean upcase) {
+	public boolean init(DDIConfiguration ddiconfig,ArrayList<InputFile> inputfiles,String outputpath,boolean upcase) {
 		this.ddiconfig=ddiconfig;
 		boolean worked = true;
 		//1. Open Inputfiles, create matrix, remove inputfile from list
@@ -181,6 +185,19 @@ public class DDIworker {
 			this.createStats=true;
 			ddifile.mustCreateStatistic(stats);
 		}
+		//create new output for base data
+		if (worked && ddiconfig.getRowDataFile()!=null) {
+			rowfilename = outputpath+ "\\"+ddiconfig.getRowDataFile();
+			try {
+				rowfile = new CSVWriter(new FileWriter(rowfilename), ';', CSVWriter.NO_QUOTE_CHARACTER);
+				//header
+				rowfile.writeNext(ddifile.getLeaderColnames());
+				this.writeRowData=true;
+			} catch (Exception e) {
+				LOGGER.log(Level.SEVERE,"Die Outputdatei " + rowfilename + " konnte nicht erstellt werden.", e);
+				worked = false;
+			}
+		}
 		if (worked && ddiconfig.samplePatientsWithout) ddifile.mustSamplePatients();
 		return worked;
 		
@@ -191,13 +208,41 @@ public class DDIworker {
 	}
 	
 	
-	public boolean process(Model model,String patient_id, ArrayList<String> targets) { 
+	
+	/*
+	 * adds to statstics: targets per Model
+	 */
+	public boolean processModel(Model model,String patient_id, ArrayList<String> targets) {
+		boolean worked=true;
 		if (this.createStats) {
 			for (String target_id: targets) {
+				/*OBSOLETE // interactions and metas might be a list separated by comma -> add to everyone
+				metas = ddifile.getValueLastCached(ddiconfig.getMeta_interactionfieldCombined()).split(Consts.fieldcombineseparator);
+				interactions = ddifile.getValueLastCached(ddiconfig.getInteractionfieldCombined()).split(Consts.fieldcombineseparator);
+				
+				for (int i=0; i<metas.length;i++) {*/
+				
 				stats.addTarget(model,patient_id, ddifile.getValueLastCached(ddiconfig.getMeta_interactionfield()), ddifile.getValueLastCached(ddiconfig.getInteractionfield()),target_id);
 			}
 		}
-		return true;
+		return worked;
+	}
+	
+	
+	public boolean processPatient() {
+		boolean worked=true;
+		if (this.writeRowData) {
+			String[] row = new String[this.ddifile.getColnames().length];
+			//get Value not from current but from last cached row 
+			for (int i=0;i<row.length;i++) row[i]=this.ddifile.getValueLastCached(this.ddifile.getColnames()[i]);
+			try {
+				rowfile.writeNext(row);
+			} catch (Exception e) {
+				LOGGER.log(Level.SEVERE,"Die Outputdatei " + rowfilename + " konnte nicht geschrieben werden.", e);
+				worked = false;
+			}
+		}
+		return worked;
 	}
 	
 	/*
@@ -207,22 +252,22 @@ public class DDIworker {
 	 */
 	public boolean finish(Model model,String path) { 
 		boolean worked = true;
-		String[] header = new String[9+(this.stats.getNumberTargetKeys(model)*3)];
-		header[0]="id";
-		header[1]="num_interactions";
-		header[2]="num_substances";
-		header[3]="num_patients";
-		header[4]="num_all_patients";
-		header[5]="num_occurences";
-		
-		int i=6;
-		for (String target : this.stats.getTargetNames(model) ) {
-			header[i]="Target_"+target+"_patients";
-			header[i+1]="Target_"+target+"_allpatients";
-			header[i+2]="Target_"+target+"_occurences";
-			i+=3;
-		}
 		if (this.createStats) {
+			String[] header = new String[9+(this.stats.getNumberTargetKeys(model)*3)];
+			header[0]="id";
+			header[1]="num_interactions";
+			header[2]="num_substances";
+			header[3]="num_patients";
+			header[4]="num_all_patients";
+			header[5]="num_occurences";
+			
+			int i=6;
+			for (String target : this.stats.getTargetNames(model) ) {
+				header[i]="Target_"+target+"_patients";
+				header[i+1]="Target_"+target+"_allpatients";
+				header[i+2]="Target_"+target+"_occurences";
+				i+=3;
+			}
 			String filename_int = path+ "\\"+model.getName()+"_stats_interactions.csv"; CSVWriter stat_file_int = null;
 			String filename_met = path+ "\\"+model.getName()+"_stats_metas.csv"; CSVWriter stat_file_met = null;
 			try {
@@ -254,6 +299,14 @@ public class DDIworker {
 			try {
 				stat_file_met.close();
 				stat_file_int.close();
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING,"Fehler beimn Schließen der Dateien.", e);
+				worked = false;
+			}
+		}
+		if (this.writeRowData) {
+			try {
+				rowfile.close();
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING,"Fehler beimn Schließen der Dateien.", e);
 				worked = false;
