@@ -88,7 +88,7 @@ public class InputFile {
 	 * @param filetype the filetype
 	 * @throws Exception the exception
 	 */
-	public InputFile (String datentyp, String path, String filetype, String[] idfields, String separator, boolean upcaseData, ArrayList<Filter> filters) throws Exception {
+	public InputFile (String datentyp, String path, String filetype, String[] idfields, char separator, char quote, boolean upcaseData, ArrayList<Filter> filters) throws Exception {
 		//ToDo: Eigene Reader-Classe als Wrapper für z.B. flatpack, csvreader usw.
 		this.datentyp = datentyp;
 		this.filetype = filetype;
@@ -118,10 +118,9 @@ public class InputFile {
 					flatpackDataset = fixparse.parse();
 					colnames=flatpackDataset.getColumns();
 			} else {
-					char separatorChar = separator.charAt(0);
 					//Issue: Flatpack will not give back CSV column name correctly, when BuffReaderDelimParser is used (getValue works fine)
 					//Workaround: Open csv beforehand and read first line
-					CSVReader reader = new CSVReader(new InputStreamReader(new FileInputStream(path), encoding), separatorChar, '"');
+					CSVReader reader = new CSVReader(new InputStreamReader(new FileInputStream(path), encoding), separator, quote);
 					String [] firstLine;
 					if ((firstLine = reader.readNext()) != null) {
 						colnames = firstLine;  
@@ -131,7 +130,7 @@ public class InputFile {
 					for(int i=0; i<colnames.length; i++) {
 						colnames[i]=colnames[i].toUpperCase();
 					}
-					csvparse = (BuffReaderDelimParser) BuffReaderParseFactory.getInstance().newDelimitedParser(new InputStreamReader(new FileInputStream(path), encoding),separatorChar,'"');
+					csvparse = (BuffReaderDelimParser) BuffReaderParseFactory.getInstance().newDelimitedParser(new InputStreamReader(new FileInputStream(path), encoding),separator,quote);
 					//csvparse.setStoreRawDataToDataSet(true);//for Testing only
 					flatpackDataset = csvparse.parse();
 			}

@@ -148,7 +148,7 @@ public class Worker {
 			//Sort if isSorted=false
 			if (!nextfile.isSorted()) {
 				try {
-					Sorter sortfile = new Sorter(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld(),nextfile.getSeparator(),config.getTmpPath(),filefilters);
+					Sorter sortfile = new Sorter(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld(),nextfile.getSeparator(),nextfile.getQuote(),config.getTmpPath(),filefilters);
 					filefilters=null;
 					LOGGER.log(Level.INFO,"Sortieren gestartet von " + nextfile.getPath());
 					String newpath;
@@ -179,7 +179,7 @@ public class Worker {
 			}
 			try {
 				LOGGER.log(Level.INFO,"Einlesen der Inputdatei "+ nextfile.getPath() + " gestartet.");
-				InputFile newfile = new InputFile(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld(), nextfile.getSeparator(),config.upcase(),filefilters);
+				InputFile newfile = new InputFile(nextfile.getDatentyp(),nextfile.getPath(),nextfile.getFiletype(),nextfile.getIdfeld(), nextfile.getSeparator(),nextfile.getQuote(),config.upcase(),filefilters);
 				newfile.setLeader(nextfile.isLeadingTable());
 				if (newfile.isLeader()) {
 					if (this.ourLeaderfile != null) LOGGER.log(Level.WARNING,"Zwei leaderfiles sind nicht möglich! Das File " + nextfile.getPath() + " wird nicht als Leader genutzt." );

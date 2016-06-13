@@ -171,7 +171,7 @@ public class MM2SVM {
 				}
 				reader.close();
 				
-				Sorter sortfile = new Sorter("matlab",source,Consts.csvFlag,idfield,Consts.csvfieldseparator,path,null);
+				Sorter sortfile = new Sorter("matlab",source,Consts.csvFlag,idfield,Consts.csvfieldseparator.charAt(0),'"',path,null);
 				
 				source = sortfile.sortFileByID(true);
 			} catch (Exception e) {

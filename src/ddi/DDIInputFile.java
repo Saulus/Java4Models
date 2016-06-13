@@ -50,7 +50,7 @@ public class DDIInputFile extends InputFile {
 	
 	/* this creates columns OBSOLETE: and leadercolumns (i.e. summarized columns; same startdays are combined to one row) */
 	public DDIInputFile (DDIConfiguration ddiconfig, InputFile drugdata_file,DDIMatrix ddimatrix, boolean upcaseData) throws Exception {
-		super(ddiconfig.getDatentyp(),"",Consts.ddiFlag,new String[]{"PID"},"",upcaseData,null);
+		super(ddiconfig.getDatentyp(),"",Consts.ddiFlag,new String[]{"PID"},';','"',upcaseData,null);
 		int colsize=5; 	//fields: PID, Interaction_ID, Meta_Id, Start, End
 		if (ddiconfig.getDosefield() != null) colsize++;
 		//int leadercolsize=colsize-2;

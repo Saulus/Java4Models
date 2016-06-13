@@ -11,6 +11,7 @@
 			<leadingtable_columns>A,B,C</leadingtable_columns><!-- optional; Columns der Leadingtable, die behalten werden; wenn leer; keine; wenn nicht vorhanden: alle -->
 			<leadingtable_numfield>D</leadingtable_numfield><!-- optional; Spalte der Leadingtable, die die rowno (für Matlab Sparse Matrix) enthält -->
 			<separator>;</separator> <!-- optional: separator for csv; standardmäßig ";" -->
+			<quote>"</quote><!-- optional:  -->
 		</datafile>
 		<datafile>
 			<data_id>stamm2010_g1</data_id> 

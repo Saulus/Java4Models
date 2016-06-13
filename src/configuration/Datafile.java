@@ -2,6 +2,8 @@ package configuration;
 
 import org.xmappr.Element;
 
+import au.com.bytecode.opencsv.CSVWriter;
+
 /**
  * The Class Datafile.
  * Elements from konfiguration.xml are loaded into here, into variables defined acc. to xml tag.
@@ -43,6 +45,9 @@ public class Datafile {
 	
 	@Element
 	public String separator;
+	
+	@Element
+	public String quote;
 	
 	
 	
@@ -149,9 +154,15 @@ public class Datafile {
 		return leadingtable_numfield;
 	}
 	
-	public String getSeparator(){
-		if (separator == null) return Consts.csvfieldseparator;
-		return separator;
+	public char getSeparator(){
+		if (separator == null) return Consts.csvfieldseparator.charAt(0);
+		return separator.charAt(0);
+	}
+	
+	public char getQuote(){
+		if (quote == null) return '"';
+		if (quote.length()==0) return CSVWriter.NO_QUOTE_CHARACTER;
+		return quote.charAt(0);
 	}
 	
 	

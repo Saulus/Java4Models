@@ -28,6 +28,7 @@ public class Sorter extends InputFile {
 	private String dbfile;
 	
 	private char separator = Consts.fieldcombineseparator.charAt(0);
+	private char quote =  CSVWriter.NO_QUOTE_CHARACTER;
 	
 	
 	/**
@@ -39,8 +40,8 @@ public class Sorter extends InputFile {
 	 * @param tmppath the tmppath
 	 * @throws Exception the exception
 	 */
-	public Sorter(String datentyp, String path, String filetype, String[] idfields,  String separator, String tmppath, ArrayList<Filter> filters) throws Exception {
-		super(datentyp, path, filetype, idfields,separator,false,filters);
+	public Sorter(String datentyp, String path, String filetype, String[] idfields,  char separator, char quote, String tmppath, ArrayList<Filter> filters) throws Exception {
+		super(datentyp, path, filetype, idfields,separator,quote,false,filters);
 		//use "in memory" if possible
 		long allocatedMemory = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
 		long presumableFreeMemory = Runtime.getRuntime().maxMemory() - allocatedMemory;
@@ -55,7 +56,10 @@ public class Sorter extends InputFile {
 		}
 		Class.forName("org.sqlite.JDBC");
 		sqldb = DriverManager.getConnection("jdbc:sqlite:"+dbfile);
-		this.separator=separator.charAt(0);
+		this.separator=separator;
+		if (quote == Character.MIN_VALUE)
+			this.quote=CSVWriter.NO_QUOTE_CHARACTER;
+		else this.quote=quote;
 	}
 
 	/**
@@ -128,7 +132,7 @@ public class Sorter extends InputFile {
 			stmt.executeUpdate("create index sort_id on sortdb ("+ this.getIDFields() +");");
 			stmt.close();   
 		//3. dump db sorted
-		CSVWriter outputfile = new CSVWriter(new FileWriter(this.getPath()+sortedfileext), this.separator, CSVWriter.NO_QUOTE_CHARACTER);
+		CSVWriter outputfile = new CSVWriter(new FileWriter(this.getPath()+sortedfileext), this.separator,this.quote);
 		stmt = sqldb.createStatement();
 	    ResultSet orderedTable = stmt.executeQuery( "SELECT * FROM sortdb order by "+ this.getIDFields() + ";" );
 	    outputfile.writeAll(orderedTable, true);
