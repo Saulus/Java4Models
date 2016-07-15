@@ -295,6 +295,18 @@ public class DDIworker {
 			for (String id : this.stats.getInteractionIds()) {
 				stat_file_int.writeNext(newRow(model,header,id,false));
 			}
+			//write summary
+			String[] row= new String[header.length];
+			row[0]="ANY";
+			row[1]=Integer.toString(stats.getNumInteractionsAny(true)); 
+			row[2]=Integer.toString(stats.getNumSubsAny(true));
+			row[3]=Integer.toString(stats.getNumPatientswithPI());
+			row[4]=Integer.toString(stats.getNumPatientsAll());
+			row[5]=Integer.toString(stats.getNumOccurencesAll());
+			stat_file_met.writeNext(row);
+			row[1]=Integer.toString(stats.getNumInteractionsAny(false)); 
+			row[2]=Integer.toString(stats.getNumSubsAny(false));
+			stat_file_int.writeNext(row);
 			//close
 			try {
 				stat_file_met.close();

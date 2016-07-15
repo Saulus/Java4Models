@@ -83,7 +83,6 @@
 		<!-- these fields can be used in models -->
 		<data_id>ddi</data_id> <!-- Output-File-ID for Model building -->
 		<writeRowData>ddirows.csv</writeRowData> <!-- optional; if set, writes information per profile row  (i.e. pid, startdate, enddate, interactions = might be multiple)  -->
-		<keep_fields></keep_fields><!-- Optional, fieldnames: which ddi fields to keep in output matrix; if not configured, keeps all, e.g.: PID,INTERAKTION_ID,META_ID,STARTDATE,ENDDATE,PACKUNGSGROESSE -->
 		<samplePatientsWithout>True</samplePatientsWithout>
 		<createStatistics>True</createStatistics>
 		<datafile_references>
@@ -102,7 +101,7 @@
 			<drugreach>Reichweite</drugreach><!-- required, must be in days -->
 			<drugreach_min>1</drugreach_min><!-- minimum allowed, smaller values will be changed to standard -->
 			<drugreach_max>100</drugreach_max><!-- maximum allowed, bigger values will be changed to standard -->
-			<drugreach_standard>28</drugreach_standard> <!-- if reach not available or incorrect, in days  -->
+			<drugreach_standard>7</drugreach_standard> <!-- if reach not available or incorrect, in days  -->
 			<dose>Packungsgroesse</dose> <!-- optional, will also be added to Output-File (as maximum from all input drugs) -->
 			<substance>WIRKSTOFF_ID</substance>
 			<interaction>INTERAKTION_ID</interaction>
@@ -115,7 +114,7 @@
 	<createProfilDense>True</createProfilDense>
 	<createProfilMatrixMarket>True</createProfilMatrixMarket>
 	<createProfilSvmlight>True</createProfilSvmlight>
-	<addPidToSvm>True</addPidToSvm><!-- adds "# PID" to each row in svm -->
+	<addPidToSvm>False</addPidToSvm><!-- adds "# PID" to each row in svm -->
 	<createScores>False</createScores>
 	<outputfile>scores.csv</outputfile>
 	<interceptname>INTERCEPT</interceptname>

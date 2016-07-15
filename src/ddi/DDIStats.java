@@ -94,6 +94,7 @@ class InteractionStat {
  */
 public class DDIStats {
 	private int num_patients=0;
+	private int num_patients_withPI=0;
 	private int num_occurences=0;
 	public HashMap<Model,HashMap<String,TargetStat>> targets_allpatients = new HashMap<Model,HashMap<String,TargetStat>> ();
 	private String lastPatientId="";
@@ -139,6 +140,9 @@ public class DDIStats {
 			}
 			this.interactions.get(interaction_id).addOccurence(patient_id);
 			this.num_occurences++;
+			if (!patient_id.equals(lastPatientId)) {
+				this.num_patients_withPI++;
+			}
 		}
 		if (!patient_id.equals(lastPatientId)) {
 			lastPatientId=patient_id;
@@ -190,9 +194,42 @@ public class DDIStats {
 		else return interactions.get(id).num_interactions;
 	}
 	
+	public int getNumInteractionsAny (boolean ismeta) {
+		int sum = 0;
+		if (ismeta) {
+			for (InteractionStat is : metas.values()){
+				sum+=is.num_interactions;
+			}
+			return sum;
+		}
+		else {
+			for (InteractionStat is : interactions.values()){
+				sum+=is.num_interactions;
+			}
+			return sum;
+		}
+	}
+	
 	public int getNumSubs (String id, boolean ismeta) {
 		if (ismeta) return metas.get(id).num_substances;
 		else return interactions.get(id).num_substances;
+	}
+	
+	
+	public int getNumSubsAny (boolean ismeta) {
+		int sum = 0;
+		if (ismeta) {
+			for (InteractionStat is : metas.values()){
+				sum+=is.num_substances;
+			}
+			return sum;
+		}
+		else {
+			for (InteractionStat is : interactions.values()){
+				sum+=is.num_substances;
+			}
+			return sum;
+		}
 	}
 	
 
@@ -203,6 +240,10 @@ public class DDIStats {
 	
 	public int getNumPatientsAll () {
 		return this.num_patients;
+	}
+	
+	public int getNumPatientswithPI () {
+		return this.num_patients_withPI;
 	}
 	
 	public int getNumOccurences (String id, boolean ismeta) {
