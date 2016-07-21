@@ -42,6 +42,7 @@ public class Variable {
 	private boolean exclude = false; //if true: exclude all patients that have this
 	private boolean isTarget = false; //if true: is Target
 	private boolean hideme = false; //if true: do not print var
+	private boolean set1 = false; //if true: set 1
 	private boolean dependsOnOtherVars = false;
 	
 	private boolean isAllowed = true; //false, if all modelvariables or variable itself were filtered out
@@ -62,6 +63,7 @@ public class Variable {
 			Allrows myrow = new Allrows(values);
 			rows.put(v, myrow);
 		} else rows.get(v).add(values);
+		if (v.set1()) set1=true; //i.e.: if true for one ModelVar -> true for all
 		if (v.isInclude()) include=true; //i.e.: if true for one ModelVar -> true for all
 		if (v.isExclude()) exclude=true; //i.e.: if true for one ModelVar -> true for all
 		if (v.isTarget()) isTarget=true; //i.e.: if true for one ModelVar -> true for all
@@ -145,6 +147,7 @@ public class Variable {
 			if (allvalues.size()>0) {
 				this.profvalue=aggV.aggregateValues(allvalues);
 				if (aggV.varIsAllowed(this.profvalue)) isAllowed=true; else isAllowed=false;
+				if (this.set1 && this.profvalue>0) this.profvalue=1;
 			} else isAllowed=false;
 		}
 	}

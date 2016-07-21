@@ -44,6 +44,12 @@ public class ModelVariableReadIn {
 	public String getFilterCol() {
 		return this.myrow.get(Consts.modFilterCol);
 	}
+	
+	public String getSet1Col() {
+		if (this.myrow.get(Consts.modSet1Col) != null) return this.myrow.get(Consts.modSet1Col).toUpperCase();
+		else return null; 
+	}
+	
 	public String getIncludeCol() {
 		return this.myrow.get(Consts.modIncludeCol).toUpperCase();
 	}

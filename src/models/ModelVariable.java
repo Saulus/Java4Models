@@ -306,6 +306,7 @@ public class ModelVariable {
 	private ModelVariableAgg agg;
 	private double filterstart = -1;
 	private double filterend = -1;
+	private boolean set1; //if true: set var to 1 if >0 (after filter)
 	private boolean include; //if true: only include patients that have this
 	private boolean exclude; //if true: exclude all patients that have this
 	private boolean target; //if target: print separately, do not include in coeff-calculation
@@ -345,6 +346,7 @@ public class ModelVariable {
 			throw new ModelConfigException("Fehler bei Variable "+  readvar.getVariableCol() + ": "+ Consts.modAggCol + " nicht lesbar",e); 
 		}
 		//parse rest
+		this.set1=Consts.wahr.equals(readvar.getSet1Col());
 		this.include=Consts.wahr.equals(readvar.getIncludeCol()); if (this.include) mymodel.setInclusion(true);
 		this.exclude=Consts.wahr.equals(readvar.getExcludeCol()); if (this.exclude) mymodel.setExclusion(true);
 		this.target=Consts.wahr.equals(readvar.getTargetCol()); if (this.target) mymodel.setHasTargets(true);
@@ -408,6 +410,10 @@ public class ModelVariable {
 		//simply parse to string 
 		return ((filterstart==-1  ||  value >= filterstart ) // value >= filterstart 
 				&& (filterend==-1  ||  value <= filterend)); //value <= filterend
+	}
+	
+	public boolean set1 () {
+		return set1;
 	}
 	
 	public boolean isInclude () {

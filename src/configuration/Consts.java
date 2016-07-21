@@ -6,7 +6,7 @@ Collected constants of general utility.
 **/
 public final class Consts {
 	
-	public static final String version = "3.0";
+	public static final String version = "3.1";
 	
 	/** The Constant satzartFlag. */
 	public static final String satzartFlag = "SATZART";
@@ -37,6 +37,8 @@ public final class Consts {
 	/** The Constant .
 	 * 	Column of Model.config file / definition */
 	public static final String modFilterCol = "VARFILTER";
+	
+	public static final String modSet1Col = "VARSET1";
 	
 	public static final String modIncludeCol = "EINSCHLUSS";
 	public static final String modExcludeCol = "AUSSCHLUSS";
