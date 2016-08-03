@@ -191,7 +191,7 @@ public class DDIworker {
 			try {
 				rowfile = new CSVWriter(new FileWriter(rowfilename), ';', CSVWriter.NO_QUOTE_CHARACTER);
 				//header
-				rowfile.writeNext(ddifile.getLeaderColnames());
+				rowfile.writeNext(ddifile.getColnames());
 				this.writeRowData=true;
 			} catch (Exception e) {
 				LOGGER.log(Level.SEVERE,"Die Outputdatei " + rowfilename + " konnte nicht erstellt werden.", e);

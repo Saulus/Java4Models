@@ -6,7 +6,7 @@ Collected constants of general utility.
 **/
 public final class Consts {
 	
-	public static final String version = "3.1";
+	public static final String version = "3.11";
 	
 	/** The Constant satzartFlag. */
 	public static final String satzartFlag = "SATZART";
