@@ -2,27 +2,104 @@
 <configuration>
 	<inputfiles>
 		<datafile>
-			<data_id>testleader</data_id>
-			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\debug\testleader.csv</path>
+			<data_id>Stamm2010</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Stamm.csv.sorted.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
 			<is_sorted>True</is_sorted>
-			<leadingtable>True</leadingtable>
 		</datafile>
 		<datafile>
-			<data_id>Arzneimittel2012</data_id>
-			<path>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Devdata\am_evo_v.csv</path>
+			<data_id>arzt_diagnose2010</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Arzt_Diagnose.csv.sorted.csv</path>
 			<type>csv</type> <!-- Satzart / csv -->
-			<is_sorted>False</is_sorted>
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>kh_diagnose2010</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_KH_Diagnose.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>Stamm2011</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Stamm.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>arzt_diagnose2011</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Arzt_Diagnose.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>kh_diagnose2011</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_KH_Diagnose.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>Stamm2012</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Stamm.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>Stamm2013</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Stamm.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>Stamm2014</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Stamm.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>verstage2009</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Tage.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>verstage2010</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Tage.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>verstage2011</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Tage.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>verstage2012</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Tage.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>verstage2013</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Tage.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
+		</datafile>
+		<datafile>
+			<data_id>verstage2014</data_id>
+			<path>C:\Users\hellwigp\Documents\4 Technology\00 Development\zufall\komplett\AVK_FDB_T_Vers_Tage.csv.sorted.csv</path>
+			<type>csv</type> <!-- Satzart / csv -->
+			<is_sorted>True</is_sorted>
 		</datafile>
 	</inputfiles>
 	<outputpath>C:\temp\debug</outputpath>
 	<modelpath>C:\temp\debug\Models</modelpath>
 	<!-- optionale Parameter -->
-	<createProfilDense>True</createProfilDense>
+	<createProfilDense>False</createProfilDense>
 	<createProfilMatrixMarket>True</createProfilMatrixMarket>
 	<createProfilSvmlight>True</createProfilSvmlight>
 	<createScores>False</createScores>
 	<outputfile>scores.csv</outputfile>
 	<interceptname>INTERCEPT</interceptname>
-	<reference_date>01JAN2012</reference_date>
+	<reference_date>01JAN2011</reference_date>
 </configuration>

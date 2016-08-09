@@ -128,8 +128,10 @@ public class Variable {
 			for (ModelVariable v : rows.keySet()) {
 				//1: calculate values from single rows
 				for (String[] singlerow : rows.get(v).getAllRows()) {
-					d = v.getValue(singlerow, vars);
-					allvalues.add(d);
+					//if (singlerow!= null) {
+						d = v.getValue(singlerow, vars);
+						allvalues.add(d);
+					//}
 				}
 				aggV=v; //use last for aggregation & check
 			}

@@ -210,17 +210,17 @@ public class Configuration {
 	
 	public String getProfilfileSvmlight(String model, boolean targets) {
 		if (targets)
-			return outputpath + "\\" + model + profilfileSvmlight + "_targets.csv";
+			return outputpath + "\\" + model + profilfileSvmlight + "_targets.svm";
 		else 
-			return outputpath + "\\" + model + profilfileSvmlight + ".csv";
+			return outputpath + "\\" + model + profilfileSvmlight + ".svm";
 	}
 	
 	
 	public String getProfilfileSvmlightHeader(String model, boolean targets) {
 		if (targets)
-			return outputpath + "\\" + model + profilfileSvmlight + "_targets"+profilfileSvmlightHeadExt+".csv";
+			return outputpath + "\\" + model + profilfileSvmlight + "_targets"+profilfileSvmlightHeadExt+".svm";
 		else 
-			return outputpath + "\\" + model + profilfileSvmlight + profilfileSvmlightHeadExt+".csv";
+			return outputpath + "\\" + model + profilfileSvmlight + profilfileSvmlightHeadExt+".svm";
 	}
 	
 	

@@ -23,7 +23,7 @@ class PatientModel {
 	
 	public PatientModel(Model model) {
 		this.model = model;
-		if (model.hasInclusion()) amIincluded=false;
+		//if (model.hasInclusion()) amIincluded=false;
 	}
 	
 	
@@ -35,6 +35,7 @@ class PatientModel {
 
 	private void calcProfValues () {
 		if (!profValuesAreCalculated) {
+			variables = this.model.updateVariablesNoInputfile(variables); //this allows variables w/o inputfile
 			//1. Determine calculation sequence
 			List<String> allVars = new ArrayList<String>(variables.keySet());
 			@SuppressWarnings("unchecked")
@@ -45,7 +46,8 @@ class PatientModel {
 				if (allVars.size()>0) {
 					for (String var : allVars) {
 						if (i==0 && !variables.get(var).dependsOnOtherVars()) rounds[i].add(var);
-						else if (i>0 && rounds[i-1].containsAll(variables.get(var).getOtherVarsDependent())) rounds[i].add(var);
+						else if (i>0 && allIncludedVars.containsAll(variables.get(var).getOtherVarsDependent()))
+							rounds[i].add(var);
 					}
 					allVars.removeAll(rounds[i]);
 					allIncludedVars.addAll(rounds[i]);
@@ -56,9 +58,11 @@ class PatientModel {
 			for (int i=0; i<rounds.length; i++) {
 				for (String var : rounds[i]) {
 					variables.get(var).calcProfvalue(variables);
-					if (variables.get(var).isAllowed() && variables.get(var).isInclude()) amIincluded=true;
+					if (variables.get(var).isInclude()) amIincluded=amIincluded && variables.get(var).isAllowed();
 					if (variables.get(var).isAllowed() && variables.get(var).isExclude()) amIexcluded=true;
+					if (!amIincluded || amIexcluded) break;
 				}
+				if (!amIincluded || amIexcluded) break;
 			}
 			profValuesAreCalculated = true;
 		}

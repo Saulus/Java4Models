@@ -170,9 +170,9 @@ class ModelVariableCalc {
 			double myval = 0;
 			double addval = 0;
 			for (ModelVariableCalcPart p : plusParts) {
-				if (p.needsCol()) addval=p.getValue(columnvalues[p.getColnumber()]);
+				if (p.needsCol() && columnvalues!=null) addval=p.getValue(columnvalues[p.getColnumber()]);
 				else if (p.needsVariable()) {
-					if (vars != null) {
+					if (vars != null && vars.containsKey(p.getRefVariable())) {
 						addval=p.getValue(vars.get(p.getRefVariable()).getProfvalue());
 						if (!vars.get(p.getRefVariable()).isAllowed()) addval=0;
 					}
@@ -182,9 +182,9 @@ class ModelVariableCalc {
 				myval = myval +addval;
 			}
 			for (ModelVariableCalcPart p : minusParts) {
-				if (p.needsCol()) addval=p.getValue(columnvalues[p.getColnumber()]);
+				if (p.needsCol() && columnvalues!=null) addval=p.getValue(columnvalues[p.getColnumber()]);
 				else if (p.needsVariable()) {
-					if (vars != null) {
+					if (vars != null && vars.containsKey(p.getRefVariable())) {
 						addval=p.getValue(vars.get(p.getRefVariable()).getProfvalue());
 						if (!vars.get(p.getRefVariable()).isAllowed()) addval=0;
 					}
@@ -399,7 +399,9 @@ public class ModelVariable {
 	public String getName (String[] columns) {
 		String myname = "";
 		for (int i=0; i<nameColumnNumbers.length; i++) {
-			myname=myname + namePrefixes[i] + columns[nameColumnNumbers[i]];
+			if (columns!=null && columns[nameColumnNumbers[i]] != null) 
+				myname=myname + namePrefixes[i] + columns[nameColumnNumbers[i]];
+			else myname=myname + namePrefixes[i] + "null";
 		}
 		myname=myname + namePrefixes[namePrefixes.length-1];
 		return myname;

@@ -33,11 +33,8 @@ class ModelFile {
 	 * @param otherfieldfilter the otherfieldfilter String from Model.config
 	 * @param variable the variablefrom Model.config
 	 */
-	public void addVariable (ModelVariableReadIn readvar, Model mymodel,Configuration config) throws ModelConfigException {
-		if (!readvar.getVariableCol().equals("") && !readvar.getColumns()[0].isEmpty()) {
-			ModelVariable v = new ModelVariable(readvar, mymodel,config);
-			filevars.add(v);
-		}
+	public void addVariable (ModelVariable var) {
+		filevars.add(var);
 	}
 	
 	
@@ -56,7 +53,7 @@ class ModelFile {
 			//1. create column values array -> returns null if not allowed by rowfilter
 			colvalues = variable.getColumnValues(inputrow);
 			//1b: Test for filters
-			if (colvalues!=null) {
+			if (colvalues!=null) {  
 				//create variable name
 				myname = variable.getName(colvalues);
 				//test filters
@@ -65,6 +62,15 @@ class ModelFile {
 					existingVars.put(myname, myVar);
 				}
 				existingVars.get(myname).addRow(variable, colvalues);
+			} else if (variable.isInclude()) {//"include" vars are always added, even with null, but only once
+				//create variable name
+				myname = variable.getName(colvalues);
+				//test filters
+				if (!existingVars.containsKey(myname)) {
+					myVar = new Variable();
+					existingVars.put(myname, myVar);
+					existingVars.get(myname).addRow(variable, colvalues);
+				}
 			}
 		}
 		return existingVars;
@@ -88,6 +94,8 @@ public class Model {
 	
 	/** The modelfiles. */
 	private HashMap<InputFile,ModelFile> modelfiles = new HashMap<InputFile,ModelFile>();
+	
+	private List<ModelVariable> vars_without_file = new ArrayList<ModelVariable>();
 	
 	/** The name. */
 	private String name;
@@ -135,7 +143,8 @@ public class Model {
 			if (headerline[j].startsWith(Consts.modColumnCol)) columnnumber++; 
 		}
 		myEntries.remove(0);
-		ModelVariableReadIn newvar;
+		ModelVariableReadIn readvar;
+		ModelVariable newvar; 
 		for (String[] nextline : myEntries) {
 			//ignore comments and empty lines
 			if (!nextline[0].isEmpty() && !nextline[0].substring(0, 1).equals(Consts.comment_indicator)) {
@@ -143,16 +152,26 @@ public class Model {
 				//this prohibits errors from wrong column order in config file
 				for (int j=0; j<headerline.length; j++) {
 					if (j<nextline.length)
-						fields_data.put(headerline[j], nextline[j]);
+						fields_data.put(headerline[j], nextline[j].replaceAll("\\s",""));
 				}
 				//find inputfile(s) for this line / fields_data
+				if (fields_data.get(Consts.modInputfileCol).isEmpty()) {
+					readvar = new ModelVariableReadIn(fields_data,columnnumber,null);
+					if (!readvar.getVariableCol().equals("")) {
+						newvar = new ModelVariable(readvar, this,config);
+						vars_without_file.add(newvar);
+					}
+				} else 
 				for (InputFile myinputfile : inputfiles) {
 					if (myinputfile.isDatentyp(fields_data.get(Consts.modInputfileCol).toUpperCase())) {
 						//relevant inputfile is found -> create ModelFile if not present
 						if (!this.modelfiles.containsKey(myinputfile)) this.modelfiles.put(myinputfile,new ModelFile());
 						//add vars
-						newvar = new ModelVariableReadIn(fields_data,columnnumber,myinputfile);
-						this.modelfiles.get(myinputfile).addVariable(newvar,this,config);
+						readvar = new ModelVariableReadIn(fields_data,columnnumber,myinputfile);
+						if (!readvar.getVariableCol().equals("") && !readvar.getColumns()[0].isEmpty()) {
+							newvar = new ModelVariable(readvar, this,config);
+							this.modelfiles.get(myinputfile).addVariable(newvar);
+						}
 					}
 				}
 			}
@@ -214,6 +233,28 @@ public class Model {
 		if (inputfileIsRelevant(inputfile))
 			return modelfiles.get(inputfile).updateVariables(inputfile,existingVars);
 		else return existingVars;
+	}
+	
+	public HashMap<String,Variable> updateVariablesNoInputfile(HashMap<String,Variable> existingVars ) {
+		Variable myVar;
+		String[] colvalues;
+		String myname;
+		for(ModelVariable variable : vars_without_file) {
+			//1. create column values array -> returns null if not allowed by rowfilter
+			colvalues = null;
+			//1b: Test for filters
+			if (variable.isInclude()) {//"include" vars are always added, even with null, but only once
+				//create variable name
+				myname = variable.getName(colvalues);
+				//test filters
+				if (!existingVars.containsKey(myname)) {
+					myVar = new Variable();
+					existingVars.put(myname, myVar);
+					existingVars.get(myname).addRow(variable, colvalues);
+				}
+			}
+		}
+		return existingVars;
 	}
 	
 	

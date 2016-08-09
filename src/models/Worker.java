@@ -209,10 +209,7 @@ public class Worker {
 		List<String> processedModels = new ArrayList<String>();  
 		File folder = new File(config.getModelpath());
 		File[] listOfFiles = folder.listFiles();
-		if (listOfFiles == null) {
-			LOGGER.log(Level.WARNING,"Keine Modellkonfiguration in " + config.getModelpath() + " gefunden");
-			worked = false;
-		} else {
+		if (listOfFiles != null) {
 			Model newmodel;
 			for (File file : listOfFiles) {
 			    if (file.isFile()) {
@@ -220,11 +217,11 @@ public class Worker {
 			    	if (!processedModels.contains(modelname)) {
 			    		try {
 			    			newmodel = new Model(modelname, inputfiles, config);
-			    			models.add(newmodel);
 			    			knownVariables.put(newmodel,  new ArrayList<String>()); //init
 			    			//knownVariables_targets.put(newmodel,  new ArrayList<String>()); //init
 			    			processedModels.add(modelname);
 			    			LOGGER.log(Level.INFO,"Modell "+ modelname + " konfiguriert.");
+			    			models.add(newmodel);
 			    			worked = true; //if one files is ok, then start
 			    		} catch (Exception e) {
 			    			String message = "Fehler gefunden bei Configuration des Modells " + modelname + ". Das Modell wird nicht verwendet.";
@@ -305,7 +302,11 @@ public class Worker {
 					}
 				}
 			}
-		} //Ende test listOfFiles==null
+		} //Ende test listOfFiles!=null
+		if (listOfFiles==null || models.size()==0 ) {
+			LOGGER.log(Level.WARNING,"Keine korrekte Modellkonfiguration in " + config.getModelpath() + " gefunden");
+			worked = false;
+		}
 		return  worked;
 	}
 	
@@ -379,7 +380,7 @@ public class Worker {
 				}
 				//2. Profiles
 				if (config.createProfilDense() || config.createProfilSparse() || config.createProfilSvmlight()) {
-					//if leaderfile: get all leaderfile_columns (OBSOLETE: not for ddimode -> their another optiopns exists)
+					//if leaderfile: get all leaderfile_columns (OBSOLETE: not for ddimode -> their another options exists)
 					String[] leaderrow = null;
 					if (this.ourLeaderfile!=null && this.ourLeaderfile.hasLeaderCols()) {
 						leaderrow = new String[this.ourLeaderfile.getLeaderColnames().length];
