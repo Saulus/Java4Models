@@ -160,8 +160,8 @@ public class Datafile {
 	}
 	
 	public char getQuote(){
-		if (quote == null) return '"';
-		if (quote.length()==0) return CSVWriter.NO_QUOTE_CHARACTER;
+		//if (quote == null) return '"';
+		if (quote == null || quote.length()==0) return CSVWriter.NO_QUOTE_CHARACTER;
 		return quote.charAt(0);
 	}
 	
