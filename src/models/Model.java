@@ -243,7 +243,7 @@ public class Model {
 			//1. create column values array -> returns null if not allowed by rowfilter
 			colvalues = null;
 			//1b: Test for filters
-			if (variable.isInclude()) {//"include" vars are always added, even with null, but only once
+			//if (variable.isInclude()) {//"include" vars are always added, even with null, but only once
 				//create variable name
 				myname = variable.getName(colvalues);
 				//test filters
@@ -252,7 +252,7 @@ public class Model {
 					existingVars.put(myname, myVar);
 					existingVars.get(myname).addRow(variable, colvalues);
 				}
-			}
+			//}
 		}
 		return existingVars;
 	}

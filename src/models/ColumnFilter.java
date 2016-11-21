@@ -114,7 +114,7 @@ public class ColumnFilter {
 	
 	
 	public boolean isAllowed(String value) {
-		if (value==null) return false;
+		if (value==null || value.equals(Consts.nullvalue_readin)) return false;
 		boolean isAllowed = (inclusion==null) || inclusion.valueFits(value);
 		isAllowed = isAllowed && ((exclusion==null) || !exclusion.valueFits(value));
 		return isAllowed;

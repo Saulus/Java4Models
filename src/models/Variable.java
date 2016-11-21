@@ -119,18 +119,18 @@ public class Variable {
 	public void calcProfvalue (HashMap<String,Variable> vars) {
 		if (profvalueIsCalulated) return; 
 		profvalueIsCalulated=true;
-		if (aggIsOccurence) this.profvalue=1;
-		else {
+		//if (aggIsOccurence) this.profvalue=1; //values might be null (for inclusion vars) -> move to below
+		//else {
 			List<Double> allvalues = new ArrayList<Double>();
 			//work through variables, filter and consolidate rows, aggregate
 			ModelVariable aggV =null;
-			double d;
+			Double d;
 			for (ModelVariable v : rows.keySet()) {
 				//1: calculate values from single rows
 				for (String[] singlerow : rows.get(v).getAllRows()) {
 					//if (singlerow!= null) {
-						d = v.getValue(singlerow, vars);
-						allvalues.add(d);
+						d = v.getValue(singlerow, vars); //gives null if row is null and var is not calculated from other vars
+						if (d!=null) allvalues.add(d);
 					//}
 				}
 				aggV=v; //use last for aggregation & check
@@ -147,11 +147,13 @@ public class Variable {
 				}
 			}
 			if (allvalues.size()>0) {
-				this.profvalue=aggV.aggregateValues(allvalues);
+				if (aggIsOccurence) this.profvalue=1; 
+				else this.profvalue=aggV.aggregateValues(allvalues);
 				if (aggV.varIsAllowed(this.profvalue)) isAllowed=true; else isAllowed=false;
 				if (this.set1 && this.profvalue>0) this.profvalue=1;
+				
 			} else isAllowed=false;
-		}
+		//}
 	}
 	
 	public boolean isAllowed() {

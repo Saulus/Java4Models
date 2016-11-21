@@ -164,8 +164,9 @@ class ModelVariableCalc {
 		return otherVars;
 	}
 	
-	public double getValue (String[] columnvalues, HashMap<String,Variable> vars) {
-		if (isStd) return 1;
+	public Double getValue (String[] columnvalues, HashMap<String,Variable> vars) {
+		if (columnvalues==null && isStd) return null;
+		else if (isStd) return 1.;
 		else {
 			double myval = 0;
 			double addval = 0;
@@ -447,7 +448,7 @@ public class ModelVariable {
 		return agg.isOccurence();
 	}
 	
-	public double getValue (String[] columnvalues, HashMap<String,Variable> vars) {
+	public Double getValue (String[] columnvalues, HashMap<String,Variable> vars) {
 		return this.calc.getValue(columnvalues, vars);
 	}
 	

@@ -108,6 +108,8 @@ public final class Consts {
 	 * for dense profile creation */
 	public static final String navalue = "0";
 	
+	public static final String nullvalue_readin = ".";
+	
 	/** The Constant comment_indicator. 
 	 * for Model config */
 	public static final String comment_indicator = "#";

@@ -44,7 +44,7 @@
 			<addinfo>C:\Users\HellwigP\Documents\4 Technology\00 Development\zufall\Anlage_4_Krankheitsabgrenzung_AJ2016.csv</addinfo> <!-- optional; path zu csv-Datei mit 2+ Spalten (Quelle,Ziele); Zielspalten werden beim Sortieren! hinzugefügt -->
 		</datafile>
 	</inputfiles>
-	<inputfilter>
+	<inputfilter> <!-- optional -->
 		<filter>
 			<data_id>Arzneimittel</data_id>
 			<field>Quarter_PY</field> <!-- Substrings in Klammern, z.B. ICD(1-3) -->
